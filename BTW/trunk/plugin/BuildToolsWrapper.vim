@@ -2,9 +2,9 @@
 " $Id$
 " File:		BuildToolsWrapper.vim         {{{1
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
-" 		<URL:http://hermitte.free.fr/vim/>
+" 		<URL:http://code.google.com/p/lh-vim/>
 " Last Update:	06th Nov 2007
-" Version:	0.0.10
+" Version:	0.0.12
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -99,6 +99,12 @@
 "	* b:want_buffermenu_or_global_disable is not used as the menus are not
 "	  limited to the current buffer
 "	* Dependency changed from LHOption to lh-vim-lib
+" v0.0.11: 22nd Oct 2010
+" 	* Can run anything and capture its output
+" 	* Config support let-modeline, ccmake, makefile
+" v0.0.12: 21st Mar 2011 
+"       * New option BTW_make_multijobs to run make with multiple jobs (-j2,
+"       etc)
 "
 "
 " TODO:                                  {{{2
@@ -141,22 +147,10 @@ if exists("g:loaded_BuildToolsWrapper")
 endif
 let g:loaded_BuildToolsWrapper = 1
 
-" Dependancies                         {{{1
-
-" Checks:                                {{{2
-if !exists('*lh#option#Get')
-  runtime autoload/lh/option.vim
-endif
-if !exists('*lh#option#Get')
-  call lh#common#ErrorMsg( "Build Tools Wrapper:\n  This plugin requires the VimL library lh-vim-lib.\n"
-	\."  Check on <http://hermitte.free.fr/vim/>")
-  finish
-endif
-" Dependencies }}}1
 " Options                              {{{1
-let s:key_make    = lh#option#Get('BTW_key_make'   , '<F7>')
-let s:key_execute = lh#option#Get('BTW_key_execute', '<C-F5>')
-let s:key_config  = lh#option#Get('BTW_key_config' , '<M-F7>')
+let s:key_make    = lh#option#get('BTW_key_make'   , '<F7>')
+let s:key_execute = lh#option#get('BTW_key_execute', '<C-F5>')
+let s:key_config  = lh#option#get('BTW_key_config' , '<M-F7>')
 
 if exists('s:run_in_background')
     unlet s:run_in_background
@@ -172,7 +166,7 @@ function! s:FetchRunInBackground()
   elseif exists(':SearchInRuntime')
     SearchInRuntime let\ s:run_in_background=" compiler/BTW/".rib_progname.".pl | "
   else
-    call lh#common#ErrorMsg( "Build Tools Wrapper:\n  This plugin requires either a version of Vim that defines |globpath()| or the script searchInRuntime.vim.\n"
+    call lh#common#error_msg( "Build Tools Wrapper:\n  This plugin requires either a version of Vim that defines |globpath()| or the script searchInRuntime.vim.\n"
 	  \."  Please upgrade your version of vim, or install searchInRuntime.vim\n"
 	  \."  Check on <http://hermitte.free.fr/vim/> or <http://vim.sf.net/> script #229")
     finish
@@ -199,16 +193,18 @@ command! -nargs=+ -complete=custom,BTWComplete BTW :call s:BTW(<f-args>)
 command! -nargs=* Make			:call <sid>Compile("<args>")
 command! -nargs=0 Execute		:call <sid>Execute()
 command! -nargs=0 AddLetModeline	:call <sid>AddLetModeline()
+command! -nargs=0 Config        	:call <sid>Config()
 command! -nargs=0 Copen			:call <sid>ShowError('copen')
 command! -nargs=0 Cwindow		:call <sid>ShowError('cwindow')
 command! -nargs=+ CopenBG		:call <sid>CopenBG(<f-args>)
 command! -nargs=0 ToggleMakeBG		:call <sid>ToggleMakeInBG()
+command! -nargs=0 ToggleMakeMJ		:call <sid>ToggleMakeMJ()
 
 " Menus                                  {{{2
 
 function! s:MenuMakeBG()
   if has('gui_running') && has ('menu')
-    let value = lh#option#Get('BTW_make_in_background', 0, 'g')
+    let value = lh#option#get('BTW_make_in_background', 0, 'g')
     amenu 50.99 &Project.---<sep>--- Nop
     let C  = value ? 'X' : "\\ "
     let UC = value ? "\\ " : 'X'
@@ -217,19 +213,34 @@ function! s:MenuMakeBG()
   endif
 endfunction
 
+function! s:MenuMakeMJ()
+  if has('gui_running') && has ('menu')
+    let value = lh#option#get('BTW_make_multijobs', 0, 'g')
+    " if type(value) != type(0)
+    " endif
+    if exists('s:old_mj')
+      silent! exe "aunmenu Project.[" . s:old_mj . escape ("] Make using multiple jobs", ' ')
+    endif
+    amenu 50.99 &Project.---<sep>--- Nop
+    silent! exe "anoremenu 50.101 &Project.[" . value . escape("] Make using multiple &jobs", '\ ') . " :ToggleMakeMJ<cr>"
+    let s:old_mj = value
+  endif
+endfunction
+
 if has('gui_running') && has ('menu')
       \ && 0!=strlen(globpath(&rtp, 'autoload/lh/menu.vim'))
     " let b:want_buffermenu_or_global_disable = 0
     " 0->no ; 1->yes ; 2->global disable
-  call lh#menu#Make('n', '50.10', '&Project.&Config', s:key_config,
-	  \ '', ':AddLetModeline<cr>')
-    amenu 50.10 &Project.--<sep>-- Nop
-  call lh#menu#Make('ni', '50.30', '&Project.&Make project', s:key_make,
+  call lh#menu#make('n', '50.10', '&Project.&Config', s:key_config,
+	  \ '', ':Config<cr>')
+    amenu 50.29 &Project.--<sep>-- Nop
+  call lh#menu#make('ni', '50.30', '&Project.&Make project', s:key_make,
 	  \ '', ':Make<cr>')
-  call lh#menu#Make('ni', '50.50', '&Project.&Execute', s:key_execute,
+  call lh#menu#make('ni', '50.50', '&Project.&Execute', s:key_execute,
 	  \ '', ':Execute<cr>')
 
-    call s:MenuMakeBG()
+  call s:MenuMakeBG()
+  call s:MenuMakeMJ()
 else
   exe '  nnoremap '.s:key_make   .':call <sid>Compile()<cr>'
   exe '  inoremap '.s:key_make   .'<c-o>:call <sid>Compile()<cr>'
@@ -237,7 +248,7 @@ else
   exe '  nnoremap '.s:key_execute.':call <sid>Execute()<cr>'
   exe '  inoremap '.s:key_execute.'<c-o>:call <sid>Execute()<cr>'
 
-  exe '  nnoremap '.s:key_config .': call <sid>AddLetModeline()<cr>'
+  exe '  nnoremap '.s:key_config .': call <sid>Config()<cr>'
 endif
 " Commands and mappings }}}1
 "------------------------------------------------------------------------
@@ -360,7 +371,7 @@ function! s:RemoveFilter(scope, filter)
     let b:BTW_filters_list = g:BTW_filters_list
     " finally: call DoRemove
   else
-    call lh#common#ErrorMsg('BTW: Error no such filter-plugin to remove "'
+    call lh#common#error_msg('BTW: Error no such filter-plugin to remove "'
 	  \ . a:filter . '"')
     " s:DoRemove(): kind of "big" no-op
   endif
@@ -418,7 +429,7 @@ endfunction
 
 " AdjustEFM(filter, efm):                        {{{3
 function! s:AdjustEFM(filter, efm)
-  let added = lh#option#Get('BTW_adjust_efm_'.a:filter, '', 'bg')
+  let added = lh#option#get('BTW_adjust_efm_'.a:filter, '', 'bg')
   " if added =~ "default efm"
   " TODO: use split and join
     let added = substitute(added, 'default efm',
@@ -430,7 +441,7 @@ function! s:AdjustEFM(filter, efm)
 	  \ escape(s:DefaultEFM(compiler_plugin_imported), '\'), '')
   endif
   return
-	\   lh#option#Get('BTW_ignore_efm_'.a:filter, '', 'bg')
+	\   lh#option#get('BTW_ignore_efm_'.a:filter, '', 'bg')
 	\ . a:efm
 	\ . (strlen(added) ? ','.added : '')
 endfunction
@@ -458,26 +469,26 @@ endfunction
 
 " ReconstructToolsChain():                       {{{3
 function! s:ReconstructToolsChain()
-  let prog = lh#option#Get('BTW_build_tool', 'make')
+  let prog = lh#option#get('BTW_build_tool', 'make')
   if 0
     exe 'runtime! compiler/BTW-'.prog.'.vim compiler/BTW_'.prog.'.vim compiler/BTW/'.prog.'.vim'
     " TODO: if '$*' is already present in the filter_program, then don't append it.
   else
     call s:LoadFilter(prog)
   endif
-  let makeprg = lh#option#Get('BTW_filter_program_'.prog, prog, 'bg') . ' $*'
+  let makeprg = lh#option#get('BTW_filter_program_'.prog, prog, 'bg') . ' $*'
   let efm     = s:AdjustEFM(prog, '')
 
-  let filters_list = lh#option#Get('BTW_filters_list', '')
+  let filters_list = lh#option#get('BTW_filters_list', '')
   while strlen(filters_list)
     let filter       = matchstr(filters_list, ',\zs[^,]*')
     let filters_list = matchstr(filters_list, ',[^,]*\zs.*')
     " echo filter . ' ### ' . filters_list
 
     call s:LoadFilter(filter)
-    " let efm = efm . ',' . lh#option#Get('BTW_adjust_efm_'.filter, '', 'g')
+    " let efm = efm . ',' . lh#option#get('BTW_adjust_efm_'.filter, '', 'g')
     let efm = s:AdjustEFM(filter, efm)
-    let prg = lh#option#Get(s:ToVarName('BTW_filter_program_'.filter), '', 'bg')
+    let prg = lh#option#get(s:ToVarName('BTW_filter_program_'.filter), '', 'bg')
 
     if strlen(prg)
       " Faire dans BTW-{filter}.vim
@@ -532,13 +543,13 @@ endfunction
 
 " ToolsChain():                                  Helper {{{3
 function! s:ToolsChain()
-  return lh#option#Get('BTW_build_tool', 'make') .
+  return lh#option#get('BTW_build_tool', 'make') .
 	\ substitute (s:FiltersList(), ',', ' | ', 'g')
 endfunction
 
 " FiltersList():                                 Helper {{{3
 function! s:FiltersList()
-  " problem: lh#option#Get this will ignore empty variables => custom function
+  " problem: lh#option#get this will ignore empty variables => custom function
   if     exists('b:BTW_filters_list') | return b:BTW_filters_list
   elseif exists('g:BTW_filters_list') | return g:BTW_filters_list
   else                                | return ''
@@ -554,6 +565,18 @@ endfunction
 " Build And Execute:                     {{{2
 " TODO: distinguish rule-name for the compilation (e.g. ``all'') and the final
 " executable
+
+" Function: s:Evaluate()             {{{3
+function! s:Evaluate(expr)
+  if type(a:expr) == type({})
+    let res = lh#function#execute(a:expr)
+  elseif type(a:expr) == type('')
+    let res = a:expr
+  else
+    throw "Unexpected variable type"
+  endif
+  return res
+endfunction
 
 " Function: s:ProjectName()          {{{3
 " How to define this option:
@@ -620,49 +643,69 @@ endfunction
 
 " Function: s:Compile([target])      {{{3
 function! s:Compile(...)
-    update
-    if a:0 > 0 && strlen(a:1)
-      let rule = a:1
-    else
-      let rule = s:TargetRule()
+  update
+  if a:0 > 0 && strlen(a:1)
+    let rule = a:1
+  else
+    let rule = s:TargetRule()
+  endif
+  " else ... pouvoir avoir s:TargetRule() . a:1 ; si <bang> ?!
+
+  let bg = s:DoRunAndCaptureOutput(&makeprg, rule)
+  if !bg
+    echomsg "Compilation finished".(len(rule)?" (".rule.")" : "")
+  endif
+endfunction
+
+" Function: s:DoRunAndCaptureOutput(program [, args])      {{{3
+let s:k_multijobs_options = {
+      \ 'make': '-j'
+      \}
+function! s:DoRunAndCaptureOutput(program, ...)
+  let bg = has('clientserver') && lh#option#get('BTW_make_in_background', 0)
+  let save_makeprg = &makeprg
+  if bg
+    let run_in = lh#option#get("BTW_make_in_background_in", '')
+    if strlen(run_in)
+      " Typically xterm -e
+      let run_in = ' --program="'.run_in.'"'
     endif
-    " else ... pouvoir avoir s:TargetRule() . a:1 ; si <bang> ?!
+    let &makeprg = s:RunInBackground()
+	  \ . ' --vim=' . v:progname
+	  \ . ' --servername=' . v:servername
+	  \ . run_in
+	  \ . ' "' . (a:program) . '"'
+    " \ . ' "' . escape(a:program, '|') . '"'
+  else
+    let &makeprg = a:program
+  endif
+  let args = join(a:000, ' ')
+  let nb_jobs = lh#option#get('BTW_make_multijobs', 0)
+  " if has_key(s:k_multijobs_options, a:program) && type(nb_jobs) == type(0) && nb_jobs > 0
+  if type(nb_jobs) == type(0) && nb_jobs > 0
+    " let args .= ' '. s:k_multijobs_options[a:program] .nb_jobs
+    let args .= ' -j' .nb_jobs
+  endif
 
-
-    let bg = has('clientserver') && lh#option#Get('BTW_make_in_background', 0)
-    if bg
-      let run_in = lh#option#Get("BTW_make_in_background_in", '')
-      if strlen(run_in)
-	" Typically xterm -e
-	let run_in = ' --program="'.run_in.'"'
-      endif
-      let save_makeprg = &makeprg
-      let &makeprg = s:RunInBackground()
-	    \ . ' --vim=' . v:progname
-	    \ . ' --servername=' . v:servername
-	    \ . run_in
-	    \ . ' "' . (save_makeprg) . '"'
-	    " \ . ' "' . escape(save_makeprg, '|') . '"'
-    endif
-
+  try 
     if lh#system#OnDOSWindows() && bg
-      let cmd = ':!start '.substitute(&makeprg, '\$\*', rule, 'g')
+      let cmd = ':!start '.substitute(&makeprg, '\$\*', args, 'g')
       let g:toto = cmd
       exe cmd
     else
-      exe 'make! '. rule
+      exe 'make! '. args
     endif
+  finally
+    let &makeprg = save_makeprg
+  endtry
 
-    if bg
-      let &makeprg = save_makeprg
-    endif
-
-    call s:ShowError()
+  call s:ShowError()
+  return bg
 endfunction
 
 " Function: s:ShowError([cop|cwin])  {{{3
 function! s:ShowError(...)
-  let qf_position = lh#option#Get('BTW_qf_position', '', 'g')
+  let qf_position = lh#option#get('BTW_qf_position', '', 'g')
 
   if a:0 == 1 && a:1 =~ '^\%(cw\%[window]\|copen\)$'
     let open_qf = a:1
@@ -684,17 +727,17 @@ function! s:ShowError(...)
   if winnum != winnr()
     " resize the window to just fit in with the number of lines.
     let nl = 15 > &winfixheight ? 15 : &winfixheight
-    let nl = lh#option#Get('BTW_QF_size', nl, 'g')
+    let nl = lh#option#get('BTW_QF_size', nl, 'g')
     let nl = line('$') < nl ? line('$') : nl
     exe nl.' wincmd _'
 
     " Apply syntax hooks
-    let syn = lh#option#Get('BTW_qf_syntax', '', 'gb')
+    let syn = lh#option#get('BTW_qf_syntax', '', 'gb')
     if strlen(syn)
       silent exe 'runtime compiler/BTW/syntax/'.syn.'.vim'
     endif
   endif
-  if lh#option#Get('BTW_GotoError', 1, 'g') == 1
+  if lh#option#get('BTW_GotoError', 1, 'g') == 1
   else
     exe origwinnum . 'wincmd w'
   endif
@@ -717,10 +760,21 @@ endfunction
 
 " Function: s:ToggleMakeInBG()       {{{3
 function! s:ToggleMakeInBG()
-  let value = lh#option#Get('BTW_make_in_background', 0, 'g')
+  let value = lh#option#get('BTW_make_in_background', 0, 'g')
   let g:BTW_make_in_background = 1 - value
 
   call s:MenuMakeBG()
+endfunction
+
+" Function: s:ToggleMakeMJ()         {{{3
+function! s:ToggleMakeMJ()
+  let value = lh#option#get('BTW_make_multijobs', 0, 'g')
+  if type(value) != type(0)
+    call lh#common#error_msg("option BTW_make_multijobs is not a number")
+  endif
+  let g:BTW_make_multijobs = (value==0) ? 2 : 0
+
+  call s:MenuMakeMJ()
 endfunction
 
 " Function: s:CompileQF()            {{{3
@@ -734,16 +788,53 @@ endfunction
 let s:ext = (has('win32')||has('win64')||has('win16')) ? '.exe' : ''
 function! s:Execute()
   let path = s:Executable()
-  if (SystemDetected() == 'unix') && (path[0]!='/')
-    let path = './' . path
+  if type(path) == type({})
+    " Assert(path.type == 'make')
+    let ctx=''
+    for [k,v] in items(path)
+      if k[0] == '$'
+	let ctx .= k[1:].'='.v.' '
+      endif
+    endfor
+    let makeprg = &makeprg
+    if !empty(ctx)
+      let p = matchend(makeprg, '.*;')
+      if -1 == p
+	let makeprg = ctx.makeprg
+      else
+	let makeprg = makeprg[ : (p-1)].ctx.makeprg[p : ]
+      endif
+    endif
+    call s:DoRunAndCaptureOutput(makeprg, path.rule)
+  else
+    if (SystemDetected() == 'unix') && (path[0]!='/') && (path!~'cd')
+      " todo, check executable(split(path)[0])
+      let path = './' . path
+    endif
+    exe ':!'.path . s:ext . ' ' .lh#option#get('BTW_run_parameters','')
   endif
-  exe ':!'.path . s:ext . ' ' .lh#option#Get('BTW_run_parameters','')
 endfunction
 
 " Function: s:ExecuteQF()            {{{3
 " TODO: delete this part
 function! s:ExecuteQF()
   :!./#<.exe
+endfunction
+
+" Function: s:Config()       {{{3
+function! s:Config()
+  let how = lh#option#get('BTW_project_config', {'type': 'modeline'} )
+  if     how.type == 'modeline'
+    call s:AddLetModeline()
+  elseif how.type == 'makefile'
+    let wd = s:Evaluate(how.wd)
+    let file = s:Evaluate(how.file)
+    call lh#buffer#jump(wd.'/'.file)
+  elseif how.type == 'ccmake'
+    let wd = s:Evaluate(how.wd)
+    let prg = 'xterm -e "cd '.wd.' ; ccmake '.(how.arg).'"'
+    exe ':!'.prg
+  endif
 endfunction
 
 " Function: s:AddLetModeline()       {{{3
