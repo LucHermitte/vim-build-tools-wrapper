@@ -1,7 +1,7 @@
 "=============================================================================
 " File:		compiler/BTW/STLFilt.vim                                           {{{1
 " Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
-"		<URL:http://hermitte.free.fr/vim/>
+"		<URL:http://code.google.com/p/lh-vim/>
 " URL: http://hermitte.free.fr/vim/ressources/vimfiles/compiler/BTW/cygwin.vim
 " Version:	0.1
 " Created:	01st Jun 2005
@@ -38,7 +38,7 @@ set cpo&vim
 " Functions {{{1
 
 " let g:BTW_filter_program_STLFilt = 'dmSTLFilt.pl -width:0'
-let g:BTW_filter_program_STLFilt = 'gSTLFilt.pl -width:0'
+let g:BTW_filter_program_STLFilt = 'gSTLFilt.pl -width:0 -path:l'
 " let s:path = findfile('gSTLfilt.pl', $PATH) 
 " let g:BTW_filter_program_STLFilt = 'perl '.s:path.'-width:0'
 

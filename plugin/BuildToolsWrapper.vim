@@ -4,7 +4,7 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Last Update:	06th Nov 2007
-" Version:	0.0.12
+" Version:	0.0.13
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -105,7 +105,9 @@
 " v0.0.12: 21st Mar 2011 
 "       * New option BTW_make_multijobs to run make with multiple jobs (-j2,
 "       etc)
-"
+" v0.0.13: 19th Aug 2011
+"       * New option BTW_compilation_dir
+"       * New feature: :QFImport to import variables into quickfix
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -188,6 +190,10 @@ endfunction
 
 " Multi-purposes command                 {{{2
 command! -nargs=+ -complete=custom,BTWComplete BTW :call s:BTW(<f-args>)
+
+" Quickfix import variables commands     {{{2
+command! -nargs=1 -complete=var QFImport      :call s:QFAddVarToImport(<f-args>)
+command! -nargs=0               QFClearImport :call s:QFClearImport()
 
 " Build/Make invokation                  {{{2
 command! -nargs=* Make			:call <sid>Compile("<args>")
@@ -478,6 +484,11 @@ function! s:ReconstructToolsChain()
   endif
   let makeprg = lh#option#get('BTW_filter_program_'.prog, prog, 'bg') . ' $*'
   let efm     = s:AdjustEFM(prog, '')
+  
+  let dir = lh#option#get('BTW_compilation_dir', '')
+  if !empty(dir)
+    let makeprg = '(cd '.shellescape(dir).' && ' . makeprg . ')'
+  endif
 
   let filters_list = lh#option#get('BTW_filters_list', '')
   while strlen(filters_list)
@@ -821,7 +832,7 @@ function! s:ExecuteQF()
   :!./#<.exe
 endfunction
 
-" Function: s:Config()       {{{3
+" Function: s:Config()               {{{3
 function! s:Config()
   let how = lh#option#get('BTW_project_config', {'type': 'modeline'} )
   if     how.type == 'modeline'
@@ -877,6 +888,63 @@ function! s:AddLetModeline()
   endif
 endfunction
 
+
+" Quickfix auto import:                  {{{2
+" Some variables need to be imported automatically into quickfix buffer
+" Variables:                         {{{3
+if !exists('s:qf_save')
+    let s:qf_save = {}
+endif
+if !exists('s:qf_options_to_import')
+  let s:qf_options_to_import = {}
+endif
+
+" Function: s:QuickFixImport()       {{{3
+function! s:QuickFixImport()
+    " echo "importing:".string(s:qf_save)
+    for var in keys(s:qf_options_to_import)
+      if has_key(s:qf_save, var)
+        exe 'let '.var.' = s:qf_save[var]'
+      endif
+    endfor
+endfunction
+
+" Function: s:QuickFixExport()       {{{3
+function! s:QuickFixExport()
+    " if &ft !~ '^cpp$\|^c$'
+        " return 
+    " endif
+    for var in keys(s:qf_options_to_import)
+      if exists(var)
+            exe 'let s:qf_save[var] = '.var
+        else
+            echomsg "Export: {".var."} does not exist"
+        endif
+    endfor
+    " echo "exported:".string(s:qf_save)
+endfunction
+
+" Augroup: QFImport                  {{{3
+aug QFImport
+    au!
+    au FileType qf :call <sid>QuickFixImport()
+    " au BufLeave * :call <sid>QuickFixExport()
+aug END
+
+" Function: s:QFAddVarToImport()     {{{3
+function! s:QFAddVarToImport(varname)
+  let s:qf_options_to_import[a:varname] = 1
+endfunction
+
+" Function: s:QFRemoveVarToImport()  {{{3
+function! s:QFRemoveVarToImport(varname)
+  silent! unlet s:qf_options_to_import[a:varname]
+endfunction
+
+" Function: s:QFClearVarToImport()   {{{3
+function! s:QFRemoveVarToImport(varname)
+  let s:qf_options_to_import = {}
+endfunction
 
 " Internals }}}1
 "------------------------------------------------------------------------

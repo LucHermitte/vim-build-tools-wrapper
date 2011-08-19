@@ -1,7 +1,7 @@
 "=============================================================================
 " File:		compiler/BTW/gcc.vim                                           {{{1
 " Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
-"		<URL:http://hermitte.free.fr/vim/>
+"		<URL:http://code.google.com/p/lh-vim/>
 " URL: http://hermitte.free.fr/vim/ressources/vimfiles/compiler/BTW/gcc.vim
 " Version:	0.1
 " Created:	28th Nov 2004
@@ -35,6 +35,7 @@
 "  * Something odd: all the link error from GCC appear before the other
 "    messages like the commands executed.
 "  * «:BTW gcc rebuild»
+"  * Apply c++filt
 " }}}1
 "=============================================================================
 
@@ -90,7 +91,7 @@ call s:Reset_program()
 function! s:Reset_efm()
   let g:BTW_adjust_efm_gcc = '%f:%l: %m'
   " - GCC link errors (undefined reference to..., etc.)
-  if lh#option#Get('g:BTW_gcc_click_lnk', 0, 'g')
+  if lh#option#get('g:BTW_gcc_click_lnk', 0, 'g')
     let g:BTW_adjust_efm_gcc = 
 	  \ '%f:1: %m'
 	  \ .','.
