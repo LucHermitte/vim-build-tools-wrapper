@@ -38,7 +38,7 @@ set cpo&vim
 " Functions {{{1
 
 " let g:BTW_filter_program_STLFilt = 'dmSTLFilt.pl -width:0'
-let g:BTW_filter_program_STLFilt = 'gSTLFilt.pl -width:0 -path:l'
+let g:BTW_filter_program_STLFilt = 'dmSTLFilt.pl -width:0 -path:l'
 " let s:path = findfile('gSTLfilt.pl', $PATH) 
 " let g:BTW_filter_program_STLFilt = 'perl '.s:path.'-width:0'
 
