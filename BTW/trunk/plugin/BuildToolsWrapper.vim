@@ -4,7 +4,7 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Last Update:	06th Nov 2007
-" Version:	0.0.13
+" Version:	0.0.14
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -108,6 +108,13 @@
 " v0.0.13: 19th Aug 2011
 "       * New option BTW_compilation_dir
 "       * New feature: :QFImport to import variables into quickfix
+" v0.0.13: 21st Feb 2012
+"       * New way to easily change settings in the filters used:
+"         BTW_filter_program_{filter} can be a |FuncRef|.
+"         see compiler/BTW/cmake.vim
+"       * BTW_adjust_efm_{filer} may be a dictionary 
+"         {"value": string, "post": FuncRef} to support post-treatements on &efm
+"         value.  see compiler/BTW/cmake.vim
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -435,7 +442,15 @@ endfunction
 
 " AdjustEFM(filter, efm):                        {{{3
 function! s:AdjustEFM(filter, efm)
-  let added = lh#option#get('BTW_adjust_efm_'.a:filter, '', 'bg')
+  let filter_efm = lh#option#get('BTW_adjust_efm_'.a:filter, '', 'bg')
+  if type(filter_efm) == type({})
+    let added = filter_efm.value
+    if has_key(filter_efm, 'post')
+      let a:efm.post += [filter_efm.post]
+    endif
+  else
+    let added = filter_efm
+  endif
   " if added =~ "default efm"
   " TODO: use split and join
     let added = substitute(added, 'default efm',
@@ -446,9 +461,9 @@ function! s:AdjustEFM(filter, efm)
     let added = substitute(added, 'import: \%([^,]\{-}\ze\%(,\|$\)\)',
 	  \ escape(s:DefaultEFM(compiler_plugin_imported), '\'), '')
   endif
-  return
+  let a:efm.value = 
 	\   lh#option#get('BTW_ignore_efm_'.a:filter, '', 'bg')
-	\ . a:efm
+	\ . a:efm.value
 	\ . (strlen(added) ? ','.added : '')
 endfunction
 
@@ -475,15 +490,20 @@ endfunction
 
 " ReconstructToolsChain():                       {{{3
 function! s:ReconstructToolsChain()
+  let efm = {'value': '', 'post':[] }
   let prog = lh#option#get('BTW_build_tool', 'make')
   if 0
     exe 'runtime! compiler/BTW-'.prog.'.vim compiler/BTW_'.prog.'.vim compiler/BTW/'.prog.'.vim'
-    " TODO: if '$*' is already present in the filter_program, then don't append it.
   else
     call s:LoadFilter(prog)
   endif
-  let makeprg = lh#option#get('BTW_filter_program_'.prog, prog, 'bg') . ' $*'
-  let efm     = s:AdjustEFM(prog, '')
+  let Makeprg = lh#option#get('BTW_filter_program_'.prog, prog, 'bg')
+  if type(Makeprg) == type(function('has'))
+    let makeprg = Makeprg('$*')
+  else
+    let makeprg = Makeprg . ' $*'
+  endif
+  call s:AdjustEFM(prog, efm)
   
   let dir = lh#option#get('BTW_compilation_dir', '')
   if !empty(dir)
@@ -498,13 +518,13 @@ function! s:ReconstructToolsChain()
 
     call s:LoadFilter(filter)
     " let efm = efm . ',' . lh#option#get('BTW_adjust_efm_'.filter, '', 'g')
-    let efm = s:AdjustEFM(filter, efm)
+    call s:AdjustEFM(filter, efm)
     let prg = lh#option#get(s:ToVarName('BTW_filter_program_'.filter), '', 'bg')
 
     if strlen(prg)
       " Faire dans BTW-{filter}.vim
       " let prg = substitute(expand('<sfile>:p:h'), ' ', '\\ ', 'g')
-      let makeprg = makeprg . " 2>&1 \\| ".prg
+      let makeprg .= " 2>&1 \\| ".prg
     endif
   endwhile
 
@@ -519,15 +539,18 @@ function! s:ReconstructToolsChain()
   "   exe set . 'makeprg='. escape(makeprg, '\ ')
 
   " Set errorformat ; strip redundant commas
-  let efm = substitute(efm, ',\+', ',', "g")
-  let efm = matchstr(efm, '^,*\zs.*')
+  let v_efm = substitute(efm.value, ',\+', ',', "g")
+  let v_efm = matchstr(v_efm, '^,*\zs.*')
+  for P in efm.post
+    let v_efm = P(v_efm)
+  endfor
   " default used ... by default
-  if strlen(efm)
+  if strlen(v_efm)
     " Add the new formats
     " exe set . 'efm+="'. efm . '"'
     " exe set . 'efm+='. escape(efm, '\ ')
     " exe 'let &'.local.'efm = &'.local."efm . ',' . efm"
-    exe 'let &'.local.'efm = efm'
+    exe 'let &'.local.'efm = v_efm'
   endif
   " set efm&vim                  " Reset to default value
   " let &efm = &efm . ',' . efm  " Add the new formats

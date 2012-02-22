@@ -3,7 +3,7 @@
 " File:		mk-BTW.vim
 " Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://hermitte.free.fr/vim/>
-" Version:	1.0.0
+" Version:	0.0.14
 " Created:	06th Nov 2007
 " Last Update:	$Date$
 "------------------------------------------------------------------------
@@ -15,6 +15,7 @@ finish
 plugin/BuildToolsWrapper.vim
 doc/BuildToolsWrapper.txt
 compiler/BTW/aap.vim
+compiler/BTW/cmake.vim
 compiler/BTW/cygwin.pl
 compiler/BTW/cygwin.vim
 compiler/BTW/gcc.pl
