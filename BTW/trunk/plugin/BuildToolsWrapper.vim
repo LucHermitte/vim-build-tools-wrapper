@@ -3,14 +3,13 @@
 " File:		BuildToolsWrapper.vim         {{{1
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://code.google.com/p/lh-vim/>
-" Last Update:	06th Nov 2007
+" Last Update:	01st Mar 2012
 " Version:	0.0.14
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
 "
 "------------------------------------------------------------------------
-" GetLatestVimScripts: «script_id» «src_id» :AutoInstall: BuildToolsWrapper
 " Installation:
 "	Drop this plugin into {rtp}/plugin/
 "	Requires: lh-vim-lib, also available on my web site
@@ -108,12 +107,12 @@
 " v0.0.13: 19th Aug 2011
 "       * New option BTW_compilation_dir
 "       * New feature: :QFImport to import variables into quickfix
-" v0.0.13: 21st Feb 2012
+" v0.0.14: 21st Feb 2012
 "       * New way to easily change settings in the filters used:
 "         BTW_filter_program_{filter} can be a |FuncRef|.
 "         see compiler/BTW/cmake.vim
 "       * BTW_adjust_efm_{filer} may be a dictionary 
-"         {"value": string, "post": FuncRef} to support post-treatements on &efm
+"         {"value": string, "post": FuncRef} to support post-treatments on &efm
 "         value.  see compiler/BTW/cmake.vim
 "
 " TODO:                                  {{{2

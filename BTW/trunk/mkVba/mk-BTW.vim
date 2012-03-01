@@ -7,28 +7,36 @@
 " Created:	06th Nov 2007
 " Last Update:	$Date$
 "------------------------------------------------------------------------
+let s:version = '0.0.14'
+let s:project = 'lh-BTW'
 cd <sfile>:p:h
-15,$MkVimball! lh-BTW
-set modifiable
-set buftype=
+try 
+  let save_rtp = &rtp
+  let &rtp = expand('<sfile>:p:h:h').','.&rtp
+  exe '23,$MkVimball! '.s:project.'-'.s:version
+  set modifiable
+  set buftype=
+finally
+  let &rtp = save_rtp
+endtry
 finish
-plugin/BuildToolsWrapper.vim
-doc/BuildToolsWrapper.txt
+compiler/BTW/STLFilt.vim
+compiler/BTW/SunSWProLinkIsError.pl
+compiler/BTW/SunSWProLinkIsError.vim
+compiler/BTW/TreeProject.vim
 compiler/BTW/aap.vim
+compiler/BTW/ant.pl
+compiler/BTW/ant.vim
 compiler/BTW/cmake.vim
 compiler/BTW/cygwin.pl
 compiler/BTW/cygwin.vim
 compiler/BTW/gcc.pl
 compiler/BTW/gcc.vim
 compiler/BTW/gmake.vim
-compiler/BTW/test.sh
-compiler/BTW/syntax/cc.vim
-compiler/BTW/STLFilt.vim
 compiler/BTW/make.vim
-compiler/BTW/SunSWProLinkIsError.pl
-compiler/BTW/TreeProject.vim
-compiler/BTW/run_in_background.pl
-compiler/BTW/ant.pl
-compiler/BTW/ant.vim
-compiler/BTW/SunSWProLinkIsError.vim
 compiler/BTW/run_and_recontact_vim.pl
+compiler/BTW/run_in_background.pl
+compiler/BTW/syntax/cc.vim
+doc/BuildToolsWrapper.txt
+lh-build-tools-wrapper-addon-info.txt
+plugin/BuildToolsWrapper.vim
