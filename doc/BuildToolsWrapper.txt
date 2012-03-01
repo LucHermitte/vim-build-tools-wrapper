@@ -1,9 +1,9 @@
 *BuildToolsWrapper.txt*	Projects building plugin
-			For Vim version 6.x.	Last change: 04th May 2006
+			For Vim version 7.x.	Last change: 01st Mar 2012
 
 
 		BuildToolsWrapper Plugin MANUAL	  By Luc Hermitte
-			version 0.0.7		  <hermitte {at} free {dot} fr>
+			version 0.0.14		  <hermitte {at} free {dot} fr>
 
 
 ------------------------------------------------------------------------------
@@ -187,9 +187,13 @@ Many things can be done in these filter-plugin, however, BuildToolsWrapper waits
 for two (optional) settings:
 - *[bg]:BTW_filter_program_{tool}* 
   It could be any external program: a perl script with its arguments, a
-  call to make after having changed the current directory, ...
+  call to make after having changed the current directory, ..., or even a
+  |FuncRef| (see compiler/BTW/cmake.vim)
 - *g:BTW_adjust_efm_{tool}*
   This is used to define the 'errorformat' for the quick-fix window.
+  In order to support post-treatments on &efm value, this variable can be a
+  |Dictionary| of the form: >
+    {"value": string, "post": FuncRef}
 
 
 Note: there are a few variables you will see from Vim. However, do not
@@ -297,7 +301,7 @@ External requirements~
 
 BTW depends on the following plugins, with which it is "shipped":
 - |system_utils|
-- |LHOptions|
+- |lh-vim-lib|
 - |searchInRuntime|
 
 A few other scripts of mine will be useful with BTW.
@@ -316,9 +320,10 @@ TODO list~
 - Find better names / terminology ; 
 - Support for folding
 - Full detailled example tuned with local_vimrc
-- Filter-plugins for: STLFit, Doxygen, Boost.TestUnitFramework
+- Filter-plugins for: STLFit, Doxygen
+- Improve and document *QFImport* , *BTW_Compilation_dir* , "import:"
 
 ------------------------------------------------------------------------------
- © Luc Hermitte, 2004-2005, http://hermitte.free.fr/vim/
+ © Luc Hermitte, 2004-2012, http://code.google.com/p/lh-vim/
  VIM: let b:VS_language = 'american' 
  vim:ts=8:sw=4:tw=80:fo=tcq2:isk=!-~,^*,^\|,^\":ft=help:
