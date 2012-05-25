@@ -1,10 +1,11 @@
 "=============================================================================
 " $Id$
-" File:		BuildToolsWrapper.vim         {{{1
+" File:		plugin/BuildToolsWrapper.vim         {{{1
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://code.google.com/p/lh-vim/>
-" Last Update:	01st Mar 2012
-" Version:	0.0.14
+" Licence:      GPLv3
+" Last Update:	13th Mar 2012
+" Version:	0.1.0
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -12,7 +13,7 @@
 "------------------------------------------------------------------------
 " Installation:
 "	Drop this plugin into {rtp}/plugin/
-"	Requires: lh-vim-lib, also available on my web site
+"	Requires: lh-vim-lib, System_utils, also available on my web site
 "	Other Recommended Scripts: menu-maps.vim, local_vimrc.vim
 "
 " History:                               {{{2
@@ -114,6 +115,11 @@
 "       * BTW_adjust_efm_{filer} may be a dictionary 
 "         {"value": string, "post": FuncRef} to support post-treatments on &efm
 "         value.  see compiler/BTW/cmake.vim
+" v0.1.0: 13th Mar 2012
+"       * "configure" while the type is "cmake" correctly runs cmake-gui on
+"         windows boxes
+"       * :Execute works under windows
+"       * Try to use lh-compl-hints if installed
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -154,6 +160,9 @@ if exists("g:loaded_BuildToolsWrapper")
   finish
 endif
 let g:loaded_BuildToolsWrapper = 1
+
+" Dependencies                         {{{1
+runtime plugin/compil-hints.vim
 
 " Options                              {{{1
 let s:key_make    = lh#option#get('BTW_key_make'   , '<F7>')
@@ -687,6 +696,9 @@ function! s:Compile(...)
   let bg = s:DoRunAndCaptureOutput(&makeprg, rule)
   if !bg
     echomsg "Compilation finished".(len(rule)?" (".rule.")" : "")
+    if exists(':CompilHintsUpdate')
+      :CompilHintsUpdate
+    endif
   endif
 endfunction
 
@@ -789,6 +801,9 @@ function! s:CopenBG(errorfile,...)
   echohl WarningMsg
   echo "Build complete!"
   echohl None
+  if exists(':CompilHintsUpdate')
+    :CompilHintsUpdate
+  endif
 endfunction
 
 " Function: s:ToggleMakeInBG()       {{{3
@@ -840,11 +855,11 @@ function! s:Execute()
     endif
     call s:DoRunAndCaptureOutput(makeprg, path.rule)
   else
-    if (SystemDetected() == 'unix') && (path[0]!='/') && (path!~'cd')
+    if (SystemDetected() == 'unix') && (path[0]!='/') && (path!~'[a-zA-Z]:[/\\]') && (path!~'cd')
       " todo, check executable(split(path)[0])
       let path = './' . path
     endif
-    exe ':!'.path . s:ext . ' ' .lh#option#get('BTW_run_parameters','')
+    exe ':!'.FixPathName(path . s:ext) . ' ' .lh#option#get('BTW_run_parameters','')
   endif
 endfunction
 
@@ -865,7 +880,17 @@ function! s:Config()
     call lh#buffer#jump(wd.'/'.file)
   elseif how.type == 'ccmake'
     let wd = s:Evaluate(how.wd)
-    let prg = 'xterm -e "cd '.wd.' ; ccmake '.(how.arg).'"'
+    if has('windows')
+      " - the first ":!start" runs a windows command
+      " - "cmd /c" is used to define the second "start" command (see "start /?")
+      " - the second "start" is used to set the current directory and run the
+      " execution.
+      let prg = 'start /b cmd /c start /D '.FixPathName(wd, 0, '"')
+            \.' /B cmake-gui '.FixPathName(how.arg, 0, '"')
+    else
+      let prg = 'xterm -e "cd '.wd.' ; ccmake '.(how.arg).'"'
+    endif
+    let g:prg = prg
     exe ':!'.prg
   endif
 endfunction
