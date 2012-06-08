@@ -120,6 +120,8 @@
 "         windows boxes
 "       * :Execute works under windows
 "       * Try to use lh-compl-hints if installed
+" v0.1.1: 08th Jun 2012
+"       * running "configure" didn't detect non-Windows correctly
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -880,7 +882,7 @@ function! s:Config()
     call lh#buffer#jump(wd.'/'.file)
   elseif how.type == 'ccmake'
     let wd = s:Evaluate(how.wd)
-    if has('windows')
+    if lh#system#OnDOSWindows()
       " - the first ":!start" runs a windows command
       " - "cmd /c" is used to define the second "start" command (see "start /?")
       " - the second "start" is used to set the current directory and run the
@@ -888,10 +890,13 @@ function! s:Config()
       let prg = 'start /b cmd /c start /D '.FixPathName(wd, 0, '"')
             \.' /B cmake-gui '.FixPathName(how.arg, 0, '"')
     else
-      let prg = 'xterm -e "cd '.wd.' ; ccmake '.(how.arg).'"'
+      " let's suppose no spaces are used
+      " let prg = 'xterm -e "cd '.wd.' ; ccmake '.(how.arg).'"'
+      let prg = 'cd '.wd.' ; cmake-gui '.(how.arg).'&'
     endif
     let g:prg = prg
-    exe ':!'.prg
+    echo ":!".prg
+    exe ':silent !'.prg
   endif
 endfunction
 
