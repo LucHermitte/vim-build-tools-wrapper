@@ -53,10 +53,12 @@ if !exists("g:loaded_make_vim")
 
 " c- default value for 'efm'           {{{2
 function! s:Reset_efm()
-  let g:BTW_adjust_efm_make =
-	\ 'default efm'
-	\ . ',' .
-	\ "%DEntering directory '%f',%XLeaving directory" 
+  if &efm !~ '%D[^,]*Entering directory'
+    let g:BTW_adjust_efm_make =
+          \ 'default efm'
+          \ . ',' .
+          \ "%DEntering directory '%f',%XLeaving directory" 
+  endif
 endfunction
 
 call s:Reset_efm()
