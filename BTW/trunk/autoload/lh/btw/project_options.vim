@@ -1,6 +1,6 @@
 "=============================================================================
 " $Id$
-" File:         autoload/lh/btw/project-options.vim               {{{1
+" File:         autoload/lh/btw/project_options.vim               {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
@@ -100,8 +100,8 @@ endif
 
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
-" # s:Hook() dict {{{2
-function! s:Hook() dict
+" # s:ToggleHook() dict {{{2
+function! s:ToggleHook() dict
   " First check whether the data has already been updated for the buffer
   " considered
   let bid = bufnr('%')
@@ -120,6 +120,29 @@ function! s:Hook() dict
   bufdo call s:Update(self)
   q
   let self._previous[bid] = self.idx_crt_value
+endfunction
+
+" # s:StringHook() dict {{{2
+function! s:StringHook() dict
+  " First check whether the data has already been updated for the buffer
+  " considered
+  let bid = bufnr('%')
+  if !has_key(self, "_previous")
+    let self._previous = {}
+  endif
+  if !has_key(self._previous, bid)
+    let self._previous[bid] = -1
+  endif
+  let previous = self._previous[bid]
+  if exists(self.variable) && eval(self.variable) == previous
+    call s:Verbose("abort for buffer ".expand('%:p'))
+    return 
+  endif
+  new
+  bufdo call s:Update(self)
+  q
+  " Assert exists(self.variable)
+  let self._previous[bid] = eval(self.variable)
 endfunction
 
 " # s:Update(dict) {{{2
@@ -152,10 +175,26 @@ function! lh#btw#project_options#add_toggle_option(menu)
   else
     let s:menus[a:menu.variable] = a:menu
     let menu = s:menus[a:menu.variable]
-    let menu.hook = function(s:getSNR().'Hook')
+    let menu.hook = function(s:getSNR().'ToggleHook')
   endif
   call lh#menu#def_toggle_item(menu)
-  " echomsg "now calling hook!"
+  call menu.hook()
+  return menu
+endfunction
+
+" Function: lh#btw#project_options#add_string_option(menu) {{{2
+function! lh#btw#project_options#add_string_option(menu)
+  if has_key(s:menus, a:menu.variable)
+    " need to merge new info (i.e. everything but idx_crt_value)
+    let menu = s:menus[a:menu.variable]
+    let menu.values = a:menu.values
+    let menu.menu = a:menu.menu
+  else
+    let s:menus[a:menu.variable] = a:menu
+    let menu = s:menus[a:menu.variable]
+    let menu.hook = function(s:getSNR().'StringHook')
+  endif
+  call lh#menu#def_string_item(menu)
   call menu.hook()
   return menu
 endfunction
