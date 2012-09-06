@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	13th Mar 2012
-" Version:	0.1.0
+" Version:	0.2.0
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -122,6 +122,8 @@
 "       * Try to use lh-compl-hints if installed
 " v0.1.1: 08th Jun 2012
 "       * running "configure" didn't detect non-Windows correctly
+" v0.2.0: 06th Sep 2012
+"       * API to help define project options
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -840,23 +842,33 @@ function! s:Execute()
   let path = s:Executable()
   if type(path) == type({})
     " Assert(path.type == 'make')
+    " Extract environment variables.
     let ctx=''
     for [k,v] in items(path)
       if k[0] == '$'
 	let ctx .= k[1:].'='.v.' '
       endif
     endfor
-    let makeprg = &makeprg
-    if !empty(ctx)
-      let p = matchend(makeprg, '.*;')
-      if -1 == p
-	let makeprg = ctx.makeprg
-      else
-	let makeprg = makeprg[ : (p-1)].ctx.makeprg[p : ]
+    " Execute the command
+    if path.type =~ 'make\|ctest'
+      let makeprg = &makeprg
+      if path.type == 'ctest'
+        let makeprg = substitute(&makeprg, '\<make\>', 'ctest', '')
       endif
+      if !empty(ctx)
+        let p = matchend(makeprg, '.*;')
+        if -1 == p
+          let makeprg = ctx.makeprg
+        else
+          " several commands => inject the variables on the last command
+          let makeprg = makeprg[ : (p-1)].ctx.makeprg[p : ]
+        endif
+      endif
+      call s:DoRunAndCaptureOutput(makeprg, path.rule)
+    else
+      call lh#common#error_msg( "BTW: unexpected type (".(path.type).") for the command to run")
     endif
-    call s:DoRunAndCaptureOutput(makeprg, path.rule)
-  else
+  else " normal case: string = command to execute
     if (SystemDetected() == 'unix') && (path[0]!='/') && (path!~'[a-zA-Z]:[/\\]') && (path!~'cd')
       " todo, check executable(split(path)[0])
       let path = './' . path

@@ -26,8 +26,8 @@
 
 "=============================================================================
 " Avoid global reinclusion {{{1
-if exists("g:loaded_BTW_STLFilt_vim") 
-      \ && !exists('g:force_reload_BTW_STLFilt_vim')
+if exists("g:loaded_BTW_STLFilt") 
+      \ && !exists('g:force_reload_BTW_STLFilt')
   finish 
 endif
 let g:loaded_BTW_STLFilt_vim = 1
@@ -38,9 +38,9 @@ set cpo&vim
 " Functions {{{1
 
 " let g:BTW_filter_program_STLFilt = 'dmSTLFilt.pl -width:0'
-let g:BTW_filter_program_STLFilt = 'dmSTLFilt.pl -width:0 -path:l'
-" let s:path = findfile('gSTLfilt.pl', $PATH) 
-" let g:BTW_filter_program_STLFilt = 'perl '.s:path.'-width:0'
+" let g:BTW_filter_program_STLFilt = 'dmSTLFilt.pl -width:0 -path:l'
+let s:path = findfile('gSTLFilt.pl', substitute($PATH, ':', ',', 'g')) " *nix only
+let g:BTW_filter_program_STLFilt = 'perl '.s:path.' -width:0'
 
 " Functions }}}1
 "------------------------------------------------------------------------
