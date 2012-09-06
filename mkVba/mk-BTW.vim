@@ -3,7 +3,7 @@
 " File:		mk-BTW.vim
 " Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://hermitte.free.fr/vim/>
-" Version:	0.0.14
+" Version:	0.2.0
 " Created:	06th Nov 2007
 " Last Update:	$Date$
 "------------------------------------------------------------------------
@@ -20,6 +20,7 @@ finally
   let &rtp = save_rtp
 endtry
 finish
+autoload/lh/btw/project_options.vim
 compiler/BTW/STLFilt.vim
 compiler/BTW/SunSWProLinkIsError.pl
 compiler/BTW/SunSWProLinkIsError.vim
