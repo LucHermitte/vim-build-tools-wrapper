@@ -100,8 +100,8 @@ endif
 
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
-" # s:ToggleHook() dict {{{2
-function! s:ToggleHook() dict
+" # s:Hook() dict {{{2
+function! s:Hook() dict
   " First check whether the data has already been updated for the buffer
   " considered
   let bid = bufnr('%')
@@ -112,37 +112,16 @@ function! s:ToggleHook() dict
     let self._previous[bid] = -1
   endif
   let previous = self._previous[bid]
-  if self.idx_crt_value == previous
+  let crt_value = self.val_id()
+  if crt_value == previous
     call s:Verbose("abort for buffer ".expand('%:p'))
     return 
   endif
   new
-  bufdo call s:Update(self)
-  q
-  let self._previous[bid] = self.idx_crt_value
-endfunction
-
-" # s:StringHook() dict {{{2
-function! s:StringHook() dict
-  " First check whether the data has already been updated for the buffer
-  " considered
-  let bid = bufnr('%')
-  if !has_key(self, "_previous")
-    let self._previous = {}
-  endif
-  if !has_key(self._previous, bid)
-    let self._previous[bid] = -1
-  endif
-  let previous = self._previous[bid]
-  if exists(self.variable) && eval(self.variable) == previous
-    call s:Verbose("abort for buffer ".expand('%:p'))
-    return 
-  endif
-  new
-  bufdo call s:Update(self)
+  silent bufdo call s:Update(self)
   q
   " Assert exists(self.variable)
-  let self._previous[bid] = eval(self.variable)
+  let self._previous[bid] = crt_value
 endfunction
 
 " # s:Update(dict) {{{2
@@ -151,16 +130,16 @@ function! s:Update(dict)
   if !empty(p) && stridx(p, a:dict._root) == 0
     call a:dict.do_update()
     let bid = bufnr('%')
-    let a:dict._previous[bid] = a:dict.idx_crt_value
+    let a:dict._previous[bid] = a:dict.val_id()
   endif
 endfunction
 
 " # s:getSNR() {{{2
-function! s:getSNR()
+function! s:getSNR(...)
   if !exists("s:SNR")
     let s:SNR=matchstr(expand('<sfile>'), '<SNR>\d\+_\zegetSNR$')
   endif
-  return s:SNR 
+  return s:SNR . (a:0>0 ? (a:1) : '')
 endfunction
 
 "------------------------------------------------------------------------
@@ -175,7 +154,7 @@ function! lh#btw#project_options#add_toggle_option(menu)
   else
     let s:menus[a:menu.variable] = a:menu
     let menu = s:menus[a:menu.variable]
-    let menu.hook = function(s:getSNR().'ToggleHook')
+    let menu.hook = function(s:getSNR().'Hook')
   endif
   call lh#menu#def_toggle_item(menu)
   call menu.hook()
@@ -192,7 +171,7 @@ function! lh#btw#project_options#add_string_option(menu)
   else
     let s:menus[a:menu.variable] = a:menu
     let menu = s:menus[a:menu.variable]
-    let menu.hook = function(s:getSNR().'StringHook')
+    let menu.hook = function(s:getSNR().'Hook')
   endif
   call lh#menu#def_string_item(menu)
   call menu.hook()
