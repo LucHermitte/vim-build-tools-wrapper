@@ -154,7 +154,7 @@ function! lh#btw#project_options#add_toggle_option(menu)
   else
     let s:menus[a:menu.variable] = a:menu
     let menu = s:menus[a:menu.variable]
-    let menu.hook = function(s:getSNR().'Hook')
+    let menu.hook = function(s:getSNR('Hook'))
   endif
   call lh#menu#def_toggle_item(menu)
   call menu.hook()
@@ -171,7 +171,7 @@ function! lh#btw#project_options#add_string_option(menu)
   else
     let s:menus[a:menu.variable] = a:menu
     let menu = s:menus[a:menu.variable]
-    let menu.hook = function(s:getSNR().'Hook')
+    let menu.hook = function(s:getSNR('Hook'))
   endif
   call lh#menu#def_string_item(menu)
   call menu.hook()
