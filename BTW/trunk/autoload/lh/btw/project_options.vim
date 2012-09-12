@@ -4,7 +4,7 @@
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
-" Version:	0.2.0
+" Version:	0.2.1
 " Created:      06th Sep 2012
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -64,7 +64,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 1
+let s:k_version = 021
 function! lh#btw#project_options#version()
   return s:k_version
 endfunction

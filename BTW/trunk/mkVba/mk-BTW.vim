@@ -3,11 +3,11 @@
 " File:		mk-BTW.vim
 " Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://hermitte.free.fr/vim/>
-" Version:	0.2.0
+" Version:	0.2.1
 " Created:	06th Nov 2007
 " Last Update:	$Date$
 "------------------------------------------------------------------------
-let s:version = '0.0.14'
+let s:version = '0.2.1'
 let s:project = 'lh-BTW'
 cd <sfile>:p:h
 try 
@@ -21,6 +21,7 @@ finally
 endtry
 finish
 autoload/lh/btw/project_options.vim
+autoload/lh/btw/cmake.vim
 compiler/BTW/STLFilt.vim
 compiler/BTW/SunSWProLinkIsError.pl
 compiler/BTW/SunSWProLinkIsError.vim

@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	13th Mar 2012
-" Version:	0.2.0
+" Version:	0.2.1
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -124,6 +124,8 @@
 "       * running "configure" didn't detect non-Windows correctly
 " v0.2.0: 06th Sep 2012
 "       * API to help define project options
+" v0.2.1: 12th Sep 2012
+"       * API to help define CMake/CTest-based project options 
 "
 " TODO:                                  {{{2
 "	* &magic
