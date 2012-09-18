@@ -83,6 +83,8 @@ function! lh#btw#cmake#def_options(config, options)
           \ '_project': a:config._project
           \ }
     call lh#btw#cmake#{option}(menu_def)
+    " save the menu in order to make hooks and other stuff accessible
+    let a:config[option] = menu_def
   endfor
 endfunction
 
