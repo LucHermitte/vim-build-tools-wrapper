@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	13th Mar 2012
-" Version:	0.2.1
+" Version:	0.2.2
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -126,6 +126,9 @@
 "       * API to help define project options
 " v0.2.1: 12th Sep 2012
 "       * API to help define CMake/CTest-based project options 
+" v0.2.2: 18th Sep 2012
+"       * CTest outputs are fixed so filenames are correctly recognized
+"       * CTest outputs are folded
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -165,7 +168,7 @@ if exists("g:loaded_BuildToolsWrapper")
   let &cpo=s:cpo_save
   finish
 endif
-let g:loaded_BuildToolsWrapper = 1
+let g:loaded_BuildToolsWrapper = 022
 
 " Dependencies                         {{{1
 runtime plugin/compil-hints.vim
@@ -286,7 +289,7 @@ let s:sfile = expand('<sfile>:p')
 " Build Chain:                           {{{2
 
 " Constants {{{3
-let s:commands="set\nsetlocal\nadd\naddlocal\nremove\nremovelocal\nrebuild\necho\nreloadPlugin\n?\nhelp"
+let s:commands="set\nsetlocal\nadd\naddlocal\nremove\nremovelocal\nrebuild\necho\ndebug\nreloadPlugin\n?\nhelp"
 let s:functions="ToolsChain()\nHasFilterGuessScope(\nHasFilter(\nFindFilter("
 let s:functions=s:functions. "\nProjectName()\nTargetRule()\nExecutable()"
 let s:variables="commands\nfunctions\nvariables"
@@ -313,7 +316,7 @@ function! BTWComplete(ArgLead, CmdLine, CursorPos)
     return s:commands
   elseif 3 == pos
     " Second argument: first arg of the command
-    if     -1 != match(a:CmdLine, '^BTW\s\+echo')
+    if     -1 != match(a:CmdLine, '^BTW\s\+\%(echo\|debug\)')
       return s:functions . "\n" . s:variables
     elseif -1 != match(a:CmdLine, '^BTW\s\+\%(help\|?\)')
     elseif -1 != match(a:CmdLine, '^BTW\s\+\%(set\|add\)\%(local\)\=')
@@ -354,6 +357,7 @@ if !exists('g:BTW_BTW_in_use')
     elseif 'removelocal'  == a:command | call s:RemoveFilter('b', a:1)
     elseif 'rebuild'      == a:command " wait for s:ReconstructToolsChain()
     elseif 'echo'         == a:command | exe "echo s:".a:1
+    elseif 'debug'        == a:command | exe "debug echo s:".a:1
       " echo s:{a:f1} ## don't support «echo s:f('foo')»
     elseif 'reloadPlugin' == a:command
       let g:force_reload_BuildToolsWrapper = 1
@@ -856,6 +860,7 @@ function! s:Execute()
       let makeprg = &makeprg
       if path.type == 'ctest'
         let makeprg = substitute(&makeprg, '\<make\>', 'ctest', '')
+        call s:RegisterFixCTest()
       endif
       if !empty(ctx)
         let p = matchend(makeprg, '.*;')
@@ -954,6 +959,113 @@ function! s:AddLetModeline()
   endif
 endfunction
 
+" Function: s:RegisterFixCTest()     {{{3
+" When working with CTest, we need to:
+" - translate the name of the files in error from "{test-number}: file:line:
+"   message"
+" and we can fold the messages from each test.
+" @todo move to autoload plugin
+function! s:RegisterFixCTest()
+ augroup CTestPostExecHook
+  au!
+  au QuickFixCmdPost make call s:FixCTestOutput() 
+  au FileType        qf   call s:QuickFixDefFolds()
+augroup END
+endfunction
+
+" Function: s:FixCTestOutput()       {{{3
+" Parse CTest output to fix filenames, and extract forlding information
+function! s:FixCTestOutput()
+  " echomsg "parse CTest output"
+  let qf_changed = 0
+  let qflist = getqflist()
+  let s:qf_folds = {-1: {}}
+  let line_nr = 1
+  let test_nr = -1
+  let test_name = ''
+  for qf in qflist
+    let qft = qf.text
+    " echo '===<'.qft.'>==='
+    if      qft =~ '^test \d\+\s*$'
+      " Test start line
+      let test_nr = matchstr(qft, '^test \zs\d\+\ze\s*$')
+      " assert(!has_key(qf_folds, test_nr))
+      let s:qf_folds[test_nr] = {'begin': line_nr}
+      let s:qf_folds[-1][line_nr] = test_nr
+    elseif qft =~ '^\d\+/\d\+ Test #\d\+:'
+      " Test end line
+      let test_nr = matchstr(qft, '^\d\+/\d\+ Test #\zs\d\+\ze:')
+      let test_success = matchstr(qft,  '^\d\+/\d\+ Test #\d\+:\s\+'.test_name.' \.\+\s*\zs\S\+')
+      let g:qft = qft
+      let s:qf_folds[test_nr].end = line_nr
+      let s:qf_folds[test_nr].complement = test_success
+      let test_nr = -1
+      let test_name = ''
+    elseif qft =~ '^\s*Start \d\+: '
+      let test_nr = matchstr(qft,  '^\s*Start \zs\d\+\ze:')
+      if !has_key(s:qf_folds, test_nr)
+        let s:qf_folds[test_nr] = {'begin': line_nr}
+        let s:qf_folds[-1][line_nr] = test_nr
+      endif
+      let test_name = matchstr(qft, '^\s*Start '.test_nr.': \zs\S\+\ze\s*$')
+    elseif qf.bufnr != 0
+      let b_name = bufname(qf.bufnr)
+      let update_bufnr = 0
+      if b_name =~ '^'.test_nr.': ' " CTest messing with errors
+        let b_name = b_name[len(test_nr.': '):]
+        let update_bufnr = 1
+        "   echomsg test_nr .' -> '. b_name
+        " else
+        "   echomsg test_nr .' != '. b_name
+      endif
+      if b_name =~ '^\S\+\s\+\S\+$' && qf.text =~ '\c.*Assertion.*'
+        let b_name = matchstr(b_name, '^\S\+\s\+\zs.*')
+        let update_bufnr = 1
+      endif
+      if update_bufnr
+        " let msg = qf.bufnr . ' -> '
+        let qf.bufnr = lh#buffer#get_nr(b_name)
+        " let msg.= qf.bufnr . ' ('.b_name.')'
+        " echomsg msg
+        let qf_changed = 1
+      endif
+    endif
+    let line_nr += 1
+  endfor
+  if qf_changed
+    call setqflist(qflist)
+  endif
+endfunction
+
+" Function: s:QuickFixDefFolds()     {{{3
+" Defines folds for each test
+" @param[in] s:qf_folds
+function! s:QuickFixDefFolds()
+  if !exists('s:qf_folds') | return | endif
+  for [t, pos] in items(s:qf_folds)
+    if t != -1
+      " echomsg t.' -> '.string(pos)
+      exe pos.begin
+      normal! V
+      exe pos.end
+      normal! zf
+    endif
+  endfor
+  setlocal foldtext=BTWQFFoldText()
+endfunction
+
+" Function: BTWQFFoldText()          {{{3
+" Defines foldtext for each fold built from s:qf_folds
+" @param[in] s:qf_folds
+function! BTWQFFoldText()
+  let test_nr = s:qf_folds[-1][v:foldstart]
+  if !has_key(s:qf_folds[test_nr], 'complement') | return | endif
+  let t = foldtext()
+  let l = (4 - len(test_nr))
+  let t.= repeat(' ', l)
+  let t.= s:qf_folds[test_nr].complement
+  return t
+endfunction
 
 " Quickfix auto import:                  {{{2
 " Some variables need to be imported automatically into quickfix buffer
