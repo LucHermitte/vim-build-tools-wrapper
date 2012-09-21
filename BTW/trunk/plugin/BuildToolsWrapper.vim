@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	13th Mar 2012
-" Version:	0.2.2
+" Version:	0.2.3
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -129,6 +129,8 @@
 " v0.2.2: 18th Sep 2012
 "       * CTest outputs are fixed so filenames are correctly recognized
 "       * CTest outputs are folded
+" v0.2.3: 21st Sep 2012
+"       * bug fix: unable to fold CTest tests when test number > 9
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -164,9 +166,12 @@ let s:cpo_save=&cpo
 set cpo&vim
 
 if exists("g:loaded_BuildToolsWrapper")
-      \ && !exists('g:force_reload_BuildToolsWrapper')
-  let &cpo=s:cpo_save
-  finish
+  if !exists('g:force_reload_BuildToolsWrapper') 
+    let &cpo=s:cpo_save
+    finish
+  else
+    echomsg "Reloading ".expand('<sfile>')
+  endif
 endif
 let g:loaded_BuildToolsWrapper = 022
 
@@ -992,41 +997,41 @@ function! s:FixCTestOutput()
       " assert(!has_key(qf_folds, test_nr))
       let s:qf_folds[test_nr] = {'begin': line_nr}
       let s:qf_folds[-1][line_nr] = test_nr
-    elseif qft =~ '^\d\+/\d\+ Test #\d\+:'
+    elseif qft =~ '^\s*\d\+/\d\+ Test\s\+#\d\+:'
       " Test end line
-      let test_nr = matchstr(qft, '^\d\+/\d\+ Test #\zs\d\+\ze:')
-      let test_success = matchstr(qft,  '^\d\+/\d\+ Test #\d\+:\s\+'.test_name.' \.\+\s*\zs\S\+')
+      let test_nr = matchstr(qft, '^\s*\d\+/\d\+ Test\s\+#\zs\d\+\ze:')
+      let test_success = matchstr(qft,  '^\s*\d\+/\d\+ Test\s\+#\d\+:\s\+'.test_name.' \.\+\s*\zs\S\+')
       let g:qft = qft
       let s:qf_folds[test_nr].end = line_nr
       let s:qf_folds[test_nr].complement = test_success
       let test_nr = -1
       let test_name = ''
-    elseif qft =~ '^\s*Start \d\+: '
-      let test_nr = matchstr(qft,  '^\s*Start \zs\d\+\ze:')
+    elseif qft =~ '^\s*Start\s\+\d\+: '
+      let test_nr = matchstr(qft,  '^\s*Start\s\+\zs\d\+\ze:')
       if !has_key(s:qf_folds, test_nr)
         let s:qf_folds[test_nr] = {'begin': line_nr}
         let s:qf_folds[-1][line_nr] = test_nr
       endif
-      let test_name = matchstr(qft, '^\s*Start '.test_nr.': \zs\S\+\ze\s*$')
+      let test_name = matchstr(qft, '^\s*Start\s\+'.test_nr.': \zs\S\+\ze\s*$')
     elseif qf.bufnr != 0
       let b_name = bufname(qf.bufnr)
       let update_bufnr = 0
       if b_name =~ '^'.test_nr.': ' " CTest messing with errors
         let b_name = b_name[len(test_nr.': '):]
         let update_bufnr = 1
-        "   echomsg test_nr .' -> '. b_name
+          " echomsg test_nr .' -> '. b_name
         " else
-        "   echomsg test_nr .' != '. b_name
+          " echomsg test_nr .' != '. b_name
       endif
       if b_name =~ '^\S\+\s\+\S\+$' && qf.text =~ '\c.*Assertion.*'
         let b_name = matchstr(b_name, '^\S\+\s\+\zs.*')
         let update_bufnr = 1
       endif
       if update_bufnr
-        " let msg = qf.bufnr . ' -> '
+        let msg = qf.bufnr . ' -> '
         let qf.bufnr = lh#buffer#get_nr(b_name)
-        " let msg.= qf.bufnr . ' ('.b_name.')'
-        " echomsg msg
+        let msg.= qf.bufnr . ' ('.b_name.')'
+        echomsg msg
         let qf_changed = 1
       endif
     endif
@@ -1045,10 +1050,14 @@ function! s:QuickFixDefFolds()
   for [t, pos] in items(s:qf_folds)
     if t != -1
       " echomsg t.' -> '.string(pos)
-      exe pos.begin
-      normal! V
-      exe pos.end
-      normal! zf
+      if has_key(pos, 'begin') && has_key(pos, 'end')
+        exe pos.begin
+        normal! V
+        exe pos.end
+        normal! zf
+      else
+        echomsg "Missing " .(has_key(pos, 'begin') ? "" : "-start-").(has_key(pos, 'end') ? "" : "-end-")." fold for test #".t
+      endif
     endif
   endfor
   setlocal foldtext=BTWQFFoldText()
