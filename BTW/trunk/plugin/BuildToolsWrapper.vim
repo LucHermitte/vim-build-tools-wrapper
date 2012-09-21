@@ -131,6 +131,7 @@
 "       * CTest outputs are folded
 " v0.2.3: 21st Sep 2012
 "       * bug fix: unable to fold CTest tests when test number > 9
+"       * using "normal V" to create fold has memory side effect
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -1051,10 +1052,10 @@ function! s:QuickFixDefFolds()
     if t != -1
       " echomsg t.' -> '.string(pos)
       if has_key(pos, 'begin') && has_key(pos, 'end')
-        exe pos.begin
-        normal! V
-        exe pos.end
-        normal! zf
+        exe (pos.begin).','.(pos.end).'fold'
+        " normal! V
+        " exe pos.end
+        " normal! zf
       else
         echomsg "Missing " .(has_key(pos, 'begin') ? "" : "-start-").(has_key(pos, 'end') ? "" : "-end-")." fold for test #".t
       endif
