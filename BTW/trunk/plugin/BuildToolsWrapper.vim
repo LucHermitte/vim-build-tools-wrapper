@@ -1053,9 +1053,6 @@ function! s:QuickFixDefFolds()
       " echomsg t.' -> '.string(pos)
       if has_key(pos, 'begin') && has_key(pos, 'end')
         exe (pos.begin).','.(pos.end).'fold'
-        " normal! V
-        " exe pos.end
-        " normal! zf
       else
         echomsg "Missing " .(has_key(pos, 'begin') ? "" : "-start-").(has_key(pos, 'end') ? "" : "-end-")." fold for test #".t
       endif
