@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	13th Mar 2012
-" Version:	0.2.3
+" Version:	0.2.4
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -133,6 +133,9 @@
 "       * bug fix: unable to fold CTest tests when test number > 9
 "       * using "normal V" to create fold has memory side effect
 "       * clean folds before entering QF windows through make
+" v0.2.4: 21st Sep 2012
+"       * List all (c)tests
+"       * first draft to execute selected test (buggged at this point)
 "
 " TODO:                                  {{{2
 "	* &magic

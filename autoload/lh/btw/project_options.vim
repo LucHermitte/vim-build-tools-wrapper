@@ -4,7 +4,7 @@
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
-" Version:	0.2.1
+" Version:	0.2.4
 " Created:      06th Sep 2012
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -64,7 +64,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 021
+let s:k_version = 024
 function! lh#btw#project_options#version()
   return s:k_version
 endfunction
@@ -128,7 +128,11 @@ endfunction
 function! s:Update(dict)
   let p = expand('%:p')
   if !empty(p) && stridx(p, a:dict._root) == 0
-    call a:dict.do_update()
+    if s:verbose
+      debug call a:dict.do_update()
+    else
+      call a:dict.do_update()
+    endif
     let bid = bufnr('%')
     let a:dict._previous[bid] = a:dict.val_id()
   endif
