@@ -3,7 +3,7 @@
 " File:		mk-BTW.vim
 " Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://hermitte.free.fr/vim/>
-" Version:	0.2.3
+" Version:	0.2.4
 " Created:	06th Nov 2007
 " Last Update:	$Date$
 "------------------------------------------------------------------------
