@@ -132,6 +132,7 @@
 " v0.2.3: 21st Sep 2012
 "       * bug fix: unable to fold CTest tests when test number > 9
 "       * using "normal V" to create fold has memory side effect
+"       * clean folds before entering QF windows through make
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -974,11 +975,20 @@ endfunction
 function! s:RegisterFixCTest()
  augroup CTestPostExecHook
   au!
+  " clean folding data before compiling
+  au QuickFixCmdPre  make call s:QuickFixCleanFolds()
   au QuickFixCmdPost make call s:FixCTestOutput() 
   au FileType        qf   call s:QuickFixDefFolds()
 augroup END
 endfunction
 
+" Function: s:QuickFixCleanFolds() {{{3
+function! s:QuickFixCleanFolds()
+  " echomsg "Clean QF folds"
+  let s:qf_folds = {}
+endfunction
+
+" Function: s:FixCTestOutput()       {{{3
 " Function: s:FixCTestOutput()       {{{3
 " Parse CTest output to fix filenames, and extract forlding information
 function! s:FixCTestOutput()
