@@ -3,7 +3,7 @@
 " File:         autoload/lh/btw/cmake.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
-" Version:      024
+" Version:      025
 " Created:      12th Sep 2012
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -46,7 +46,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 024
+let s:k_version = 025
 function! lh#btw#cmake#version()
   return s:k_version
 endfunction
@@ -164,7 +164,7 @@ function! lh#btw#cmake#def_ctest_targets(menu_def)
   " and lh#menu#def_toggle_item
   let a:menu_def.values        = ''
   " "variable" is a variable name, hence _project being a string
-  let a:menu_def.variable      = a:menu_def._project.'.tests.which_tests'
+  let a:menu_def.variable      = a:menu_def._project.'.tests.test_regex'
   let a:menu_def._root         = a:menu_def.project().paths.trunk
   let a:menu_def.menu.priority .= '30.20'
   let a:menu_def.menu.name     .= 'C&Test.&Target Test(s)'
@@ -242,28 +242,30 @@ function! lh#btw#cmake#update_list(menu_def)
     let menu.variable      = a:menu_def._project.'.tests.list.'.test
     let menu._root         = a:menu_def.project().paths.trunk
     let menu._testname     = test
+    let menu._testnr       = i
+    let menu.set_ctest_argument = function(s:getSNR('SetCTestArgument'))
     function! menu.do_update() dict
-      let which    = self.project().tests.which_tests
-      let l_tests=split(which, ',')
+      let l_tests = self.project().tests.active_list
       let updated = 0
       if self.val_id()
         " add test name
-        if match(l_tests, self._testname) < 0
+        if match(l_tests, self._testnr) < 0
           let updated = 1
-          let l_tests += [self._testname]
+          let l_tests += [self._testnr]
         endif
       else
         " remove test name
-        let idx = match(l_tests, self._testname)
+        let idx = match(l_tests, self._testnr)
         if idx >= 0
           let updated = 1
           call remove(l_tests, idx)
         endif
       endif
       if updated
-        let which = join(l_tests, ',')
-        exe ':Set '.(s:config.def_ctest_targets.command).' '.which
-        " call self.set_ctest_argument()
+        let project = self.project()
+        let g:self = self
+        let project.tests.active_list = l_tests
+        call self.set_ctest_argument()
       endif
     endfunction
     call lh#btw#project_options#add_toggle_option(menu)
@@ -297,13 +299,31 @@ function! s:SetProjectExecutable() dict
 endfunction
 
 " # s:SetCTestArgument() dict {{{2
+function! s:IndicesListToCTestIArgument(list)
+  " Converts the list of tests to run to a list that CTest will
+  " understand
+  " -> first test repeated, coma, then list of remaining tests
+  let list = sort(a:list)
+  let res = '-I '.list[0].','.list[0]
+  let remaining_tests = list[1:]
+  if !empty(remaining_tests)
+    let res .= ',,'.join(remaining_tests, ',')
+  endif
+  return res
+endfunction
 function! s:SetCTestArgument() dict
-    LetIfUndef b:BTW_project_executable.type 'ctest'
-    let which    = self.project().tests.which_tests
-    let checkmem = self.project().tests.checking_memory
-    let b:BTW_project_executable.rule = self.project().tests.verbosity
-          \ . (empty(which) ? ('') : (' -R '.which))
-          \ . (checkmem=='yes' ? (' -D ExperimentalMemCheck') : (''))
+  " -R have precedence over arguments to -I ; like with ctest
+  LetIfUndef b:BTW_project_executable.type 'ctest'
+  let test_regex  = self.project().tests.test_regex
+  let which       = self.project().tests.active_list
+  let checkmem    = self.project().tests.checking_memory
+  " call confirm('regex type: '.type(test_regex) . "\nwhich type: ".type(which), '&Ok', 1)
+  let b:BTW_project_executable.rule = self.project().tests.verbosity
+        \ . (checkmem=='yes' ? (' -D ExperimentalMemCheck') : (''))
+  let b:BTW_project_executable.rule
+        \ .= (! empty(test_regex)) ? (' -R '.test_regex)
+        \  : (! empty(which))      ? s:IndicesListToCTestIArgument(which)
+        \  : ''
 endfunction
 
 " }}}1

@@ -126,16 +126,21 @@ endfunction
 
 " # s:Update(dict) {{{2
 function! s:Update(dict)
-  let p = expand('%:p')
-  if !empty(p) && stridx(p, a:dict._root) == 0
-    if s:verbose
-      debug call a:dict.do_update()
-    else
-      call a:dict.do_update()
+  try 
+    let p = expand('%:p')
+    if !empty(p) && stridx(p, a:dict._root) == 0
+      if s:verbose
+        debug call a:dict.do_update()
+      else
+        call a:dict.do_update()
+      endif
+      let bid = bufnr('%')
+      let a:dict._previous[bid] = a:dict.val_id()
     endif
-    let bid = bufnr('%')
-    let a:dict._previous[bid] = a:dict.val_id()
-  endif
+  catch /.*/
+    let g:exception_data = a:dict
+    echoerr "Buffer ".bufnr('%').": Cannot update project option ".string(a:dict).': '.v:exception.' at '.v:throwpoint
+  endtry
 endfunction
 
 " # s:getSNR() {{{2
