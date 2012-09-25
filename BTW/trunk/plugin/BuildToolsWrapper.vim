@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	13th Mar 2012
-" Version:	0.2.4
+" Version:	0.2.5
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -136,6 +136,8 @@
 " v0.2.4: 21st Sep 2012
 "       * List all (c)tests
 "       * first draft to execute selected test (buggged at this point)
+" v0.2.5: 25th Sep 2012
+"       * Possible to execute selected (C)test
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -178,7 +180,7 @@ if exists("g:loaded_BuildToolsWrapper")
     echomsg "Reloading ".expand('<sfile>')
   endif
 endif
-let g:loaded_BuildToolsWrapper = 022
+let g:loaded_BuildToolsWrapper = 025
 
 " Dependencies                         {{{1
 runtime plugin/compil-hints.vim
