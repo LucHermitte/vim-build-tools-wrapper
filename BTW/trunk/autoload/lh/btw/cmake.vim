@@ -75,9 +75,34 @@ endfunction
 " {config} shall contain:
 " - menu.priority and menu.name
 " - _project settings
+"   - paths
+"     - trunk
+"     - project
+"     - doxyfile
+"     - sources
+"     - _build          // internal, points to the compilation dir used
+"                       // to set b:BTW_compilation_dir
+"   - build
+"     - Debug
+"     - Release
+"   - compilation (optional)
+"     - mode            'Debug' from ['Debug', 'Release'] " matches the subdirs from build/
+"   - tests (all optional)
+"     - verbosity       ''   from ['', '-V', '-VV']
+"     - checking_memory 'no' from ['no', 'yes']
+"     - test_regex      ''
+"     - active_list     []
 " {options} is the list of lh#btw#cmake functions to call
 function! lh#btw#cmake#def_options(config, options)
   let s:config = a:config " in case it is required to access other config stuff
+  " Set default values
+  call lh#let#if_undef('g:'.a:config._project.'.compilation.mode',      string('Release'))
+  call lh#let#if_undef('g:'.a:config._project.'.tests.checking_memory', string('no'))
+  call lh#let#if_undef('g:'.a:config._project.'.tests.checking_memory', string('no'))
+  call lh#let#if_undef('g:'.a:config._project.'.tests.test_regex',      string(''))
+  call lh#let#if_undef('g:'.a:config._project.'.tests.active_list',     string([]))
+
+  " Add all selected options to menu
   for option in a:options
     " deepcopy of menu, shallow copy of _project
     let menu_def = {
@@ -100,7 +125,6 @@ function! lh#btw#cmake#def_toggable_compil_mode(menu_def)
   endfunction
   " Automatically set variables for lh#btw#project_options#add_toggle_option,
   " and lh#menu#def_toggle_item
-  let a:menu_def.idx_crt_value = 0
   let a:menu_def.values        = ['Debug', 'Release']
   " "variable" is a variable name, hence _project being a string
   let a:menu_def.variable      = a:menu_def._project.'.compilation.mode'
@@ -134,10 +158,13 @@ function! lh#btw#cmake#def_toggable_ctest_verbosity(menu_def)
   endfunction
   " Automatically set variables for lh#btw#project_options#add_toggle_option,
   " and lh#menu#def_toggle_item
-  let a:menu_def.idx_crt_value = 0
   let a:menu_def.values        = ['', '-V', '-VV']
   " "variable" is a variable name, hence _project being a string
   let a:menu_def.variable      = a:menu_def._project.'.tests.verbosity'
+  let actual_variable_name = (a:menu_def.variable[0]=='$' ? '' : 'g:') . a:menu_def.variable
+  if !exists(actual_variable_name)
+    let a:menu_def.idx_crt_value = 0
+  endif
   let a:menu_def._root         = a:menu_def.project().paths.trunk
   let a:menu_def.menu.priority .= '30.10'
   let a:menu_def.menu.name     .= 'C&Test.&Verbosity'
@@ -289,8 +316,8 @@ function! s:UpdateCompilDir() dict
   " "let self.project().paths = value" is refused by viml interpreter => hence
   " the auxiliary reference
   let paths = self.project().paths
-  let paths.build = self.project().paths.project.'/'.self.project().build[self.project().compilation.mode]
-  let b:BTW_compilation_dir    = paths.build
+  let paths._build = self.project().paths.project.'/'.self.project().build[self.project().compilation.mode]
+  let b:BTW_compilation_dir    = paths._build
   " echoerr "Compiling ".expand('%')." in ".b:BTW_compilation_dir
 endfunction
 
@@ -304,13 +331,14 @@ function! s:IndicesListToCTestIArgument(list)
   " understand
   " -> first test repeated, coma, then list of remaining tests
   let list = sort(a:list)
-  let res = '-I '.list[0].','.list[0]
+  let res = ' -I '.list[0].','.list[0]
   let remaining_tests = list[1:]
   if !empty(remaining_tests)
     let res .= ',,'.join(remaining_tests, ',')
   endif
   return res
 endfunction
+
 function! s:SetCTestArgument() dict
   " -R have precedence over arguments to -I ; like with ctest
   LetIfUndef b:BTW_project_executable.type 'ctest'
