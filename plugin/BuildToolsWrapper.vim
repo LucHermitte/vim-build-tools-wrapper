@@ -138,6 +138,7 @@
 "       * first draft to execute selected test (buggged at this point)
 " v0.2.5: 25th Sep 2012
 "       * Possible to execute selected (C)test
+"       * Optional project configuration for btw/project_options
 "
 " TODO:                                  {{{2
 "	* &magic
