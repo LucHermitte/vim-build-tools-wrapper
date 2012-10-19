@@ -13,7 +13,6 @@
 "       $ ctest <build_dir>
 "
 " Options:
-"       [bg]:BTW_project_sources_dir
 "       [bg]:BTW_project_build_dir
 "       [bg]:BTW_project_build_mode
 " 

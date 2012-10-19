@@ -3,7 +3,7 @@
 " File:         autoload/lh/btw/cmake.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
-" Version:      025
+" Version:      026
 " Created:      12th Sep 2012
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -46,7 +46,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 025
+let s:k_version = 026
 function! lh#btw#cmake#version()
   return s:k_version
 endfunction
@@ -93,8 +93,11 @@ endfunction
 "     - test_regex      ''
 "     - active_list     []
 " {options} is the list of lh#btw#cmake functions to call
+if !exists('s:config')
+  let s:config = {}
+endif
 function! lh#btw#cmake#def_options(config, options)
-  let s:config = a:config " in case it is required to access other config stuff
+  let s:config[a:config._project] = a:config " in case it is required to access other config stuff
   " Set default values
   call lh#let#if_undef('g:'.a:config._project.'.compilation.mode',      string('Release'))
   call lh#let#if_undef('g:'.a:config._project.'.tests.checking_memory', string('no'))
@@ -109,9 +112,10 @@ function! lh#btw#cmake#def_options(config, options)
           \ 'menu': copy(a:config.menu),
           \ '_project': a:config._project
           \ }
-    call lh#btw#cmake#{option}(menu_def)
     " save the menu in order to make hooks and other stuff accessible
     let a:config[option] = menu_def
+    " execute the action to initialize everything
+    call lh#btw#cmake#{option}(menu_def)
   endfor
 endfunction
 
@@ -236,16 +240,22 @@ endfunction
 
 " Function: lh#btw#cmake#update_list(menu_def) {{{2
 function! lh#btw#cmake#update_list(menu_def)
-  function! a:menu_def.project() dict " dereference _project
-    return eval('g:'.self._project)
-  endfunction
+  if type(a:menu_def) == type({})
+    let proj_id = a:menu_def._project
+    function! a:menu_def.project() dict " dereference _project
+      return eval('g:'.self._project)
+    endfunction
+  else
+    let proj_id = a:menu_def
+  endif
+  let menu_def = s:config[proj_id].update_list
   let tests = lh#os#system('cd '.b:BTW_compilation_dir. ' && ctest -N')
-  let a:menu_def.menu.priority .= '30.900'
-  let a:menu_def.menu.name     .= 'C&Test.&List'
-  silent! exe 'aunmenu! '. a:menu_def.menu.name
-  exe "amenu ".(a:menu_def.menu.priority).'.89 '.(a:menu_def.menu.name).'.-<Sep>- Nop '
-  exe "amenu <silent> ".(a:menu_def.menu.priority).'.90 '.(a:menu_def.menu.name).'.&Update'
-        \ .' :call lh#btw#cmake#update_list('.string(a:menu_def).')<cr>'
+  let menu_def.menu.priority .= '30.900'
+  let menu_def.menu.name     .= 'C&Test.&List'
+  silent! exe 'aunmenu! '. menu_def.menu.name
+  exe "amenu ".(menu_def.menu.priority).'.89 '.(menu_def.menu.name).'.-<Sep>- Nop '
+  exe "amenu <silent> ".(menu_def.menu.priority).'.90 '.(menu_def.menu.name).'.&Update'
+        \ .' :call lh#btw#cmake#update_list('.string(menu_def._project).')<cr>'
 
   let l_tests = split(tests, "\n")
   call filter(l_tests, "v:val =~ 'Test\\s\\+#'")
@@ -253,11 +263,11 @@ function! lh#btw#cmake#update_list(menu_def)
   let i = 1
   for test in l_tests
     let menu = {
-          \ '_project': (a:menu_def._project),
-          \ 'project' : (a:menu_def.project),
+          \ '_project': (menu_def._project),
+          \ 'project' : (menu_def.project),
           \ 'menu'    : {
-          \              'priority': (a:menu_def.menu.priority).'.'.i,
-          \              'name'    : (a:menu_def.menu.name).'.'.test}
+          \              'priority': (menu_def.menu.priority).'.'.i,
+          \              'name'    : (menu_def.menu.name).'.'.test}
           \ }
     " function! menu.project() dict " dereference _project
       " return eval('g:'.self._project)
@@ -265,9 +275,9 @@ function! lh#btw#cmake#update_list(menu_def)
     let menu.idx_crt_value = 0
     let menu.values        = [0, 1]
     let menu.texts         = [' ', 'X']
-    call lh#let#if_undef('g:'.a:menu_def._project.'.tests.list.'.test, 0)
-    let menu.variable      = a:menu_def._project.'.tests.list.'.test
-    let menu._root         = a:menu_def.project().paths.trunk
+    call lh#let#if_undef('g:'.menu_def._project.'.tests.list.'.test, 0)
+    let menu.variable      = menu_def._project.'.tests.list.'.test
+    let menu._root         = menu_def.project().paths.trunk
     let menu._testname     = test
     let menu._testnr       = i
     let menu.set_ctest_argument = function(s:getSNR('SetCTestArgument'))
