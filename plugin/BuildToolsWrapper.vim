@@ -4,8 +4,8 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
-" Last Update:	13th Mar 2012
-" Version:	0.2.5
+" Last Update:	19th Oct 2012
+" Version:	0.2.6
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -139,6 +139,8 @@
 " v0.2.5: 25th Sep 2012
 "       * Possible to execute selected (C)test
 "       * Optional project configuration for btw/project_options
+" v0.2.6: 19th Oct 2012
+"       * Bugfix in #lh#btw#cmake#update_list()
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -1036,9 +1038,9 @@ function! s:FixCTestOutput()
       if b_name =~ '^'.test_nr.': ' " CTest messing with errors
         let b_name = b_name[len(test_nr.': '):]
         let update_bufnr = 1
-          " echomsg test_nr .' -> '. b_name
+        "   echomsg test_nr .' -> '. b_name
         " else
-          " echomsg test_nr .' != '. b_name
+        "   echomsg test_nr .' != '. b_name
       endif
       if b_name =~ '^\S\+\s\+\S\+$' && qf.text =~ '\c.*Assertion.*'
         let b_name = matchstr(b_name, '^\S\+\s\+\zs.*')
