@@ -46,7 +46,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 026
+let s:k_version = 027
 function! lh#btw#cmake#version()
   return s:k_version
 endfunction
@@ -282,6 +282,7 @@ function! lh#btw#cmake#update_list(menu_def)
     let menu._testnr       = i
     let menu.set_ctest_argument = function(s:getSNR('SetCTestArgument'))
     function! menu.do_update() dict
+      " This part affects a global setting
       let l_tests = self.project().tests.active_list
       let updated = 0
       if self.val_id()
@@ -302,6 +303,11 @@ function! lh#btw#cmake#update_list(menu_def)
         let project = self.project()
         let g:self = self
         let project.tests.active_list = l_tests
+      endif
+      " This part affects a buffer-local setting => always update
+      if s:verbose
+        debug call self.set_ctest_argument()
+      else
         call self.set_ctest_argument()
       endif
     endfunction
@@ -335,7 +341,7 @@ endfunction
 function! s:SetProjectExecutable() dict
 endfunction
 
-" # s:SetCTestArgument() dict {{{2
+" # s:IndicesListToCTestIArgument() dict {{{2
 function! s:IndicesListToCTestIArgument(list)
   " Converts the list of tests to run to a list that CTest will
   " understand
@@ -362,6 +368,7 @@ function! s:SetCTestArgument() dict
         \ .= (! empty(test_regex)) ? (' -R '.test_regex)
         \  : (! empty(which))      ? s:IndicesListToCTestIArgument(which)
         \  : ''
+  call s:Verbose(expand('%').": b:BTW_project_executable.rule <- ".string(b:BTW_project_executable.rule))
 endfunction
 
 " }}}1
