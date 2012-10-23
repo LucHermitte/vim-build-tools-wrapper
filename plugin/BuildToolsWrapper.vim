@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	19th Oct 2012
-" Version:	0.2.6
+" Version:	0.2.7
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -141,6 +141,8 @@
 "       * Optional project configuration for btw/project_options
 " v0.2.6: 19th Oct 2012
 "       * Bugfix in #lh#btw#cmake#update_list()
+" v0.2.7: 23rd Oct 2012
+"       * bugfix: Toggle *CtestList* now updates the target test
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -183,7 +185,7 @@ if exists("g:loaded_BuildToolsWrapper")
     echomsg "Reloading ".expand('<sfile>')
   endif
 endif
-let g:loaded_BuildToolsWrapper = 025
+let g:loaded_BuildToolsWrapper = 027
 
 " Dependencies                         {{{1
 runtime plugin/compil-hints.vim
@@ -765,6 +767,8 @@ function! s:DoRunAndCaptureOutput(program, ...)
     else
       exe 'make! '. args
     endif
+  catch /.*/
+    call lh#common#error_msg("Error: ".v:exception. " throw at: ".v:throwpoint)
   finally
     let &makeprg = save_makeprg
   endtry
@@ -1000,65 +1004,69 @@ endfunction
 " Function: s:FixCTestOutput()       {{{3
 " Parse CTest output to fix filenames, and extract forlding information
 function! s:FixCTestOutput()
-  " echomsg "parse CTest output"
-  let qf_changed = 0
-  let qflist = getqflist()
-  let s:qf_folds = {-1: {}}
-  let line_nr = 1
-  let test_nr = -1
-  let test_name = ''
-  for qf in qflist
-    let qft = qf.text
-    " echo '===<'.qft.'>==='
-    if      qft =~ '^test \d\+\s*$'
-      " Test start line
-      let test_nr = matchstr(qft, '^test \zs\d\+\ze\s*$')
-      " assert(!has_key(qf_folds, test_nr))
-      let s:qf_folds[test_nr] = {'begin': line_nr}
-      let s:qf_folds[-1][line_nr] = test_nr
-    elseif qft =~ '^\s*\d\+/\d\+ Test\s\+#\d\+:'
-      " Test end line
-      let test_nr = matchstr(qft, '^\s*\d\+/\d\+ Test\s\+#\zs\d\+\ze:')
-      let test_success = matchstr(qft,  '^\s*\d\+/\d\+ Test\s\+#\d\+:\s\+'.test_name.' \.\+\s*\zs\S\+')
-      let g:qft = qft
-      let s:qf_folds[test_nr].end = line_nr
-      let s:qf_folds[test_nr].complement = test_success
-      let test_nr = -1
-      let test_name = ''
-    elseif qft =~ '^\s*Start\s\+\d\+: '
-      let test_nr = matchstr(qft,  '^\s*Start\s\+\zs\d\+\ze:')
-      if !has_key(s:qf_folds, test_nr)
+  try
+    " echomsg "parse CTest output"
+    let qf_changed = 0
+    let qflist = getqflist()
+    let s:qf_folds = {-1: {}}
+    let line_nr = 1
+    let test_nr = -1
+    let test_name = ''
+    for qf in qflist
+      let qft = qf.text
+      " echo '===<'.qft.'>==='
+      if      qft =~ '^test \d\+\s*$'
+        " Test start line
+        let test_nr = matchstr(qft, '^test \zs\d\+\ze\s*$')
+        " assert(!has_key(qf_folds, test_nr))
         let s:qf_folds[test_nr] = {'begin': line_nr}
         let s:qf_folds[-1][line_nr] = test_nr
+      elseif qft =~ '^\s*\d\+/\d\+ Test\s\+#\d\+:'
+        " Test end line
+        let test_nr = matchstr(qft, '^\s*\d\+/\d\+ Test\s\+#\zs\d\+\ze:')
+        let test_success = matchstr(qft,  '^\s*\d\+/\d\+ Test\s\+#\d\+:\s\+'.test_name.' \.\+\s*\zs\S\+')
+        let g:qft = qft
+        let s:qf_folds[test_nr].end = line_nr
+        let s:qf_folds[test_nr].complement = test_success
+        let test_nr = -1
+        let test_name = ''
+      elseif qft =~ '^\s*Start\s\+\d\+: '
+        let test_nr = matchstr(qft,  '^\s*Start\s\+\zs\d\+\ze:')
+        if !has_key(s:qf_folds, test_nr)
+          let s:qf_folds[test_nr] = {'begin': line_nr}
+          let s:qf_folds[-1][line_nr] = test_nr
+        endif
+        let test_name = matchstr(qft, '^\s*Start\s\+'.test_nr.': \zs\S\+\ze\s*$')
+      elseif qf.bufnr != 0
+        let b_name = bufname(qf.bufnr)
+        let update_bufnr = 0
+        if b_name =~ '^'.test_nr.': ' " CTest messing with errors
+          let b_name = b_name[len(test_nr.': '):]
+          let update_bufnr = 1
+          "   echomsg test_nr .' -> '. b_name
+          " else
+          "   echomsg test_nr .' != '. b_name
+        endif
+        if b_name =~ '^\S\+\s\+\S\+$' && qf.text =~ '\c.*Assertion.*'
+          let b_name = matchstr(b_name, '^\S\+\s\+\zs.*')
+          let update_bufnr = 1
+        endif
+        if update_bufnr
+          let msg = qf.bufnr . ' -> '
+          let qf.bufnr = lh#buffer#get_nr(b_name)
+          let msg.= qf.bufnr . ' ('.b_name.')'
+          echomsg msg
+          let qf_changed = 1
+        endif
       endif
-      let test_name = matchstr(qft, '^\s*Start\s\+'.test_nr.': \zs\S\+\ze\s*$')
-    elseif qf.bufnr != 0
-      let b_name = bufname(qf.bufnr)
-      let update_bufnr = 0
-      if b_name =~ '^'.test_nr.': ' " CTest messing with errors
-        let b_name = b_name[len(test_nr.': '):]
-        let update_bufnr = 1
-        "   echomsg test_nr .' -> '. b_name
-        " else
-        "   echomsg test_nr .' != '. b_name
-      endif
-      if b_name =~ '^\S\+\s\+\S\+$' && qf.text =~ '\c.*Assertion.*'
-        let b_name = matchstr(b_name, '^\S\+\s\+\zs.*')
-        let update_bufnr = 1
-      endif
-      if update_bufnr
-        let msg = qf.bufnr . ' -> '
-        let qf.bufnr = lh#buffer#get_nr(b_name)
-        let msg.= qf.bufnr . ' ('.b_name.')'
-        echomsg msg
-        let qf_changed = 1
-      endif
+      let line_nr += 1
+    endfor
+    if qf_changed
+      call setqflist(qflist)
     endif
-    let line_nr += 1
-  endfor
-  if qf_changed
-    call setqflist(qflist)
-  endif
+  catch /.*/
+    call lh#common#error_msg("Error: ".v:exception. " throw at: ".v:throwpoint)
+  endtry
 endfunction
 
 " Function: s:QuickFixDefFolds()     {{{3
