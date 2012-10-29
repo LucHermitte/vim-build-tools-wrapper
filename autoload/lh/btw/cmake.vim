@@ -3,7 +3,7 @@
 " File:         autoload/lh/btw/cmake.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
-" Version:      026
+" Version:      028
 " Created:      12th Sep 2012
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -46,7 +46,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 027
+let s:k_version = 028
 function! lh#btw#cmake#version()
   return s:k_version
 endfunction
@@ -250,8 +250,13 @@ function! lh#btw#cmake#update_list(menu_def)
   endif
   let menu_def = s:config[proj_id].update_list
   let tests = lh#os#system('cd '.b:BTW_compilation_dir. ' && ctest -N')
-  let menu_def.menu.priority .= '30.900'
-  let menu_def.menu.name     .= 'C&Test.&List'
+  if type(a:menu_def) == type({})
+    " let's say that the first call is an initialization with a dictionary, and
+    " that the following calls are made with a string naming the
+    " menu_definition to use.
+    let menu_def.menu.priority .= '30.900'
+    let menu_def.menu.name     .= 'C&Test.&List'
+  endif
   silent! exe 'aunmenu! '. menu_def.menu.name
   exe "amenu ".(menu_def.menu.priority).'.89 '.(menu_def.menu.name).'.-<Sep>- Nop '
   exe "amenu <silent> ".(menu_def.menu.priority).'.90 '.(menu_def.menu.name).'.&Update'

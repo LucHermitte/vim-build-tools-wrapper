@@ -3,11 +3,11 @@
 " File:		mk-BTW.vim
 " Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://hermitte.free.fr/vim/>
-" Version:	0.2.7
+" Version:	0.2.8
+let s:version = '0.2.8'
 " Created:	06th Nov 2007
 " Last Update:	$Date$
 "------------------------------------------------------------------------
-let s:version = '0.2.7'
 let s:project = 'lh-BTW'
 cd <sfile>:p:h
 try 

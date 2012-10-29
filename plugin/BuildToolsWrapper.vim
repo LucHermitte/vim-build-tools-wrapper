@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	19th Oct 2012
-" Version:	0.2.7
+" Version:	0.2.8
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -143,6 +143,8 @@
 "       * Bugfix in #lh#btw#cmake#update_list()
 " v0.2.7: 23rd Oct 2012
 "       * bugfix: Toggle *CtestList* now updates the target test
+" v0.2.8: 29th Oct 2012
+"       * bugfix: updating CTest test lists was made in the wrong menu position
 "
 " TODO:                                  {{{2
 "	* &magic
