@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	19th Oct 2012
-" Version:	0.2.8
+" Version:	0.2.11
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -13,7 +13,7 @@
 "------------------------------------------------------------------------
 " Installation:
 "	Drop this plugin into {rtp}/plugin/
-"	Requires: lh-vim-lib, System_utils, also available on my web site
+"	Requires: lh-vim-lib (v3.1.0+), System_utils, also available on my web site
 "	Other Recommended Scripts: menu-maps.vim, local_vimrc.vim
 "
 " History:                               {{{2
@@ -145,6 +145,12 @@
 "       * bugfix: Toggle *CtestList* now updates the target test
 " v0.2.8: 29th Oct 2012
 "       * bugfix: updating CTest test lists was made in the wrong menu position
+" v0.2.9: 07th Nov 2012
+"       * bugix: updating CTest test lists was not updating new test id
+" v0.2.10: 21st Nov 2012
+"       * enh: g:BTW_make_multijobs default value is lh#os#cpu_number()
+" v0.2.11: 08th Jan 2013
+"       * enh: generates .clang_complete file ... but in b:BTW_compilation_dir
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -187,7 +193,7 @@ if exists("g:loaded_BuildToolsWrapper")
     echomsg "Reloading ".expand('<sfile>')
   endif
 endif
-let g:loaded_BuildToolsWrapper = 027
+let g:loaded_BuildToolsWrapper = 0211
 
 " Dependencies                         {{{1
 runtime plugin/compil-hints.vim
@@ -846,12 +852,15 @@ function! s:ToggleMakeInBG()
 endfunction
 
 " Function: s:ToggleMakeMJ()         {{{3
+let s:k_cpu_number = lh#os#cpu_number()
 function! s:ToggleMakeMJ()
   let value = lh#option#get('BTW_make_multijobs', 0, 'g')
   if type(value) != type(0)
     call lh#common#error_msg("option BTW_make_multijobs is not a number")
   endif
-  let g:BTW_make_multijobs = (value==0) ? 2 : 0
+  let g:BTW_make_multijobs = (value==0) ? s:k_cpu_number : 0
+  echo "Compling on " .
+        \ ((g:BTW_make_multijobs>1) ? (g:BTW_make_multijobs . " cpus") : "1 cpu")
 
   call s:MenuMakeMJ()
 endfunction
@@ -1002,7 +1011,6 @@ function! s:QuickFixCleanFolds()
   let s:qf_folds = {}
 endfunction
 
-" Function: s:FixCTestOutput()       {{{3
 " Function: s:FixCTestOutput()       {{{3
 " Parse CTest output to fix filenames, and extract forlding information
 function! s:FixCTestOutput()
