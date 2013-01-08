@@ -1,10 +1,11 @@
 "=============================================================================
 " $Id$
 " File:		mk-BTW.vim
-" Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
-"		<URL:http://hermitte.free.fr/vim/>
-" Version:	0.2.8
-let s:version = '0.2.8'
+" Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
+" 		<URL:http://code.google.com/p/lh-vim/>
+" Licence:      GPLv3
+" Version:	0.2.11
+let s:version = '0.2.11'
 " Created:	06th Nov 2007
 " Last Update:	$Date$
 "------------------------------------------------------------------------
