@@ -4,7 +4,7 @@
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
-" Version:	0.2.4
+" Version:	0.2.11
 " Created:      06th Sep 2012
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -14,9 +14,12 @@
 "------------------------------------------------------------------------
 " Installation:
 "       Drop this file into {rtp}/autoload/lh/btw
-"       Requires Vim7+, lh-vim
+"       Requires Vim7+, lh-vim 3.1.6
 " History:      
 "       v0.2.0: first factorization
+"       v0.2.11:
+"       * bug: don't prevent syntax highlighting & ft detection to be triggered
+"         when launching vim with several files
 " TODO:         «missing features»
 " Example: Defining CTest verbosity from local_vimrc: {{{2
 "    let s:root = expand("<sfile>:p:h")
@@ -117,11 +120,21 @@ function! s:Hook() dict
     call s:Verbose("abort for buffer ".expand('%:p'))
     return 
   endif
-  new
-  silent bufdo call s:Update(self)
-  q
-  " Assert exists(self.variable)
-  let self._previous[bid] = crt_value
+  try 
+    sp
+    " Bug: iterating on listed buffers (e.g. from vim *.cpp) is enough to
+    " disable syntax highlighting
+    " => 
+    " We delay the settings of b:variables for not loaded buffers.
+    for b in lh#buffer#list('bufloaded')
+      exe 'b '.b
+      call s:Update(self)
+    endfor
+  finally
+    q
+    " Assert exists(self.variable)
+    let self._previous[bid] = crt_value
+  endtry
 endfunction
 
 " # s:Update(dict) {{{2
@@ -166,7 +179,7 @@ function! lh#btw#project_options#add_toggle_option(menu)
     let menu.hook = function(s:getSNR('Hook'))
   endif
   call lh#menu#def_toggle_item(menu)
-  call menu.hook()
+  " call menu.hook() " already called in menu#s:Set()
   return menu
 endfunction
 
@@ -183,7 +196,7 @@ function! lh#btw#project_options#add_string_option(menu)
     let menu.hook = function(s:getSNR('Hook'))
   endif
   call lh#menu#def_string_item(menu)
-  call menu.hook()
+  " call menu.hook() " already called in menu#s:Set()
   return menu
 endfunction
 
