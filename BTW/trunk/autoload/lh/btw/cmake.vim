@@ -80,8 +80,11 @@ endfunction
 "     - project
 "     - doxyfile
 "     - sources
-"     - _build          // internal, points to the compilation dir used
+"     - _build          // Internal, points to the compilation dir used
 "                       // to set b:BTW_compilation_dir
+"     - _clic           // Subpath whete clang indexer DB is stored from _build
+"                       // defaults to ".clic/index.bd"
+"     - clic()          // Returns _build + _clic (by default)
 "   - build
 "     - Debug
 "     - Release
@@ -100,6 +103,8 @@ function! lh#btw#cmake#def_options(config, options)
   let s:config[a:config._project] = a:config " in case it is required to access other config stuff
   " Set default values
   call lh#let#if_undef('g:'.a:config._project.'.compilation.mode',      string('Release'))
+  call lh#let#if_undef('g:'.a:config._project.'.paths._clic',           string('.clic/index.db'))
+  call lh#let#if_undef('g:'.a:config._project.'.paths.clic',            function(s:getSNR('GetClic')))
   call lh#let#if_undef('g:'.a:config._project.'.tests.checking_memory', string('no'))
   call lh#let#if_undef('g:'.a:config._project.'.tests.checking_memory', string('no'))
   call lh#let#if_undef('g:'.a:config._project.'.tests.test_regex',      string(''))
@@ -333,12 +338,14 @@ endfunction
 " - menu.priority and menu.name
 " - _project settings
 function! lh#btw#cmake#add_gen_clang_complete(menu_def)
-  let a:menu_def.menu.priority .= '90'
-  let a:menu_def.menu.name     .= '&Update\ Clang\ Complete\ compilation\ settings'
-  silent! exe 'aunmenu! '. a:menu_def.menu.name
+  " let a:menu_def.menu.priority .= '90'
+  " let a:menu_def.menu.name     .= '&Update\ Clang\ Complete\ compilation\ settings'
+  " silent! exe 'aunmenu! '. a:menu_def.menu.name
   " exe "amenu ".(a:menu_def.menu.priority).'.89 '.(a:menu_def.menu.name).'.-<Sep>- Nop '
-  exe "amenu <silent> ".(a:menu_def.menu.priority).' '.(a:menu_def.menu.name)
+  exe "amenu <silent> ".(a:menu_def.menu.priority.'90').' '.(a:menu_def.menu.name.'Update\ Clang\ &Complete\ compilation\ settings')
         \ .' :call lh#btw#cmake#_gen_clang_complete()<cr>'
+  exe "amenu <silent> ".(a:menu_def.menu.priority.'91').' '.(a:menu_def.menu.name.'Update\ Code\ &Index\ Base')
+        \ .' :call lh#clang#update_clic('.string(a:menu_def._project).')<cr>'
 endfunction
 
 " ## Internal functions {{{1
@@ -358,6 +365,11 @@ function! s:UpdateCompilDir() dict
   let paths._build = self.project().paths.project.'/'.self.project().build[self.project().compilation.mode]
   let b:BTW_compilation_dir    = paths._build
   " echoerr "Compiling ".expand('%')." in ".b:BTW_compilation_dir
+endfunction
+
+" # s:GetClic() dict {{{2
+function! s:GetClic() dict
+  return self._build . '/' . self._clic
 endfunction
 
 " # s:SetProjectExecutable() dict {{{2
