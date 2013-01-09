@@ -150,7 +150,10 @@
 " v0.2.10: 21st Nov 2012
 "       * enh: g:BTW_make_multijobs default value is lh#os#cpu_number()
 " v0.2.11: 08th Jan 2013
-"       * enh: generates .clang_complete file ... but in b:BTW_compilation_dir
+"       * enh: Generates .clang_complete file ... but in b:BTW_compilation_dir
+"       * enh: Generates clang_indexer DB, in b:BTW_compilation_dir
+"       * bug: Don't prevent syntax highlighting & ft detection to be triggered
+"         when launching vim with several files
 "
 " TODO:                                  {{{2
 "	* &magic
