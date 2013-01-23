@@ -154,6 +154,12 @@
 "       * enh: Generates clang_indexer DB, in b:BTW_compilation_dir
 "       * bug: Don't prevent syntax highlighting & ft detection to be triggered
 "         when launching vim with several files
+" v0.2.12: 23rd Jan 2013
+"       * bug: lh#btw#cmake#update_list() won't fail when executed from a
+"         buffer not under the paths.trunk directory.
+"       * bug: Generated ctest menu accept test names with non-word "\W"
+"         characters.
+"         
 "
 " TODO:                                  {{{2
 "	* &magic

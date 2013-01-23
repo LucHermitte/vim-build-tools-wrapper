@@ -3,7 +3,7 @@
 " File:         autoload/lh/btw/cmake.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
-" Version:      0.2.11
+" Version:      0.2.12
 " Created:      12th Sep 2012
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -244,7 +244,7 @@ function! lh#btw#cmake#def_toggable_ctest_checkmem(menu_def)
 endfunction
 
 " Function: lh#btw#cmake#update_list(menu_def) {{{2
-function! lh#btw#cmake#update_list(menu_def)
+function! lh#btw#cmake#update_list(menu_def) abort
   if type(a:menu_def) == type({})
     let proj_id = a:menu_def._project
     function! a:menu_def.project() dict " dereference _project
@@ -253,6 +253,12 @@ function! lh#btw#cmake#update_list(menu_def)
   else
     let proj_id = a:menu_def
   endif
+  let p = expand('%:p')
+  " a:menu_def.project().paths.trunk
+  if empty(p) || stridx(p, a:menu_def.project().paths.trunk) != 0
+    return 
+  endif
+
   let menu_def = s:config[proj_id].update_list
   let tests = lh#os#system('cd '.b:BTW_compilation_dir. ' && ctest -N')
   if type(a:menu_def) == type({})
@@ -286,8 +292,9 @@ function! lh#btw#cmake#update_list(menu_def)
     let menu.values        = [0, 1]
     let menu.texts         = [' ', 'X']
     " Initialize to: not active, by default
-    call lh#let#if_undef('g:'.menu_def._project.'.tests.list.'.test, 0)
-    let menu.variable      = menu_def._project.'.tests.list.'.test
+    let testvar = substitute(test, '\W', '_', 'g')
+    call lh#let#if_undef('g:'.menu_def._project.'.tests.list.'.testvar, 0)
+    let menu.variable      = menu_def._project.'.tests.list.'.testvar
     let menu._root         = menu_def.project().paths.trunk
     let menu._testname     = test
     let menu._testnr       = i
