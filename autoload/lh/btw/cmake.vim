@@ -3,7 +3,7 @@
 " File:         autoload/lh/btw/cmake.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
-" Version:      0.2.12
+" Version:      0.2.13
 " Created:      12th Sep 2012
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -340,11 +340,11 @@ function! lh#btw#cmake#update_list(menu_def) abort
   call lh#common#warning_msg('List of (C)Tests updated: '.len(l_tests).' tests have been found.')
 endfunction
 
-" Function: lh#btw#cmake#add_gen_clang_complete(menu_def) {{{2
+" Function: lh#btw#cmake#add_gen_clic_DB(menu_def) {{{2
 " {menu_def} shall contain:
 " - menu.priority and menu.name
 " - _project settings
-function! lh#btw#cmake#add_gen_clang_complete(menu_def)
+function! lh#btw#cmake#add_gen_clic_DB(menu_def)
   " let a:menu_def.menu.priority .= '90'
   " let a:menu_def.menu.name     .= '&Update\ Clang\ Complete\ compilation\ settings'
   " silent! exe 'aunmenu! '. a:menu_def.menu.name
@@ -352,7 +352,7 @@ function! lh#btw#cmake#add_gen_clang_complete(menu_def)
   exe "amenu <silent> ".(a:menu_def.menu.priority.'90').' '.(a:menu_def.menu.name.'Update\ Clang\ &Complete\ compilation\ settings')
         \ .' :call lh#btw#cmake#_gen_clang_complete()<cr>'
   exe "amenu <silent> ".(a:menu_def.menu.priority.'91').' '.(a:menu_def.menu.name.'Update\ Code\ &Index\ Base')
-        \ .' :call lh#clang#update_clic('.string(a:menu_def._project).')<cr>'
+        \ .' :call clang#update_clic('.string(a:menu_def._project).')<cr>'
 endfunction
 
 " ## Internal functions {{{1
@@ -444,7 +444,7 @@ function! lh#btw#cmake#_gen_clang_complete()
         let use_next = 1
       endif
     endfor
-    for option in split(options, '\zs\ze\s*-')
+    for option in split(options, '\s\+\zs\ze-')
       if !empty(option)
         let merged_options[option] = '1'
       endif
