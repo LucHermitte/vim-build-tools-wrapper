@@ -4,8 +4,8 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
-" Last Update:	19th Oct 2012
-" Version:	0.2.11
+" Last Update:	$Date$
+" Version:	0.2.13
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -159,6 +159,9 @@
 "         buffer not under the paths.trunk directory.
 "       * bug: Generated ctest menu accept test names with non-word "\W"
 "         characters.
+" v0.2.13: 23rd Jan 2013
+"       * enh: Calling ":cd" before opening the quickfix window in order to
+"         avoid absolutepaths in the qf window
 "         
 "
 " TODO:                                  {{{2
@@ -810,6 +813,8 @@ function! s:ShowError(...)
   " command is not fixed.
   let winnum = winnr()
   cclose
+  " cd . is used to avoid absolutepaths in the quickfix window
+  cd .
   exe qf_position . ' ' . open_qf
 
   setlocal nowrap
