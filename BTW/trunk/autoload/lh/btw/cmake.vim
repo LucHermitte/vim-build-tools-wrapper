@@ -118,7 +118,14 @@ function! lh#btw#cmake#def_options(config, options)
           \ '_project': a:config._project
           \ }
     " save the menu in order to make hooks and other stuff accessible
-    let a:config[option] = menu_def
+    if has_key(a:config, option)
+      let a:config[option].menu = menu_def.menu
+      let a:config[option]._project = menu_def._project
+      let menu_def = a:config[option]
+    else
+      let a:config[option] = menu_def
+    endif
+
     " execute the action to initialize everything
     call lh#btw#cmake#{option}(menu_def)
   endfor
@@ -349,10 +356,12 @@ function! lh#btw#cmake#add_gen_clic_DB(menu_def)
   " let a:menu_def.menu.name     .= '&Update\ Clang\ Complete\ compilation\ settings'
   " silent! exe 'aunmenu! '. a:menu_def.menu.name
   " exe "amenu ".(a:menu_def.menu.priority).'.89 '.(a:menu_def.menu.name).'.-<Sep>- Nop '
-  exe "amenu <silent> ".(a:menu_def.menu.priority.'90').' '.(a:menu_def.menu.name.'Update\ Clang\ &Complete\ compilation\ settings')
-        \ .' :call lh#btw#cmake#_gen_clang_complete()<cr>'
-  exe "amenu <silent> ".(a:menu_def.menu.priority.'91').' '.(a:menu_def.menu.name.'Update\ Code\ &Index\ Base')
-        \ .' :call clang#update_clic('.string(a:menu_def._project).')<cr>'
+  call lh#menu#make('nic',
+        \ a:menu_def.menu.priority.'90', a:menu_def.menu.name.'Update Clang &Complete compilation settings',
+        \ '<localleader>tc', '', ':call lh#btw#cmake#_gen_clang_complete()<cr>' )
+  call lh#menu#make('nic',
+        \ a:menu_def.menu.priority.'91', a:menu_def.menu.name.'Update Code &Index Base',
+        \ '<localleader>ti', '', ':call clang#update_clic('.string(a:menu_def._project).')<cr>' )
 endfunction
 
 " ## Internal functions {{{1
@@ -450,8 +459,13 @@ function! lh#btw#cmake#_gen_clang_complete()
       endif
     endfor
   endfor
-  call writefile(keys(merged_options), b:BTW_compilation_dir.'/.clang_complete')
-  call lh#common#warning_msg(b:BTW_compilation_dir.'/.clang_complete updated.')
+  let clang_complete_path = b:BTW_compilation_dir.'/.clang_complete'
+  if filewritable( clang_complete_path)
+    call writefile(keys(merged_options), clang_complete_path)
+    call lh#common#warning_msg(b:BTW_compilation_dir.'/.clang_complete updated.')
+  else
+    call lh#common#error_msg("[BTW] Cannot write to ". clang_complete_path)
+  endif
 endfunction
 
 "------------------------------------------------------------------------
