@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	$Date$
-" Version:	0.2.13
+" Version:	0.2.14
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -162,7 +162,16 @@
 " v0.2.13: 23rd Jan 2013
 "       * enh: Calling ":cd" before opening the quickfix window in order to
 "         avoid absolutepaths in the qf window
-"         
+" v0.2.14: 25th Jul 2013
+"       * bug: When the project is organized with symbolic links, settings
+"         weren't applied. e.g.
+"          $$/
+"          +-> repo/branches/B42
+"          +-> sources/ -> symlink to $$/repo/branches/B42
+"          +-> build/
+"       * enh: The compilation mode doesn't need anymore to be "Debug" or
+"         "Release", it can be anything now like for instance: "ARM", "80x86",
+"         ...
 "
 " TODO:                                  {{{2
 "	* &magic

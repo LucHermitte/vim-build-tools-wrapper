@@ -3,7 +3,7 @@
 " File:         autoload/lh/btw/cmake.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
-" Version:      0.2.13
+" Version:      0.2.14
 " Created:      12th Sep 2012
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -30,9 +30,7 @@
 "
 "------------------------------------------------------------------------
 " Installation:
-"       Drop this file into {rtp}/autoload/lh/btw
-"       Requires Vim7+, lh-vim-lib
-"       «install details»
+"       Requires Vim7+, lh-vim-lib 3.1.9+
 " History:      «history»
 " TODO:         
 "       Simplify the definition of the "_project" sub-dictionary as it requires
@@ -46,7 +44,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 0211
+let s:k_version = 0214
 function! lh#btw#cmake#version()
   return s:k_version
 endfunction
@@ -141,7 +139,7 @@ function! lh#btw#cmake#def_toggable_compil_mode(menu_def)
   endfunction
   " Automatically set variables for lh#btw#project_options#add_toggle_option,
   " and lh#menu#def_toggle_item
-  let a:menu_def.values        = ['Debug', 'Release']
+  let a:menu_def.values        = keys(a:menu_def.project().build)
   " "variable" is a variable name, hence _project being a string
   let a:menu_def.variable      = a:menu_def._project.'.compilation.mode'
   let a:menu_def._root         = a:menu_def.project().paths.trunk
@@ -262,7 +260,7 @@ function! lh#btw#cmake#update_list(menu_def) abort
   endif
   let p = expand('%:p')
   " a:menu_def.project().paths.trunk
-  if empty(p) || stridx(p, a:menu_def.project().paths.trunk) != 0
+  if empty(p) || lh#path#is_in(p, a:menu_def.project().paths.trunk) != 0
     return 
   endif
 
@@ -378,7 +376,7 @@ function! s:UpdateCompilDir() dict
   " "let self.project().paths = value" is refused by viml interpreter => hence
   " the auxiliary reference
   let paths = self.project().paths
-  let paths._build = self.project().paths.project.'/'.self.project().build[self.project().compilation.mode]
+  let paths._build = paths.project.'/'.self.project().build[self.project().compilation.mode]
   let b:BTW_compilation_dir    = paths._build
   " echoerr "Compiling ".expand('%')." in ".b:BTW_compilation_dir
 endfunction

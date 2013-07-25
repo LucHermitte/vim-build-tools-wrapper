@@ -4,7 +4,7 @@
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
-" Version:	0.2.11
+" Version:	0.2.14
 " Created:      06th Sep 2012
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -20,6 +20,13 @@
 "       v0.2.11:
 "       * bug: don't prevent syntax highlighting & ft detection to be triggered
 "         when launching vim with several files
+"       v0.2.14:
+"       * bug: When the project is organized with symbolic links, settings
+"         weren't applied. e.g.
+"          $$/
+"          +-> repo/branches/B42
+"          +-> sources/ -> symlink to $$/repo/branches/B42
+"          +-> build/
 " TODO:         «missing features»
 " Example: Defining CTest verbosity from local_vimrc: {{{2
 "    let s:root = expand("<sfile>:p:h")
@@ -67,7 +74,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 024
+let s:k_version = 0214
 function! lh#btw#project_options#version()
   return s:k_version
 endfunction
@@ -141,7 +148,7 @@ endfunction
 function! s:Update(dict)
   try 
     let p = expand('%:p')
-    if !empty(p) && stridx(p, a:dict._root) == 0
+    if !empty(p) && lh#path#is_in(p, a:dict._root)
       if s:verbose
         debug call a:dict.do_update()
       else
