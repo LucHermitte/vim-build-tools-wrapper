@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 #		<URL:http://hermitte.free.fr/vim>
-# Purpose:	Fiter outputs from GCC like the error messages from the
+# Purpose:	Filter outputs from GCC like the error messages from the
 #               link phase.
 #               Defined as a filter to use on make's result.
 #		Meant to be used by Vim.

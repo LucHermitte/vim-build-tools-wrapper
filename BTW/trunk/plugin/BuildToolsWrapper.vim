@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	$Date$
-" Version:	0.2.14
+" Version:	0.2.15
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -172,6 +172,8 @@
 "       * enh: The compilation mode doesn't need anymore to be "Debug" or
 "         "Release", it can be anything now like for instance: "ARM", "80x86",
 "         ...
+" v0.2.15: 19th Dec 2013
+"       * enh: ctest folding now displays the name of the test as well
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -214,7 +216,7 @@ if exists("g:loaded_BuildToolsWrapper")
     echomsg "Reloading ".expand('<sfile>')
   endif
 endif
-let g:loaded_BuildToolsWrapper = 0211
+let g:loaded_BuildToolsWrapper = 0215
 
 " Dependencies                         {{{1
 runtime plugin/compil-hints.vim
@@ -1045,6 +1047,7 @@ function! s:FixCTestOutput()
     let line_nr = 1
     let test_nr = -1
     let test_name = ''
+    let test_name_lengths = []
     for qf in qflist
       let qft = qf.text
       " echo '===<'.qft.'>==='
@@ -1070,6 +1073,8 @@ function! s:FixCTestOutput()
           let s:qf_folds[-1][line_nr] = test_nr
         endif
         let test_name = matchstr(qft, '^\s*Start\s\+'.test_nr.': \zs\S\+\ze\s*$')
+        let s:qf_folds[test_nr].name = test_name
+        let test_name_lengths += [ len(test_name) ]
       elseif qf.bufnr != 0
         let b_name = bufname(qf.bufnr)
         let update_bufnr = 0
@@ -1088,12 +1093,21 @@ function! s:FixCTestOutput()
           let msg = qf.bufnr . ' -> '
           let qf.bufnr = lh#buffer#get_nr(b_name)
           let msg.= qf.bufnr . ' ('.b_name.')'
-          echomsg msg
+          " echomsg msg
           let qf_changed = 1
         endif
       endif
       let line_nr += 1
     endfor
+
+    " Find the max length of all test names and align them.
+    let l = max(test_name_lengths)
+    for [t, pos] in items(s:qf_folds)
+      if t != -1
+        let pos.name .= ' '.repeat('.', 3 + l-len(pos.name))
+      endif
+    endfor
+
     if qf_changed
       call setqflist(qflist)
     endif
@@ -1126,9 +1140,9 @@ endfunction
 function! BTWQFFoldText()
   let test_nr = s:qf_folds[-1][v:foldstart]
   if !has_key(s:qf_folds[test_nr], 'complement') | return | endif
-  let t = foldtext()
+  let t = foldtext().': '
   let l = (4 - len(test_nr))
-  let t.= repeat(' ', l)
+  let t.= repeat(' ', l). (s:qf_folds[test_nr].name) .'   '
   let t.= s:qf_folds[test_nr].complement
   return t
 endfunction

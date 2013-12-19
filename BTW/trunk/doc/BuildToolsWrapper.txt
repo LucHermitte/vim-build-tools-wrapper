@@ -1,9 +1,9 @@
 *BuildToolsWrapper.txt*	Projects building plugin
-			For Vim version 7.x.	Last change: 01st Mar 2012
+			For Vim version 7.x.	Last change: 19th Dec 2013
 
 
 		BuildToolsWrapper Plugin MANUAL	  By Luc Hermitte
-			version 0.0.14		  <hermitte {at} free {dot} fr>
+			version 0.2.15		  <hermitte {at} free {dot} fr>
 
 
 ------------------------------------------------------------------------------
@@ -305,7 +305,6 @@ BTW depends on the following plugins, with which it is "shipped":
 - |searchInRuntime|
 
 A few other scripts of mine will be useful with BTW.
-- |menu-map|: simplifes the definition of gVim menus and commands
 - |local_vimrc| is a plugin that permits to define options (and any other things
   like mappings, functions, ...) that will be local to the files in the
   sub-directories of the one where there are _vimrc_local.vim files. 
@@ -324,6 +323,5 @@ TODO list~
 - Improve and document *QFImport* , *BTW_Compilation_dir* , "import:"
 
 ------------------------------------------------------------------------------
- © Luc Hermitte, 2004-2012, http://code.google.com/p/lh-vim/
- VIM: let b:VS_language = 'american' 
+ © Luc Hermitte, 2004-2013, http://code.google.com/p/lh-vim/
  vim:ts=8:sw=4:tw=80:fo=tcq2:isk=!-~,^*,^\|,^\":ft=help:
