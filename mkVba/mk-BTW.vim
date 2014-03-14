@@ -4,8 +4,8 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
-" Version:	0.2.15
-let s:version = '0.2.15'
+" Version:	0.3.0
+let s:version = '0.3.0'
 " Created:	06th Nov 2007
 " Last Update:	$Date$
 "------------------------------------------------------------------------
@@ -21,8 +21,10 @@ finally
   let &rtp = save_rtp
 endtry
 finish
-autoload/lh/btw/project_options.vim
+autoload/lh/btw.vim
 autoload/lh/btw/cmake.vim
+autoload/lh/btw/filters.vim
+autoload/lh/btw/project_options.vim
 compiler/BTW/STLFilt.vim
 compiler/BTW/SunSWProLinkIsError.pl
 compiler/BTW/SunSWProLinkIsError.vim
@@ -39,6 +41,7 @@ compiler/BTW/gmake.vim
 compiler/BTW/make.vim
 compiler/BTW/run_and_recontact_vim.pl
 compiler/BTW/run_in_background.pl
+compiler/BTW/substitute_filenames.vim
 compiler/BTW/syntax/cc.vim
 doc/BuildToolsWrapper.txt
 lh-build-tools-wrapper-addon-info.txt

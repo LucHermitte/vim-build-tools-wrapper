@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	$Date$
-" Version:	0.2.15
+" Version:	0.3.0
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -174,6 +174,8 @@
 "         ...
 " v0.2.15: 19th Dec 2013
 "       * enh: ctest folding now displays the name of the test as well
+" v0.3.0: 14th Mar 2014
+"       * s:Evaluate() moved to lh/btw.vim autoload plugin
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -216,7 +218,7 @@ if exists("g:loaded_BuildToolsWrapper")
     echomsg "Reloading ".expand('<sfile>')
   endif
 endif
-let g:loaded_BuildToolsWrapper = 0215
+let g:loaded_BuildToolsWrapper = 0300
 
 " Dependencies                         {{{1
 runtime plugin/compil-hints.vim
@@ -666,18 +668,6 @@ endfunction
 " TODO: distinguish rule-name for the compilation (e.g. ``all'') and the final
 " executable
 
-" Function: s:Evaluate()             {{{3
-function! s:Evaluate(expr)
-  if type(a:expr) == type({})
-    let res = lh#function#execute(a:expr)
-  elseif type(a:expr) == type('')
-    let res = a:expr
-  else
-    throw "Unexpected variable type"
-  endif
-  return res
-endfunction
-
 " Function: s:ProjectName()          {{{3
 " How to define this option:
 " - with a _vimrc_local file
@@ -951,11 +941,11 @@ function! s:Config()
   if     how.type == 'modeline'
     call s:AddLetModeline()
   elseif how.type == 'makefile'
-    let wd = s:Evaluate(how.wd)
-    let file = s:Evaluate(how.file)
+    let wd = lh#btw#_evaluate(how.wd)
+    let file = lh#btw#_evaluate(how.file)
     call lh#buffer#jump(wd.'/'.file)
   elseif how.type == 'ccmake'
-    let wd = s:Evaluate(how.wd)
+    let wd = lh#btw#_evaluate(how.wd)
     if lh#system#OnDOSWindows()
       " - the first ":!start" runs a windows command
       " - "cmd /c" is used to define the second "start" command (see "start /?")
