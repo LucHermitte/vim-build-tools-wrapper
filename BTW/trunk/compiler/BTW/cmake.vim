@@ -41,7 +41,7 @@ let b:BTW_filter_program_cmake = function('BTW_compile_cmake')
 "------------------------------------------------------------------------
 " cmake messes up with the error format as it prepends the error lines with
 " "%d>"
-" => tell BTW for fix efm by prepending what other tools add
+" => tell BTW to fix efm by prepending what other tools add
 function! BTW_fix_efm_cmake(efm)
   let efm = split(a:efm, ',')
   call map(efm, '"%\\d%\\+>".v:val')
