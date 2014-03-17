@@ -28,7 +28,7 @@ let s:cpo_save=&cpo
 set cpo&vim
 "------------------------------------------------------------------------
 
-function! BTW_Substitute_Filenames()
+function! BTW_Substitute_Filenames() abort
   let before = lh#btw#_evaluate(lh#dev#option#get('BTW_old_name', &ft, []))
   let after = lh#btw#_evaluate(lh#dev#option#get('BTW_new_name', &ft, []))
   let g:qfs = []
@@ -61,8 +61,8 @@ function! BTW_Substitute_Filenames()
         let new_bufname = substitute(old_bufname, before, after, 'g')
         if new_bufname != old_bufname
           let msg = qf.bufnr . ' -> '
-          let qf.bufnr = lh#buffer#get_nr(b_name)
-          let msg.= qf.bufnr . ' ('.b_name.')'
+          let qf.bufnr = lh#buffer#get_nr(new_bufname)
+          let msg.= qf.bufnr . ' ('.new_bufname.')'
           " echomsg msg
           let qf_changed = 1
         endif
