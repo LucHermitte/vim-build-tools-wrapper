@@ -4,7 +4,7 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
-" Version:      0.3.0
+" Version:      0.3.1
 " Created:      13th Mar 2014
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -19,13 +19,15 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 030
+let s:k_version = 031
 function! lh#btw#filters#version()
   return s:k_version
 endfunction
 
 " # Debug   {{{2
-let s:verbose = 0
+if !exists('s:verbose')
+  let s:verbose = 0
+endif
 function! lh#btw#filters#verbose(...)
   if a:0 > 0 | let s:verbose = a:1 | endif
   return s:verbose
@@ -65,7 +67,12 @@ endfunction
 " Function: s:ApplyQuickFixHooks(hook_kind) {{{3
 function! s:ApplyQuickFixHooks(hook_kind)
   for Hook in values(s:qf_hooks[a:hook_kind])
-    call Hook()
+    if s:verbose > 1
+      echomsg a:hook_kind . ' -> ' . string(Hook)
+      debug call Hook()
+    else
+      call Hook()
+    endif
   endfor
 endfunction
 

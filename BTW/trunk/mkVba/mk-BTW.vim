@@ -4,8 +4,8 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
-" Version:	0.3.0
-let s:version = '0.3.0'
+" Version:	0.3.1
+let s:version = '0.3.1'
 " Created:	06th Nov 2007
 " Last Update:	$Date$
 "------------------------------------------------------------------------

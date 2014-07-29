@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	$Date$
-" Version:	0.3.0
+" Version:	0.3.1
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -176,6 +176,9 @@
 "       * enh: ctest folding now displays the name of the test as well
 " v0.3.0: 14th Mar 2014
 "       * s:Evaluate() moved to lh/btw.vim autoload plugin
+" v0.3.1: 29th Jul 2014
+"       * ctest filters now use BTW hooks facility
+"       * BTW hooks can be debuged when lh#btw#filter#verbose >= 2
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -335,6 +338,15 @@ endif
 " Internals                            {{{1
 
 let s:sfile = expand('<sfile>:p')
+
+" Misc Functions:                        {{{2
+" s:getSNR([func_name]) {{{3
+function! s:getSNR(...)
+  if !exists("s:SNR")
+    let s:SNR=matchstr(expand('<sfile>'), '<SNR>\d\+_\zegetSNR$')
+  endif
+  return s:SNR . (a:0>0 ? (a:1) : '')
+endfunction
 
 " Build Chain:                           {{{2
 
@@ -967,25 +979,19 @@ endfunction
 " Function: s:AddLetModeline()       {{{3
 " Meant to be used with let-modeline.vim
 function! s:AddLetModeline()
-  " TODO: add support for scons, A-A-P, ... (hook ?)
   " TODO: become smart: auto detect makefile, A-A-P, scons, ...
 
-  " Check is there is already a Makefile or an A-A-P recipe.
-  let aap_files  = glob('*.aap')
-  if strlen(aap_files)
-    let aap_files  = substitute("\n".aap_files, '\n', '\0Edit \&', 'g')
-  endif
+  " Check if there is already a Makefile
   let make_files = glob('Makefile*')
   if strlen(make_files)
     let make_files = substitute("\n".make_files, '\n', '\0Edit \&', 'g')
   elseif !strlen(aap_files)
-    let aap_files  = "\nEdit &main.aap"
     let make_files = "\nEdit &Makefile"
   endif
 
   let which = WHICH('COMBO', 'Which option must be set ?',
 	\ "Abort"
-	\ . aap_files . make_files
+	\ . make_files
 	\ . "\n$&CFLAGS\n$C&PPFLAGS\n$C&XXFLAGS"
 	\ . "\n$L&DFLAGS\n$LD&LIBS"
 	\ . "\n&g:BTW_project\n&b:BTW_project"
@@ -1011,13 +1017,9 @@ endfunction
 " and we can fold the messages from each test.
 " @todo move to autoload plugin
 function! s:RegisterFixCTest()
- augroup CTestPostExecHook
-  au!
-  " clean folding data before compiling
-  au QuickFixCmdPre  make call s:QuickFixCleanFolds()
-  au QuickFixCmdPost make call s:FixCTestOutput() 
-  au FileType        qf   call s:QuickFixDefFolds()
-augroup END
+  call lh#btw#filters#register_hook(s:getSNR('QuickFixCleanFolds'), 'pre')
+  call lh#btw#filters#register_hook(s:getSNR('FixCTestOutput'),     'post')
+  call lh#btw#filters#register_hook(s:getSNR('QuickFixDefFolds'),   'open')
 endfunction
 
 " Function: s:QuickFixCleanFolds() {{{3
@@ -1071,9 +1073,9 @@ function! s:FixCTestOutput()
         if b_name =~ '^'.test_nr.': ' " CTest messing with errors
           let b_name = b_name[len(test_nr.': '):]
           let update_bufnr = 1
-          "   echomsg test_nr .' -> '. b_name
+            " echomsg test_nr .' -> '. b_name
           " else
-          "   echomsg test_nr .' != '. b_name
+            " echomsg test_nr .' != '. b_name
         endif
         if b_name =~ '^\S\+\s\+\S\+$' && qf.text =~ '\c.*Assertion.*'
           let b_name = matchstr(b_name, '^\S\+\s\+\zs.*')
