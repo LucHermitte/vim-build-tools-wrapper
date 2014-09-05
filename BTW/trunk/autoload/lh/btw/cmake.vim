@@ -74,7 +74,7 @@ endfunction
 " - menu.priority and menu.name
 " - _project settings
 "   - paths
-"     - trunk
+"     - trunk           // It's important to tune this variable to distinguish between subprojects
 "     - project
 "     - doxyfile
 "     - sources

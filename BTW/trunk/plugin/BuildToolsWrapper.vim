@@ -5,7 +5,7 @@
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:	$Date$
-" Version:	0.3.1
+" Version:	0.3.2
 " Created:	28th Nov 2004
 "------------------------------------------------------------------------
 " Description:	Flexible alternative to Vim compiler-plugins.
@@ -179,6 +179,9 @@
 " v0.3.1: 29th Jul 2014
 "       * ctest filters now use BTW hooks facility
 "       * BTW hooks can be debuged when lh#btw#filter#verbose >= 2
+" v0.3.2: 02nd Sep 2014
+"       * New option [bg]:BTW_use_prio ("update"|"makeprg") can tells to always
+"         update makeprg, or never.
 "
 " TODO:                                  {{{2
 "	* &magic
@@ -221,7 +224,7 @@ if exists("g:loaded_BuildToolsWrapper")
     echomsg "Reloading ".expand('<sfile>')
   endif
 endif
-let g:loaded_BuildToolsWrapper = 0300
+let g:loaded_BuildToolsWrapper = 0320
 
 " Dependencies                         {{{1
 runtime plugin/compil-hints.vim
@@ -753,6 +756,9 @@ function! s:Compile(...)
   endif
   " else ... pouvoir avoir s:TargetRule() . a:1 ; si <bang> ?!
 
+  if lh#option#get('BTW_use_prio', 'update') == 'update'
+    call s:ReconstructToolsChain()
+  endif
   let bg = s:DoRunAndCaptureOutput(&makeprg, rule)
   if !bg
     echomsg "Compilation finished".(len(rule)?" (".rule.")" : "")
