@@ -42,11 +42,11 @@
 
 "=============================================================================
 " Avoid global reinclusion {{{1
-if exists("g:loaded_gcc_vim") 
-      \ && !exists('g:force_reload_gcc_vim')
+if exists("g:loaded_gcc") 
+      \ && !exists('g:force_reload_gcc')
   finish 
 endif
-let g:loaded_gcc_vim = 1
+let g:loaded_gcc = 1
 let s:cpo_save=&cpo
 set cpo&vim
 " Avoid global reinclusion }}}1
@@ -78,7 +78,7 @@ let s:file = substitute(expand('<sfile>:p:h'), ' ', '\\ ', 'g')
 
 " b- filter to apply over outputs:     {{{2
 function! s:Reset_program()
-  let g:BTW_filter_program_gcc = s:file."/gcc.pl"
+  let g:BTW_filter_program_gcc = 'perl '.s:file."/gcc.pl"
 	\ . s:Option('group_lnk', '-grp-lnk')
 	\ . s:Option('click_lnk', '-clk-lnk')
 	\ . s:Option('obj_dir', '-obj')
