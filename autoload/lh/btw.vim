@@ -3,7 +3,7 @@
 " File:         autoload/lh/btw.vim                               {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://code.google.com/p/lh-vim/>
-" Version:      001
+" Version:      3.3.0
 " Created:      14th Mar 2014
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -25,7 +25,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 1
+let s:k_version = 330
 function! lh#btw#version()
   return s:k_version
 endfunction
@@ -50,6 +50,11 @@ endfunction
 
 "------------------------------------------------------------------------
 " ## Exported functions {{{1
+
+" Function: lh#btw#compilation_dir() {{{3
+function! lh#btw#compilation_dir()
+  return lh#option#get('BTW_compilation_dir', '.')
+endfunction
 
 "------------------------------------------------------------------------
 " ## Internal functions {{{1

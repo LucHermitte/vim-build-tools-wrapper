@@ -1,70 +1,70 @@
 "=============================================================================
 " $Id$
-" File:		plugin/BuildToolsWrapper.vim         {{{1
-" Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
-" 		<URL:http://code.google.com/p/lh-vim/>
+" File:         plugin/BuildToolsWrapper.vim         {{{1
+" Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
+"               <URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
-" Last Update:	$Date$
-" Version:	0.3.2
-" Created:	28th Nov 2004
+" Last Update:  $Date$
+" Version:      0.3.3
+" Created:      28th Nov 2004
 "------------------------------------------------------------------------
-" Description:	Flexible alternative to Vim compiler-plugins.
+" Description:  Flexible alternative to Vim compiler-plugins.
 "
 "------------------------------------------------------------------------
 " Installation:
-"	Drop this plugin into {rtp}/plugin/
-"	Requires: lh-vim-lib (v3.1.0+), System_utils, also available on my web site
-"	Other Recommended Scripts: menu-maps.vim, local_vimrc.vim
+"       Drop this plugin into {rtp}/plugin/
+"       Requires: lh-vim-lib (v3.1.0+), System_utils, also available on my web site
+"       Other Recommended Scripts: menu-maps.vim, local_vimrc.vim
 "
 " History:                               {{{2
 "  v0.0.1: 28th Nov 2004 : First Version
-"  	* Focalize on :BTW
+"       * Focalize on :BTW
 "
 "  v0.0.2: Merge two related projects.
-"	* Integrate the work I've done on the previous C-ftplugin ->
-"	  c_compile.vim
+"       * Integrate the work I've done on the previous C-ftplugin ->
+"         c_compile.vim
 "
 "  v0.0.3:
-"	* «:Make» support an optional list of targets
-"	* BTW_filter_prog can be local to a buffer
-"	  => regarding to the current directory (thanks to local_vimrc.vim) we
-"	  can use different makefiles, but the same build program.
-"	  The other solution I haven't considered (yet?) was to use callback
-"	  functions.
-"	* Little bug fix in the ``edit settings'' confirm-box ; some \n were
-"	  badly handled.
-"	* New commands: :Copen and :Cwindow which work like :copen and :cwindow
-"	  except they show up to BTW_QF_size error lines (default 15), and they
-"	  jump (or not) to the first error according to BTW_GotoError.
+"       * «:Make» support an optional list of targets
+"       * BTW_filter_prog can be local to a buffer
+"         => regarding to the current directory (thanks to local_vimrc.vim) we
+"         can use different makefiles, but the same build program.
+"         The other solution I haven't considered (yet?) was to use callback
+"         functions.
+"       * Little bug fix in the ``edit settings'' confirm-box ; some \n were
+"         badly handled.
+"       * New commands: :Copen and :Cwindow which work like :copen and :cwindow
+"         except they show up to BTW_QF_size error lines (default 15), and they
+"         jump (or not) to the first error according to BTW_GotoError.
 "
 "  v0.0.4: 13th Jan 2005
-"	* g:BTW_qf_position -> :vert, :lefta, :abo, ...
-"	* «:BTW reloadPlugin» -> To ease plugin test & maintenance
+"       * g:BTW_qf_position -> :vert, :lefta, :abo, ...
+"       * «:BTW reloadPlugin» -> To ease plugin test & maintenance
 "
 "  v0.0.5: 11th Mar 2005
-"	* «:BTW delete»
-"	* «:BTW echo» auto completes the values of various internal functions
-"	  ProjectName() TargetRule() Executable()
+"       * «:BTW delete»
+"       * «:BTW echo» auto completes the values of various internal functions
+"         ProjectName() TargetRule() Executable()
 "
 "  v0.0.6: 26th May 2005
-"  	* Do not prepend './' to executable path if, under unix, it starts with
-"  	  '/'
+"       * Do not prepend './' to executable path if, under unix, it starts with
+"         '/'
 "
 "  v0.0.7: 27th May 2005
-"  	* Use :cclose instead of :bw in s:CompileQF()
-"  	* Use :cclose as well in s:Executable(), s:ProjectName() and
-"  	  s:TargetRule()
-"  	* No need to quote the arguments to :Make anymore
-"  	* Can run :Make in background, if the option
-"  	  [bg]:BTW_make_in_background is set to 1
-"  	  Warning: As those damn pop-ups on the Internet, the quickfix window
-"  	  can be opened at any time. Which may break our current manipulations.
-"  	* Toggled menu for g:BTW_make_in_background (g(lobal) scope only, not [bg])
+"       * Use :cclose instead of :bw in s:CompileQF()
+"       * Use :cclose as well in s:Executable(), s:ProjectName() and
+"         s:TargetRule()
+"       * No need to quote the arguments to :Make anymore
+"       * Can run :Make in background, if the option
+"         [bg]:BTW_make_in_background is set to 1
+"         Warning: As those damn pop-ups on the Internet, the quickfix window
+"         can be opened at any time. Which may break our current manipulations.
+"       * Toggled menu for g:BTW_make_in_background (g(lobal) scope only, not [bg])
 "
 "  v0.0.8: 30th May 2005
-"  	* new option for errorformat configuration: g:BTW_ignore_efm_{filter}
-"  	* We can ask for using the default value of efm by setting
-"  	  g:BTW_adjust_efm_{filter} to "default efm".
+"       * new option for errorformat configuration: g:BTW_ignore_efm_{filter}
+"       * We can ask for using the default value of efm by setting
+"         g:BTW_adjust_efm_{filter} to "default efm".
 "         Default efm: -> «set efm&vim»
 "             %f(%l) : %t%*\D%n: %m
 "             %*[^"]"%f"%*\D%l: %m
@@ -73,36 +73,36 @@
 "             %f:%l:%m
 "
 "  v0.0.9: 22nd Jul 2005
-"  	* Run in background works with several filters (output piped), and even
-"  	  with filter that expands into "cd path ; make -f file.mk"
-"  	  Tested under Solaris.
-"  	* The temporary file can be in any directory.
+"       * Run in background works with several filters (output piped), and even
+"         with filter that expands into "cd path ; make -f file.mk"
+"         Tested under Solaris.
+"       * The temporary file can be in any directory.
 "
 "  v0.0.10: 17th Nov 2005 - 06th Nov 2007
-"  	* First support for syntax additions -> [bg]BTW_qf_syntax_{...}
-"  	  Will be rewritten ...
-"  	* Better management of efm
-"  	* Simplification: Use of :cgetfile for build in backgound
-"	* Auto detection of where run_in_background.pl is, without the explicit
-"	  need to searchInRuntime.vim -- as long as Vim supports the function
-"	  |globpath()|
-"	* auto-import of |compiler-plugin| with just "|BTW-add| ant" for
-"	  instance.
-"	* A filter can import definitions from a |compiler-plugin|. e.g.:
-"	     let g:BTW_adjust_efm_{filter} = 'import: ant,default efm' 
-"	  If the filter does not provide a [bg]:BTW_filter_program_{filter},
-"	  the one from the compiler plugin will be used.
-"	* Executable() programs (in $PATH) can be added as filter
-"	* Adapted to the refactorization of MenuMake
-"	* run_in_background patched to work under Cygwin -- except perl's fork
-"	  isn't forking
-"	* b:want_buffermenu_or_global_disable is not used as the menus are not
-"	  limited to the current buffer
-"	* Dependency changed from LHOption to lh-vim-lib
+"       * First support for syntax additions -> [bg]BTW_qf_syntax_{...}
+"         Will be rewritten ...
+"       * Better management of efm
+"       * Simplification: Use of :cgetfile for build in backgound
+"       * Auto detection of where run_in_background.pl is, without the explicit
+"         need to searchInRuntime.vim -- as long as Vim supports the function
+"         |globpath()|
+"       * auto-import of |compiler-plugin| with just "|BTW-add| ant" for
+"         instance.
+"       * A filter can import definitions from a |compiler-plugin|. e.g.:
+"            let g:BTW_adjust_efm_{filter} = 'import: ant,default efm'
+"         If the filter does not provide a [bg]:BTW_filter_program_{filter},
+"         the one from the compiler plugin will be used.
+"       * Executable() programs (in $PATH) can be added as filter
+"       * Adapted to the refactorization of MenuMake
+"       * run_in_background patched to work under Cygwin -- except perl's fork
+"         isn't forking
+"       * b:want_buffermenu_or_global_disable is not used as the menus are not
+"         limited to the current buffer
+"       * Dependency changed from LHOption to lh-vim-lib
 " v0.0.11: 22nd Oct 2010
-" 	* Can run anything and capture its output
-" 	* Config support let-modeline, ccmake, makefile
-" v0.0.12: 21st Mar 2011 
+"       * Can run anything and capture its output
+"       * Config support let-modeline, ccmake, makefile
+" v0.0.12: 21st Mar 2011
 "       * New option BTW_make_multijobs to run make with multiple jobs (-j2,
 "       etc)
 " v0.0.13: 19th Aug 2011
@@ -112,7 +112,7 @@
 "       * New way to easily change settings in the filters used:
 "         BTW_filter_program_{filter} can be a |FuncRef|.
 "         see compiler/BTW/cmake.vim
-"       * BTW_adjust_efm_{filer} may be a dictionary 
+"       * BTW_adjust_efm_{filer} may be a dictionary
 "         {"value": string, "post": FuncRef} to support post-treatments on &efm
 "         value.  see compiler/BTW/cmake.vim
 " v0.1.0: 13th Mar 2012
@@ -125,7 +125,7 @@
 " v0.2.0: 06th Sep 2012
 "       * API to help define project options
 " v0.2.1: 12th Sep 2012
-"       * API to help define CMake/CTest-based project options 
+"       * API to help define CMake/CTest-based project options
 " v0.2.2: 18th Sep 2012
 "       * CTest outputs are fixed so filenames are correctly recognized
 "       * CTest outputs are folded
@@ -182,14 +182,16 @@
 " v0.3.2: 02nd Sep 2014
 "       * New option [bg]:BTW_use_prio ("update"|"makeprg") can tells to always
 "         update makeprg, or never.
+" v0.3.3: 12th Dec 2014
+"       * New API function: lh#btw#compilation_dir()
 "
 " TODO:                                  {{{2
-"	* &magic
-"	* Support priority -> «:BTW add cygwin 9»
-"	* Write doc
-"	* ¿ addlocal when there is already something ?
-"	  - or, xor,
-"	  - use local only ?
+"       * &magic
+"       * Support priority -> «:BTW add cygwin 9»
+"       * Write doc
+"       * ¿ addlocal when there is already something ?
+"         - or, xor,
+"         - use local only ?
 "       * Folding -> tools names (ld, gcc, g++) + other tools
 "         1st lvl: directories
 "         2nd lvl: tools <--- use special colors for tools
@@ -200,13 +202,13 @@
 "         that loading the filter is enough), or directly set:
 "             let g:BTW_adjust_efm_foo = g:BTW_adjust_efm_bar
 "       * if '$*' is already present in the filter_program, then don't append
-"	  it.
-"	* Test run_in_background.pl with VimDetect.pm
-"	* Is there a real need for «:LMake», «:LOpen» ? I'm not sure that
-"	  commands like :lmake (et al.) are that useful as long as there is no
-"	  way  to say that a particular |location-list| is shared between
-"	  several windows from a same project.
-"	* executable() filters should be able to accept arguments
+"         it.
+"       * Test run_in_background.pl with VimDetect.pm
+"       * Is there a real need for «:LMake», «:LOpen» ? I'm not sure that
+"         commands like :lmake (et al.) are that useful as long as there is no
+"         way  to say that a particular |location-list| is shared between
+"         several windows from a same project.
+"       * executable() filters should be able to accept arguments
 " }}}1
 "=============================================================================
 
@@ -217,14 +219,14 @@ let s:cpo_save=&cpo
 set cpo&vim
 
 if exists("g:loaded_BuildToolsWrapper")
-  if !exists('g:force_reload_BuildToolsWrapper') 
+  if !exists('g:force_reload_BuildToolsWrapper')
     let &cpo=s:cpo_save
     finish
   else
     echomsg "Reloading ".expand('<sfile>')
   endif
 endif
-let g:loaded_BuildToolsWrapper = 0320
+let g:loaded_BuildToolsWrapper = 0330
 
 " Dependencies                         {{{1
 runtime plugin/compil-hints.vim
@@ -240,8 +242,8 @@ endif
 
 function! s:FetchRunInBackground()
   let rib_progname = lh#system#OnDOSWindows()
-	\ ? 'run_and_recontact_vim'
-	\ : 'run_in_background'
+        \ ? 'run_and_recontact_vim'
+        \ : 'run_in_background'
 
   if     exists('*globpath')
     let s:run_in_background = globpath(&rtp, 'compiler/BTW/'.rib_progname.'.pl')
@@ -249,8 +251,8 @@ function! s:FetchRunInBackground()
     SearchInRuntime let\ s:run_in_background=" compiler/BTW/".rib_progname.".pl | "
   else
     call lh#common#error_msg( "Build Tools Wrapper:\n  This plugin requires either a version of Vim that defines |globpath()| or the script searchInRuntime.vim.\n"
-	  \."  Please upgrade your version of vim, or install searchInRuntime.vim\n"
-	  \."  Check on <http://hermitte.free.fr/vim/> or <http://vim.sf.net/> script #229")
+          \."  Please upgrade your version of vim, or install searchInRuntime.vim\n"
+          \."  Check on <http://hermitte.free.fr/vim/> or <http://vim.sf.net/> script #229")
     finish
   endif
 
@@ -276,15 +278,15 @@ command! -nargs=1 -complete=var QFImport      :call s:QFAddVarToImport(<f-args>)
 command! -nargs=0               QFClearImport :call s:QFClearImport()
 
 " Build/Make invokation                  {{{2
-command! -nargs=* Make			:call <sid>Compile("<args>")
-command! -nargs=0 Execute		:call <sid>Execute()
-command! -nargs=0 AddLetModeline	:call <sid>AddLetModeline()
-command! -nargs=0 Config        	:call <sid>Config()
-command! -nargs=0 Copen			:call <sid>ShowError('copen')
-command! -nargs=0 Cwindow		:call <sid>ShowError('cwindow')
-command! -nargs=+ CopenBG		:call <sid>CopenBG(<f-args>)
-command! -nargs=0 ToggleMakeBG		:call <sid>ToggleMakeInBG()
-command! -nargs=0 ToggleMakeMJ		:call <sid>ToggleMakeMJ()
+command! -nargs=* Make                  :call <sid>Compile("<args>")
+command! -nargs=0 Execute               :call <sid>Execute()
+command! -nargs=0 AddLetModeline        :call <sid>AddLetModeline()
+command! -nargs=0 Config                :call <sid>Config()
+command! -nargs=0 Copen                 :call <sid>ShowError('copen')
+command! -nargs=0 Cwindow               :call <sid>ShowError('cwindow')
+command! -nargs=+ CopenBG               :call <sid>CopenBG(<f-args>)
+command! -nargs=0 ToggleMakeBG          :call <sid>ToggleMakeInBG()
+command! -nargs=0 ToggleMakeMJ          :call <sid>ToggleMakeMJ()
 
 " Menus                                  {{{2
 
@@ -318,12 +320,12 @@ if has('gui_running') && has ('menu')
     " let b:want_buffermenu_or_global_disable = 0
     " 0->no ; 1->yes ; 2->global disable
   call lh#menu#make('n', '50.10', '&Project.&Config', s:key_config,
-	  \ '', ':Config<cr>')
+          \ '', ':Config<cr>')
     amenu 50.29 &Project.--<sep>-- Nop
   call lh#menu#make('ni', '50.30', '&Project.&Make project', s:key_make,
-	  \ '', ':Make<cr>')
+          \ '', ':Make<cr>')
   call lh#menu#make('ni', '50.50', '&Project.&Execute', s:key_execute,
-	  \ '', ':Execute<cr>')
+          \ '', ':Execute<cr>')
 
   call s:MenuMakeBG()
   call s:MenuMakeMJ()
@@ -372,8 +374,8 @@ function! BTWComplete(ArgLead, CmdLine, CursorPos)
   let pos = strlen(tmp)
   if 0
     call confirm( "AL = ". a:ArgLead."\nCL = ". a:CmdLine."\nCP = ".a:CursorPos
-	  \ . "\ntmp = ".tmp."\npos = ".pos
-	  \, '&Ok', 1)
+          \ . "\ntmp = ".tmp."\npos = ".pos
+          \, '&Ok', 1)
   endif
 
   if     2 == pos
@@ -391,8 +393,8 @@ function! BTWComplete(ArgLead, CmdLine, CursorPos)
       " let files = files . globpath(&rtp, 'compiler/BT/*')
       let files = s:FindFilter('*')
       let files = substitute(files,
-	    \ '\(^\|\n\).\{-}compiler[\\/]BTW[-_\\/]\(.\{-}\)\.vim\>\ze\%(\n\|$\)',
-	    \ '\1\2', 'g')
+            \ '\(^\|\n\).\{-}compiler[\\/]BTW[-_\\/]\(.\{-}\)\.vim\>\ze\%(\n\|$\)',
+            \ '\1\2', 'g')
       return files
     elseif -1 != match(a:CmdLine, '^BTW\s\+remove\%(local\)\=')
       " Removes a filter
@@ -410,13 +412,13 @@ if !exists('g:BTW_BTW_in_use')
     " todo: check a:0 > 1
     if     'set'      == a:command | let g:BTW_build_tool = a:1
       if exists('b:BTW_build_tool')
-	let b:BTW_build_tool = a:1
+        let b:BTW_build_tool = a:1
       endif
     elseif 'setlocal'     == a:command | let b:BTW_build_tool = a:1
     elseif 'add'          == a:command | call s:AddFilter('g', a:1)
     elseif 'addlocal'     == a:command | call s:AddFilter('b', a:1)
       " if exists('b:BTW_filters_list') " ?????
-	" call s:AddFilter('b', a:1)
+        " call s:AddFilter('b', a:1)
       " endif
     elseif 'remove'       == a:command | call s:RemoveFilter('g', a:1)
     elseif 'removelocal'  == a:command | call s:RemoveFilter('b', a:1)
@@ -461,14 +463,14 @@ function! s:RemoveFilter(scope, filter)
     " exe 'bufdo BTW removelocal '.a:filter
     exe ':buffer '.bnum
   elseif ('b' == a:scope) && !exists(var)
-	\ && s:HasFilter(a:filter, var)
-	" \ && (match(s:FiltersList(),a:filter) >= 0)
+        \ && s:HasFilter(a:filter, var)
+        " \ && (match(s:FiltersList(),a:filter) >= 0)
     " Defines a local set of filter-plugins from previous the global list
     let b:BTW_filters_list = g:BTW_filters_list
     " finally: call DoRemove
   else
     call lh#common#error_msg('BTW: Error no such filter-plugin to remove "'
-	  \ . a:filter . '"')
+          \ . a:filter . '"')
     " s:DoRemove(): kind of "big" no-op
   endif
 
@@ -491,8 +493,8 @@ endfunction
 function! s:FindFilter(filter)
   let filter = a:filter . '.vim'
   let result =globpath(&rtp, "compiler/BTW-".filter) . "\n" .
-	\ globpath(&rtp, "compiler/BTW_".filter). "\n" .
-	\ globpath(&rtp, "compiler/BTW/".filter)
+        \ globpath(&rtp, "compiler/BTW_".filter). "\n" .
+        \ globpath(&rtp, "compiler/BTW/".filter)
   let result = substitute(result, '\n\n', '\n', 'g')
   let result = substitute(result, '^\n', '', 'g')
   return result
@@ -537,17 +539,17 @@ function! s:AdjustEFM(filter, efm)
   " if added =~ "default efm"
   " TODO: use split and join
     let added = substitute(added, 'default efm',
-	  \ escape(s:DefaultEFM('default efm'), '\'), '')
+          \ escape(s:DefaultEFM('default efm'), '\'), '')
   " endif
   if added =~ 'import:'
     let compiler_plugin_imported = matchstr(added, 'import: \zs[^,]*')
     let added = substitute(added, 'import: \%([^,]\{-}\ze\%(,\|$\)\)',
-	  \ escape(s:DefaultEFM(compiler_plugin_imported), '\'), '')
+          \ escape(s:DefaultEFM(compiler_plugin_imported), '\'), '')
   endif
-  let a:efm.value = 
-	\   lh#option#get('BTW_ignore_efm_'.a:filter, '', 'bg')
-	\ . a:efm.value
-	\ . (strlen(added) ? ','.added : '')
+  let a:efm.value =
+        \   lh#option#get('BTW_ignore_efm_'.a:filter, '', 'bg')
+        \ . a:efm.value
+        \ . (strlen(added) ? ','.added : '')
 endfunction
 
 
@@ -562,7 +564,7 @@ function! s:LoadFilter(filter)
     let b:BTW_adjust_efm_{a:filter} = 'import: '.a:filter
   elseif 0 != strlen(globpath(&rtp, 'compiler/BTW/'.a:filter.'.pl'))
     " Third case: there is a perl script compiler/BTW/{a:filter}.pl
-    let g:BTW_filter_program_{a:filter} = globpath(&rtp, 'compiler/BTW/'.a:filter.'.vim') 
+    let g:BTW_filter_program_{a:filter} = globpath(&rtp, 'compiler/BTW/'.a:filter.'.vim')
   elseif executable(a:filter)
     let filter = s:ToVarName(a:filter)
     let g:BTW_filter_program_{filter} = a:filter
@@ -587,7 +589,7 @@ function! s:ReconstructToolsChain()
     let makeprg = Makeprg . ' $*'
   endif
   call s:AdjustEFM(prog, efm)
-  
+
   let dir = lh#option#get('BTW_compilation_dir', '')
   if !empty(dir)
     let makeprg = '(cd '.shellescape(dir).' && ' . makeprg . ')'
@@ -661,7 +663,7 @@ endfunction
 " ToolsChain():                                  Helper {{{3
 function! s:ToolsChain()
   return lh#option#get('BTW_build_tool', 'make') .
-	\ substitute (s:FiltersList(), ',', ' | ', 'g')
+        \ substitute (s:FiltersList(), ',', ' | ', 'g')
 endfunction
 
 " FiltersList():                                 Helper {{{3
@@ -782,10 +784,10 @@ function! s:DoRunAndCaptureOutput(program, ...)
       let run_in = ' --program="'.run_in.'"'
     endif
     let &makeprg = s:RunInBackground()
-	  \ . ' --vim=' . v:progname
-	  \ . ' --servername=' . v:servername
-	  \ . run_in
-	  \ . ' "' . (a:program) . '"'
+          \ . ' --vim=' . v:progname
+          \ . ' --servername=' . v:servername
+          \ . run_in
+          \ . ' "' . (a:program) . '"'
     " \ . ' "' . escape(a:program, '|') . '"'
   else
     let &makeprg = a:program
@@ -798,7 +800,7 @@ function! s:DoRunAndCaptureOutput(program, ...)
     let args .= ' -j' .nb_jobs
   endif
 
-  try 
+  try
     if lh#system#OnDOSWindows() && bg
       let cmd = ':!start '.substitute(&makeprg, '\$\*', args, 'g')
       let g:toto = cmd
@@ -915,7 +917,7 @@ function! s:Execute()
     let ctx=''
     for [k,v] in items(path)
       if k[0] == '$'
-	let ctx .= k[1:].'='.v.' '
+        let ctx .= k[1:].'='.v.' '
       endif
     endfor
     " Execute the command
@@ -996,12 +998,12 @@ function! s:AddLetModeline()
   endif
 
   let which = WHICH('COMBO', 'Which option must be set ?',
-	\ "Abort"
-	\ . make_files
-	\ . "\n$&CFLAGS\n$C&PPFLAGS\n$C&XXFLAGS"
-	\ . "\n$L&DFLAGS\n$LD&LIBS"
-	\ . "\n&g:BTW_project\n&b:BTW_project"
-	\ )
+        \ "Abort"
+        \ . make_files
+        \ . "\n$&CFLAGS\n$C&PPFLAGS\n$C&XXFLAGS"
+        \ . "\n$L&DFLAGS\n$LD&LIBS"
+        \ . "\n&g:BTW_project\n&b:BTW_project"
+        \ )
   if which =~ 'Abort\|^$'
     " Nothing to do
   elseif which =~ '^Edit.*$'
@@ -1168,7 +1170,7 @@ endfunction
 " Function: s:QuickFixExport()       {{{3
 function! s:QuickFixExport()
     " if &ft !~ '^cpp$\|^c$'
-        " return 
+        " return
     " endif
     for var in keys(s:qf_options_to_import)
       if exists(var)
