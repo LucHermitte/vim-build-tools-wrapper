@@ -10,6 +10,8 @@ let s:k_version = 034
 "------------------------------------------------------------------------
 " Description:
 "       «description»
+" Todo:
+" * Apply mt_jump_to_first_markers on the 2 other files generated
 " }}}1
 "=============================================================================
 
@@ -48,21 +50,38 @@ endfunction
 " Function: lh#btw#project#new(...) {{{3
 function! lh#btw#project#new(...) abort
   let args = call('lh#btw#project#_analyse_params', a:000)
-  let cleanup = lh#on#exit().restore('g:mt_IDontWantTemplatesAutomaticallyInserted')
+  if has_key(args, '_prj_config')
+    if args._prj_config !~ '^g:'
+      let args._prj_config = 'g:'.args._prj_config
+    endif
+  endif
+  let args.description = "Definition of vim's local options for the project ". (args._prj_name)
+  let cleanup = lh#on#exit()
+        \.restore('g:mt_IDontWantTemplatesAutomaticallyInserted')
+        \.restore('g:mt_jump_to_first_markers')
   " mu-template expansion will be done manually in order to inject the precise
   " parameters
   try
     let g:mt_IDontWantTemplatesAutomaticallyInserted = 1
+    let g:mt_jump_to_first_markers = 0
     sp _vimrc_local.vim
     call lh#mut#expand_and_jump(0, 'vim', args)
 
     if has_key(args.project_kind, 'c') || has_key(args.project_kind, 'cpp')
       sp _vimrc_cpp_style.vim
+      call lh#mut#expand_and_jump(0, 'vim/internals/vim-header', args)
+      normal! G
       call lh#mut#expand_and_jump(0, 'vim/internals/vim-rc-local-cpp-style', args)
+      normal! G
+      call lh#mut#expand_and_jump(0, 'vim/internals/vim-footer', args)
     endif
     if has_key(args.project_kind, 'cmake')
       sp _vimrc_local_global_defs.vim
+      call lh#mut#expand_and_jump(0, 'vim/internals/vim-header', args)
+      normal! G
       call lh#mut#expand_and_jump(0, 'vim/internals/vim-rc-local-global-cmake-def', args)
+      normal! G
+      call lh#mut#expand_and_jump(0, 'vim/internals/vim-footer', args)
     endif
   finally
     call cleanup.finalize()
