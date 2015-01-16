@@ -4,7 +4,7 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
-" Version:      0.3.1
+" Version:      0.3.4
 " Created:      13th Mar 2014
 " Last Update:  $Date$
 "------------------------------------------------------------------------
@@ -19,7 +19,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 031
+let s:k_version = 034
 function! lh#btw#filters#version()
   return s:k_version
 endfunction
@@ -62,6 +62,25 @@ function! lh#btw#filters#register_hook(Hook, kind)
   endif
 
   let s:qf_hooks[a:kind][a:Hook] = function(a:Hook)
+endfunction
+
+" Function: lh#btw#filters#register_hooks(Hooks) {{{3
+function! lh#btw#filters#register_hooks(Hooks)
+  if !exists('s:qf_hooks')
+    call lh#btw#filters#_clear_hooks()
+    augroup BTW_QF_PreHook
+      au!
+      " clean folding data before compiling
+      au QuickFixCmdPre  make call s:ApplyQuickFixHooks('pre')
+      au QuickFixCmdPost make call s:ApplyQuickFixHooks('post') 
+      au FileType        qf   call s:ApplyQuickFixHooks('open')
+    augroup END
+  endif
+
+  for [kind, Hook] in a:Hooks
+    let s:qf_hooks[kind][Hook] = function(Hook)
+  endfor
+
 endfunction
 
 " Function: s:ApplyQuickFixHooks(hook_kind) {{{3

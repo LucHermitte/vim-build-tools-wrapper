@@ -1,31 +1,31 @@
-*BuildToolsWrapper.txt*	Projects building plugin
-			For Vim version 7.x.	Last change: 19th Dec 2013
+*BuildToolsWrapper.txt* Projects building plugin
+                        For Vim version 7.x.    Last change: 19th Dec 2013
 
 
-		BuildToolsWrapper Plugin MANUAL	  By Luc Hermitte
-			version 0.2.15		  <hermitte {at} free {dot} fr>
+                BuildToolsWrapper Plugin MANUAL   By Luc Hermitte
+                        version 0.2.15            <hermitte {at} free {dot} fr>
 
 
 ------------------------------------------------------------------------------
 Contents~
-|BTW-presentation|	Presentation
-|BTW-filters|		Filter plugins
-  |BTW-filter-purpose|		Purpose
-  |:BTW|			:BTW, the filters management command
-  |BTW-default-filters|		Default filters
-  |BTW-write-filter|		Write a filter
+|BTW-presentation|      Presentation
+|BTW-filters|           Filter plugins
+  |BTW-filter-purpose|          Purpose
+  |:BTW|                        :BTW, the filters management command
+  |BTW-default-filters|         Default filters
+  |BTW-write-filter|            Write a filter
 
-|BTW-Build-Execute|		Build and Execute
+|BTW-Build-Execute|             Build and Execute
 
-|«link»|		«title»
-|add-local-help|	Instructions on installing this file
+|«link»|                «title»
+|add-local-help|        Instructions on installing this file
 
 
 ------------------------------------------------------------------------------
-					*BTW-presentation*
+                                        *BTW-presentation*
 Presentation~
 
-This plugin serves two distinct, but related, purposes: 
+This plugin serves two distinct, but related, purposes:
 - define a flexible alternative to Vim |compiler-plugin|s,
   -> |BTW-filters|,
 - and ease the compilation of projects
@@ -33,7 +33,7 @@ This plugin serves two distinct, but related, purposes:
 
 
 ------------------------------------------------------------------------------
-							*BTW-filters*
+                                                        *BTW-filters*
 Filter-plugins~
 
 Purpose~
@@ -69,57 +69,57 @@ time the definitions of a filter are loaded by |:BTW|, we can choose to use them
 globally or locally to the current buffer. Every local setting overrides the
 global settings.
 
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-							*BTW-filter-purpose*
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                                                        *BTW-filter-purpose*
 
 «Insert here»
 
 
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-							*:BTW*
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                                                        *:BTW*
 :BTW, The filters management command~
 
 The filters used in a specific project are managed with the command :BTW.
 
 This command accepts the following sub-commands:
 
-- :BTW set      {main-filter}				*:BTW-set*
-- :BTW setlocal {main-filter}				*:BTW-setlocal*
+- :BTW set      {main-filter}                           *:BTW-set*
+- :BTW setlocal {main-filter}                           *:BTW-setlocal*
   These two commands set the main filter-plugin, i.e. the one associated to the
   build tool -- i.e. make, A-A-P, scons, bjam, ...
   With "setlocal", we override the main filter-plugin.
-  
-- :BTW add      {filter}				*:BTW-add*
-- :BTW addlocal {filter}				*:BTW-addlocal*
+
+- :BTW add      {filter}                                *:BTW-add*
+- :BTW addlocal {filter}                                *:BTW-addlocal*
   These two commands add a filter-plugin at the end of the chain
   of filter-plugins applied over the result of the compilation process.
-  The order of the filters applied respects the order of the calls to 
+  The order of the filters applied respects the order of the calls to
   ":BTW add(local)".
   With "addlocal", we override (ignore), in the scope of the current buffer, the
   filter-plugins globally loaded.
   ¿ must add-global apply to local lists when they already exist ?
 
-- :BTW remove      {filter}				*:BTW-remove*
-- :BTW removelocal {filter}				*:BTW-removelocal*
+- :BTW remove      {filter}                             *:BTW-remove*
+- :BTW removelocal {filter}                             *:BTW-removelocal*
   Remove a filter-plugin from the chain of filter-plugins applied.
   global: the filter-plugin will also be removed from every buffer-local list
   local:  if there is no local list, and the filter is found in the global list,
           then a local list is build from the global one, but without the
-	  filter.
-	  todo: retest
+          filter.
+          todo: retest
 
-- :BTW clear      {filter}				*:BTW-clear*
-- :BTW clearlocal {filter}				*:BTW-clearlocal*
+- :BTW clear      {filter}                              *:BTW-clear*
+- :BTW clearlocal {filter}                              *:BTW-clearlocal*
   Full reset of the filter-plugins used. This command can be seen as an
   alternative to calling |:BTW-remove| on every filter-plugin.
   Yet to be implemented
 
-- :BTW rebuild						*:BTW-rebuild*
+- :BTW rebuild                                          *:BTW-rebuild*
   Little helper command. Only useful when the vim script (that defines a
   filter-plugin) has been changed, and we want to refresh 'makeprg' and
   'errorformat' in consequence.
 
-- :BTW echo {expr}					*:BTW-echo*
+- :BTW echo {expr}                                      *:BTW-echo*
   Debug oriented helper function. It serves to evaluate and display an internal
   (script scope -> s:) data/function from BuildToolsWrapper.vim.
 
@@ -127,8 +127,8 @@ In order to ease the use of |:BTW|, this command supports a smart
 auto-completion.
 
 
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-							*BTW-default-filters*
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                                                        *BTW-default-filters*
 Default filters~
 
 A few filter-plugins are shipped with BuildToolsWrapper.
@@ -139,7 +139,7 @@ Main filter-plugins~
   - the program to use according to the OS -> aap or aap.bat
   - a few adjustments to the 'errorformat', in order to take into account some
     error messages from A-A-P.
-    
+
 - (g)make.
   filter-plugin yet to be written... It will contain folding stuff.
 
@@ -160,7 +160,7 @@ Other filter-plugins~
     - *g:BTW_gcc_src_dir* (string ['']) directory where the translation units
       are.
 
-- TreeProject 
+- TreeProject
   See this filter-plugin as an example of what can be done.
   The filter-plugin will find and set, on a buffer-basis, which makefile must be
   used, according to the directory (matching an independant subcomponent of a
@@ -174,8 +174,8 @@ Other filter-plugins~
   external perl script.
 
 
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-							*BTW-write-filter*
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                                                        *BTW-write-filter*
 Write a filter-plugin~
 
 The filter-plugin {name} is supposed to be associated to the file
@@ -185,7 +185,7 @@ The filter-plugin {name} is supposed to be associated to the file
 
 Many things can be done in these filter-plugin, however, BuildToolsWrapper waits
 for two (optional) settings:
-- *[bg]:BTW_filter_program_{tool}* 
+- *[bg]:BTW_filter_program_{tool}*
   It could be any external program: a perl script with its arguments, a
   call to make after having changed the current directory, ..., or even a
   |FuncRef| (see compiler/BTW/cmake.vim)
@@ -202,25 +202,25 @@ manipulate them directly. They are actually internal variables you must ignore.
 
 
 ------------------------------------------------------------------------------
-							*BTW-Build-Execute*
+                                                        *BTW-Build-Execute*
 Build and Execute~
 
 BTW also serves to ease the compilation of projects and execute programs built.
 
 The different possible operations are:
 
-							*:Make*
+                                                        *:Make*
 Building a program~
 The command |:Make| accepts an optional target. The default target is determined
 according to the heuristic described in |BTW-project-target|.
 
 By default, |:Make| (with no argument) is binded to <F7>. This can be overrided
-with the option |[bg]:BTW_key_make|. 
+with the option |[bg]:BTW_key_make|.
 
-							*:Execute*
+                                                        *:Execute*
 Executing a program~
 The command |:Execute| accepts no arguments. The default program to execute is
-determined according to the heuristic described in |BTW-project-executable|. 
+determined according to the heuristic described in |BTW-project-executable|.
 
 Arguments to the program can be specified with the option
 |g:BTW_run_parameters|.
@@ -228,7 +228,7 @@ Arguments to the program can be specified with the option
 By default, |:Execute| (with no argument) is binded to <C-F5> This can be
 overrided with the option |[bg]:BTW_key_execute|.
 
-							*BTW-Build-Configure*
+                                                        *BTW-Build-Configure*
 Configuration of the build process~
 A little helper is provided for when we can rely on gmake to automatically
 compile programs made of only one translation unit (.c, .cpp, ...). Typically
@@ -240,28 +240,28 @@ various environment variables like $CFLAGS, $CXXFLAGS, $LDFLAGS, $LDLIBS,
 |[bg]:BTW_project|, ... The let-modeline will be added at the bottom of the
 edited file.
 
-However, at this time it also has a very limited support of Makefiles and A-A-P 
+However, at this time it also has a very limited support of Makefiles and A-A-P
 recipes: |:AddLetModeline| will try to locate Makefile or main.aap and propose
 to edit them.
 
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-							*BTW-keybindings*
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                                                        *BTW-keybindings*
 
 *[bg]:BTW_key_make*    (def. <F7>)   keybinding associated to |:Make|.
 *[bg]:BTW_key_execute* (def. <C-F5>) keybinding associated to |:Execute|.
 *[bg]:BTW_key_cofing*  (def. <M-F7>) keybinding associated to |:AddLetModeline|.
 
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Heuristics~
 
-							*BTW-project-target*
+                                                        *BTW-project-target*
 Target heuristics~
 The target used by |:Make| is chosen according to the following rule.
-- First |:Make| tries to use the option *[bg]:BTW_project_target* 
+- First |:Make| tries to use the option *[bg]:BTW_project_target*
 - If not set, it tries to use the target from the heuristics |BTW-project-name|.
 - If nothing is returned, "all" is assumed.
 
-							*BTW-project-executable*
+                                                        *BTW-project-executable*
 Executable heuristics~
 The executable used by |:Execute| is chosen according to the following rule.
 - |:Execute| tries to use the option *[bg]:BTW_project_executable*
@@ -271,14 +271,14 @@ The executable used by |:Execute| is chosen according to the following rule.
 - If nothing is returned, nothing is returned.
   I will eventually try to detect acceptable executables in the build directory.
 
-							*BTW-project-name*
+                                                        *BTW-project-name*
 Project name heuristics~
 The name of the project is defined by *[bg]:BTW_project* , if set. If not, it
 uses the name of the file in the current buffer (|%<|), or the name of the file
 from alternate buffer (|#<|) if we are in the |quickfix-window|.
 
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-							*BTW-quickfix*
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                                                        *BTW-quickfix*
 Options for the Quickfix window~
 
 Several options permit to tune how the |quickfix-window| is handled by |:Make|,
@@ -296,7 +296,7 @@ error. The default value is true (1).
 
 
 ------------------------------------------------------------------------------
-							*BTW-requirements*
+                                                        *BTW-requirements*
 External requirements~
 
 BTW depends on the following plugins, with which it is "shipped":
@@ -307,21 +307,21 @@ BTW depends on the following plugins, with which it is "shipped":
 A few other scripts of mine will be useful with BTW.
 - |local_vimrc| is a plugin that permits to define options (and any other things
   like mappings, functions, ...) that will be local to the files in the
-  sub-directories of the one where there are _vimrc_local.vim files. 
+  sub-directories of the one where there are _vimrc_local.vim files.
   (local_vimrc is a plugin that enables local .vimrc's named _vimrc_local.vim)
 
 ------------------------------------------------------------------------------
-							*BTW-future*
+                                                        *BTW-future*
 TODO list~
 - Auto-completion (Read/Write) for BTW variables
-- Priority (for add and addlocal) ; 
+- Priority (for add and addlocal) ;
 - Better doc
-- Find better names / terminology ; 
+- Find better names / terminology ;
 - Support for folding
 - Full detailled example tuned with local_vimrc
 - Filter-plugins for: STLFit, Doxygen
 - Improve and document *QFImport* , *BTW_Compilation_dir* , "import:"
 
 ------------------------------------------------------------------------------
- © Luc Hermitte, 2004-2013, http://code.google.com/p/lh-vim/
+ © Luc Hermitte, 2004-2015, http://code.google.com/p/lh-vim/
  vim:ts=8:sw=4:tw=80:fo=tcq2:isk=!-~,^*,^\|,^\":ft=help:
