@@ -11,12 +11,12 @@
 " Description:
 "       BTW filter to replace expressions on the fly
 "       This kind of filter is useful when the build chain uses configuration
-"       files that are instaciated in the build directory. 
+"       files that are instaciated in the build directory.
 "       The actual file that needs to be opened in the original file in thoses
 "       cases.
-" 
+"
 "------------------------------------------------------------------------
-" TODO:         
+" TODO:
 "       Support multiple uses:
 "       - this plugin shall replace cygwin filter for instance
 "         and we must be able to continue to use it to display the original
@@ -40,7 +40,7 @@ function! BTW_Substitute_Filenames() abort
       " 1- Fixing text
       let qft = substitute(qf.text, before, after, 'g')
       if qft != qf.text
-        if qf.bufnr == 0 
+        if qf.bufnr == 0
           let till_colon = matchstr(qft, '^[^:]*\ze:') " won't work under windows...
           if filereadable(till_colon) " trick files recognized on the fly
             let qf.bufnr = - lh#buffer#get_nr(till_colon)

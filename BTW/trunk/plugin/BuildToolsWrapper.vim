@@ -5,7 +5,7 @@
 "               <URL:http://code.google.com/p/lh-vim/>
 " Licence:      GPLv3
 " Last Update:  $Date$
-" Version:      0.3.3
+" Version:      0.3.4
 " Created:      28th Nov 2004
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
@@ -184,6 +184,10 @@
 "         update makeprg, or never.
 " v0.3.3: 12th Dec 2014
 "       * New API function: lh#btw#compilation_dir()
+" v0.3.4: 16th Jan 2015
+"       * New subcommand to generate local_vimrc files for C&C++ projects and
+"         projects managed with CMake -> :BTW new_project
+"       * Minor refactoring in lh#btw#filters functions
 "
 " TODO:                                  {{{2
 "       * &magic
@@ -356,11 +360,11 @@ endfunction
 " Build Chain:                           {{{2
 
 " Constants {{{3
-let s:commands="set\nsetlocal\nadd\naddlocal\nremove\nremovelocal\nrebuild\necho\ndebug\nreloadPlugin\n?\nhelp"
+let s:commands="set\nsetlocal\nadd\naddlocal\nremove\nremovelocal\nrebuild\necho\ndebug\nreloadPlugin\nnew_project\n?\nhelp"
 let s:functions="ToolsChain()\nHasFilterGuessScope(\nHasFilter(\nFindFilter("
 let s:functions=s:functions. "\nProjectName()\nTargetRule()\nExecutable()"
 let s:variables="commands\nfunctions\nvariables"
-
+let s:k_new_prj = ['c', 'cpp', 'cmake', 'name=', 'config=', 'src_dir=']
 
 " ToVarName(filterName):                         {{{3
 function! s:ToVarName(filterName)
@@ -399,6 +403,15 @@ function! BTWComplete(ArgLead, CmdLine, CursorPos)
     elseif -1 != match(a:CmdLine, '^BTW\s\+remove\%(local\)\=')
       " Removes a filter
       return substitute(s:FiltersList(), ',', '\n', 'g')
+    elseif -1 != match(a:CmdLine, '^BTW\s\+\<new\%[_project]\>')
+      return "c\ncpp\ncmake\nname=\nconfig=\nsrc_dir="
+    endif
+  elseif 4 <= pos
+    let p = matchend(a:CmdLine, '^BTW\s\+\<new\%[_project]\>')
+    if -1 != p
+      let already_there = split(a:CmdLine[p : ])
+      let g:already_there = already_there
+      return join(filter(copy(s:k_new_prj), 'match(already_there, "\\<".v:val."\\>")==-1'), "\n")
     endif
   endif
   " finally: unknown
@@ -436,6 +449,8 @@ if !exists('g:BTW_BTW_in_use')
     elseif a:command =~ '\%(help\|?\)'
       call s:Usage()
       return
+    elseif a:command =~ '\<new\%[_project]\>'
+      call call(function('lh#btw#project#new'), a:000)
     endif
     call s:ReconstructToolsChain()
   endfunction
@@ -809,7 +824,11 @@ function! s:DoRunAndCaptureOutput(program, ...)
       exe 'make! '. args
     endif
   catch /.*/
-    call lh#common#error_msg("Error: ".v:exception. " throw at: ".v:throwpoint)
+    if lh#btw#filters#verbose() > 0
+      debug call lh#common#error_msg("Error: ".v:exception. " thrown at: ".v:throwpoint)
+    else
+      call lh#common#error_msg("Error: ".v:exception. " thrown at: ".v:throwpoint)
+    endif
   finally
     let &makeprg = save_makeprg
   endtry
@@ -1025,9 +1044,15 @@ endfunction
 " and we can fold the messages from each test.
 " @todo move to autoload plugin
 function! s:RegisterFixCTest()
-  call lh#btw#filters#register_hook(s:getSNR('QuickFixCleanFolds'), 'pre')
-  call lh#btw#filters#register_hook(s:getSNR('FixCTestOutput'),     'post')
-  call lh#btw#filters#register_hook(s:getSNR('QuickFixDefFolds'),   'open')
+  let hooks = {
+        \ 'pre':  s:getSNR('QuickFixCleanFolds'),
+        \ 'post': s:getSNR('FixCTestOutput'),
+        \ 'open': s:getSNR('QuickFixDefFolds')
+        \ }
+  call lh#btw#filters#register_hooks(hooks)
+  " call lh#btw#filters#register_hook(s:getSNR('QuickFixCleanFolds'), 'pre')
+  " call lh#btw#filters#register_hook(s:getSNR('FixCTestOutput'),     'post')
+  " call lh#btw#filters#register_hook(s:getSNR('QuickFixDefFolds'),   'open')
 endfunction
 
 " Function: s:QuickFixCleanFolds() {{{3

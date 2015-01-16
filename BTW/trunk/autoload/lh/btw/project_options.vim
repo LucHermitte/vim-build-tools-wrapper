@@ -10,12 +10,12 @@
 "------------------------------------------------------------------------
 " Description:
 "       API to help define project options
-" 
+"
 "------------------------------------------------------------------------
 " Installation:
 "       Drop this file into {rtp}/autoload/lh/btw
 "       Requires Vim7+, lh-vim 3.1.6
-" History:      
+" History:
 "       v0.2.0: first factorization
 "       v0.2.11:
 "       * bug: don't prevent syntax highlighting & ft detection to be triggered
@@ -57,7 +57,7 @@
 "          \ 'menu': {'priority': s:menu_priority.'20', 'name': s:menu_name.'M&ode'},
 "          \ '_root': s:root
 "          \ }
-"    
+"
 "    function! g:sea_compil_mode_menu.do_update() dict
 "      let b:BTW_project_build_mode = g:sea_compil_mode
 "      call s:UpdateCompilDir()
@@ -125,13 +125,13 @@ function! s:Hook() dict
   let crt_value = self.val_id()
   if crt_value == previous
     call s:Verbose("abort for buffer ".expand('%:p'))
-    return 
+    return
   endif
-  try 
+  try
     sp
     " Bug: iterating on listed buffers (e.g. from vim *.cpp) is enough to
     " disable syntax highlighting
-    " => 
+    " =>
     " We delay the settings of b:variables for not loaded buffers.
     for b in lh#buffer#list('bufloaded')
       exe 'b '.b
@@ -146,7 +146,7 @@ endfunction
 
 " # s:Update(dict) {{{2
 function! s:Update(dict)
-  try 
+  try
     let p = expand('%:p')
     if !empty(p) && lh#path#is_in(p, a:dict._root)
       if s:verbose
