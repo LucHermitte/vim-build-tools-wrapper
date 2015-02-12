@@ -404,7 +404,7 @@ function! BTWComplete(ArgLead, CmdLine, CursorPos)
       " Removes a filter
       return substitute(s:FiltersList(), ',', '\n', 'g')
     elseif -1 != match(a:CmdLine, '^BTW\s\+\<new\%[_project]\>')
-      return "c\ncpp\ncmake\nname=\nconfig=\nsrc_dir="
+      return "c\ncpp\ncmake\ndoxygen\nname=\nconfig=\nsrc_dir="
     endif
   elseif 4 <= pos
     let p = matchend(a:CmdLine, '^BTW\s\+\<new\%[_project]\>')

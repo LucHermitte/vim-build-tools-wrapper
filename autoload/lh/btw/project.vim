@@ -49,6 +49,8 @@ endfunction
 " # New project {{{2
 " Function: lh#btw#project#new(...) {{{3
 function! lh#btw#project#new(...) abort
+  let extension_for_configurable_files = ''
+
   let args = call('lh#btw#project#_analyse_params', a:000)
   if has_key(args, '_prj_config')
     if args._prj_config !~ '^g:'
@@ -75,7 +77,9 @@ function! lh#btw#project#new(...) abort
       normal! G
       call lh#mut#expand_and_jump(0, 'vim/internals/vim-footer', args)
     endif
-    if has_key(args.project_kind, 'cmake')
+    let using_cmake = has_key(args.project_kind, 'cmake')
+    if using_cmake
+      let extension_for_configurable_files = 'in'
       sp _vimrc_local_global_defs.vim
       call lh#mut#expand_and_jump(0, 'vim/internals/vim-header', args)
       normal! G
@@ -86,6 +90,12 @@ function! lh#btw#project#new(...) abort
   finally
     call cleanup.finalize()
   endtry
+  if has_key(args.project_kind, 'doxygen')
+    exe 'sp Doxyfile'.extension_for_configurable_files
+  endif
+  if using_cmake
+    sp CMakeLists.txt
+  endif
 endfunction
 
 "------------------------------------------------------------------------
