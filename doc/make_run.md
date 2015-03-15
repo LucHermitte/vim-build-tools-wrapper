@@ -87,7 +87,7 @@ The best way to define this option is from a project oriented plugin like [local
 
 ## CMake based projects
 
-[I have a lot of things to say on this topic](doc/cmake.md).
+[I have a lot of things to say on this topic](cmake.md).
 
 
 # Execute
