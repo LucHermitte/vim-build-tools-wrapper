@@ -1,9 +1,9 @@
 *BuildToolsWrapper.txt* Projects building plugin
-                        For Vim version 7.x.    Last change: 19th Dec 2013
+                        For Vim version 7.x.    Last change: 15th Mar 2015
 
 
                 BuildToolsWrapper Plugin MANUAL   By Luc Hermitte
-                        version 0.2.15            <hermitte {at} free {dot} fr>
+                        version 0.3.4            <hermitte {at} free {dot} fr>
 
 
 ------------------------------------------------------------------------------
@@ -17,7 +17,7 @@ Contents~
 
 |BTW-Build-Execute|             Build and Execute
 
-|«link»|                «title»
+|?link?|                ?title?
 |add-local-help|        Instructions on installing this file
 
 
@@ -72,7 +72,7 @@ global settings.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                                                         *BTW-filter-purpose*
 
-«Insert here»
+?Insert here?
 
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -97,7 +97,7 @@ This command accepts the following sub-commands:
   ":BTW add(local)".
   With "addlocal", we override (ignore), in the scope of the current buffer, the
   filter-plugins globally loaded.
-  ¿ must add-global apply to local lists when they already exist ?
+  ? must add-global apply to local lists when they already exist ?
 
 - :BTW remove      {filter}                             *:BTW-remove*
 - :BTW removelocal {filter}                             *:BTW-removelocal*
@@ -323,5 +323,6 @@ TODO list~
 - Improve and document *QFImport* , *BTW_Compilation_dir* , "import:"
 
 ------------------------------------------------------------------------------
- © Luc Hermitte, 2004-2015, http://code.google.com/p/lh-vim/
+ ? Luc Hermitte, 2004-2015, <http://github.com/LucHermitte/vim-build-tools-wrapper>, CC by SA 3.0 {{{1
+ VIM: let b:VS_language = 'american'
  vim:ts=8:sw=4:tw=80:fo=tcq2:isk=!-~,^*,^\|,^\":ft=help:
