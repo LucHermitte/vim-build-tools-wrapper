@@ -43,3 +43,5 @@ There are a few alternative plugins that I'm aware of:
   * [Tim Pope's vim-dispatch](http://github.com/tpope/vim-dispatch) regarding the encapsulation of `:make`
   * Marc Weber's _name-forgotten_ plugin to run things in background
   * [Jacky Alciné's CMake.vim plugin](http://jalcine.github.io/cmake.vim/)
+
+[![Project Stats](https://www.openhub.net/p/21020/widgets/project_thin_badge.gif)](https://www.openhub.net/p/21020)
