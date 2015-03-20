@@ -1,13 +1,12 @@
 "=============================================================================
-" $Id$
 " File:		mk-BTW.vim
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
-" 		<URL:http://code.google.com/p/lh-vim/>
+" 		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:	0.3.4
-let s:version = '0.3.4'
+" Version:	0.4.0
+let s:version = '0.4.0'
 " Created:	06th Nov 2007
-" Last Update:	$Date$
+" Last Update:	20th Mar 2015
 "------------------------------------------------------------------------
 let s:project = 'lh-BTW'
 cd <sfile>:p:h

@@ -1,12 +1,12 @@
 "=============================================================================
-" $Id$
 " File:         autoload/lh/btw/filters.vim                       {{{1
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
-" 		<URL:http://code.google.com/p/lh-vim/>
+" 		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.3.4
+" Version:      0.4.0
+let s:k_version = 040
 " Created:      13th Mar 2014
-" Last Update:  $Date$
+" Last Update:  20th Mar 2015
 "------------------------------------------------------------------------
 " Description:
 "       Generic way to add on-the-fly filters and hooks on quickfix results
@@ -19,7 +19,6 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 034
 function! lh#btw#filters#version()
   return s:k_version
 endfunction
@@ -48,20 +47,23 @@ endfunction
 " ## Exported functions {{{1
 
 " # QuickFix Hooks {{{2
-" Function: lh#btw#filters#register_hook(Hook, kind) {{{3
-function! lh#btw#filters#register_hook(Hook, kind)
+" Function: lh#btw#filters#register_hook(prio, Hook, kind) {{{3
+function! lh#btw#filters#register_hook(prio, Hook, kind)
   if !exists('s:qf_hooks')
     call lh#btw#filters#_clear_hooks()
     augroup BTW_QF_PreHook
       au!
       " clean folding data before compiling
-      au QuickFixCmdPre  make call s:ApplyQuickFixHooks('pre')
-      au QuickFixCmdPost make call s:ApplyQuickFixHooks('post') 
-      au FileType        qf   call s:ApplyQuickFixHooks('open')
+      au QuickFixCmdPre  make call lh#btw#filters#_apply_quick_fix_hooks('pre')
+      au QuickFixCmdPost make call lh#btw#filters#_apply_quick_fix_hooks('post')
+      au FileType        qf   call lh#btw#filters#_apply_quick_fix_hooks('open')
     augroup END
   endif
 
-  let s:qf_hooks[a:kind][a:Hook] = function(a:Hook)
+  if !has_key(s:qf_hooks[a:kind], a:prio)
+    let s:qf_hooks[a:kind][a:prio] = {}
+  endif
+  let s:qf_hooks[a:kind][a:prio][a:Hook] = function(a:Hook)
 endfunction
 
 " Function: lh#btw#filters#register_hooks(Hooks) {{{3
@@ -72,36 +74,59 @@ function! lh#btw#filters#register_hooks(Hooks)
       au!
       " clean folding data before compiling
       au QuickFixCmdPre  make call s:ApplyQuickFixHooks('pre')
-      au QuickFixCmdPost make call s:ApplyQuickFixHooks('post') 
+      au QuickFixCmdPost make call s:ApplyQuickFixHooks('post')
       au FileType        qf   call s:ApplyQuickFixHooks('open')
     augroup END
   endif
 
-  for [kind, Hook] in a:Hooks
-    let s:qf_hooks[kind][Hook] = function(Hook)
+  for [kind, prio_hook] in items(a:Hooks)
+    for [prio, Hook] in items(prio_hook)
+      if !has_key(s:qf_hooks[kind], prio)
+        let s:qf_hooks[kind][prio] = {}
+      endif
+      let s:qf_hooks[kind][prio][Hook] = function(Hook)
+    endfor
   endfor
-
 endfunction
 
-" Function: s:ApplyQuickFixHooks(hook_kind) {{{3
-function! s:ApplyQuickFixHooks(hook_kind)
-  for Hook in values(s:qf_hooks[a:hook_kind])
-    if s:verbose > 1
-      echomsg a:hook_kind . ' -> ' . string(Hook)
-      debug call Hook()
-    else
-      call Hook()
-    endif
+" Function: lh#btw#filters#_apply_quick_fix_hooks(hook_kind) {{{3
+function! lh#btw#filters#_apply_quick_fix_hooks(hook_kind) abort
+  let hooks_by_prio_dict = s:qf_hooks[a:hook_kind]
+  let hooks_by_prio = items(hooks_by_prio_dict)
+  call sort(hooks_by_prio, 's:SortByFirstNum')
+  let hooks = map(copy(hooks_by_prio), 'v:val[1]')
+
+  for hooks_of_prio in hooks
+    for Hook in values(hooks_of_prio)
+      if s:verbose >= 1
+        echomsg a:hook_kind . ' -> ' . string(Hook)
+      endif
+      if s:verbose >= 2
+        debug call Hook()
+      else
+        call Hook()
+      endif
+    endfor
   endfor
 endfunction
 
 " Function: lh#btw#filters#_clear_hooks() {{{3
 function! lh#btw#filters#_clear_hooks()
-  let s:qf_hooks = {'pre':{}, 'post':{}, 'open':{}}
+  let s:qf_hooks = {'pre':{}, 'post':{}, 'open':{}, 'syntax':{}}
 endfunction
+
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
+" # Misc functions {{{2
+" Function: s:SortByFirstNum(lhs, rhs) {{{3
+function! s:SortByFirstNum(lhs, rhs)
+  let diff = eval(a:lhs[0]) - eval(a:rhs[0])
+  return    diff  < 0 ? -1
+        \ : diff == 0 ? 0
+        \ :             1
+endfunction
 
+" }}}1
 "------------------------------------------------------------------------
 let &cpo=s:cpo_save
 "=============================================================================

@@ -1,11 +1,10 @@
 "=============================================================================
-" $Id$
 " File:         plugin/BuildToolsWrapper.vim         {{{1
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
-"               <URL:http://code.google.com/p/lh-vim/>
+"               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
 " Last Update:  $Date$
-" Version:      0.3.4
+" Version:      0.4.0
 " Created:      28th Nov 2004
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
@@ -188,6 +187,15 @@
 "       * New subcommand to generate local_vimrc files for C&C++ projects and
 "         projects managed with CMake -> :BTW new_project
 "       * Minor refactoring in lh#btw#filters functions
+" v0.4.0: 20th Mar 2015
+"       * several functions moved to autoload plugins
+"       * filter BTW/sustitute_file supports several substitution lists with
+"         (bg):{ft_}BTW_substitute_names: [ [old1, new1], [old2, new2], ...]
+"       * filter BTW/sustitute_file permit to shorten (/conceal part of)
+"         filenames with
+"         (bg):{ft_}BTW_shorten_names: [ patterns, ...]
+"       * New hook group: "syntax"
+"       * qf_export_variable rewritten => many tests are required
 "
 " TODO:                                  {{{2
 "       * &magic
@@ -278,8 +286,8 @@ endfunction
 command! -nargs=+ -complete=custom,BTWComplete BTW :call s:BTW(<f-args>)
 
 " Quickfix import variables commands     {{{2
-command! -nargs=1 -complete=var QFImport      :call s:QFAddVarToImport(<f-args>)
-command! -nargs=0               QFClearImport :call s:QFClearImport()
+command! -nargs=1 -complete=var QFImport      :call lh#btw#qf_add_var_to_import(<f-args>)
+command! -nargs=0               QFClearImport :call lh#btw#qf_clear_import()
 
 " Build/Make invokation                  {{{2
 command! -nargs=* Make                  :call <sid>Compile("<args>")
@@ -347,15 +355,6 @@ endif
 " Internals                            {{{1
 
 let s:sfile = expand('<sfile>:p')
-
-" Misc Functions:                        {{{2
-" s:getSNR([func_name]) {{{3
-function! s:getSNR(...)
-  if !exists("s:SNR")
-    let s:SNR=matchstr(expand('<sfile>'), '<SNR>\d\+_\zegetSNR$')
-  endif
-  return s:SNR . (a:0>0 ? (a:1) : '')
-endfunction
 
 " Build Chain:                           {{{2
 
@@ -872,6 +871,7 @@ function! s:ShowError(...)
     if strlen(syn)
       silent exe 'runtime compiler/BTW/syntax/'.syn.'.vim'
     endif
+    call lh#btw#filters#_apply_quick_fix_hooks('syntax')
   endif
   if lh#option#get('BTW_GotoError', 1, 'g') == 1
   else
@@ -944,7 +944,7 @@ function! s:Execute()
       let makeprg = &makeprg
       if path.type == 'ctest'
         let makeprg = substitute(&makeprg, '\<make\>', 'ctest', '')
-        call s:RegisterFixCTest()
+        call lh#btw#_register_fix_ctest()
       endif
       if !empty(ctx)
         let p = matchend(makeprg, '.*;')
@@ -1035,198 +1035,6 @@ function! s:AddLetModeline()
       silent $put=l
     endif
   endif
-endfunction
-
-" Function: s:RegisterFixCTest()     {{{3
-" When working with CTest, we need to:
-" - translate the name of the files in error from "{test-number}: file:line:
-"   message"
-" and we can fold the messages from each test.
-" @todo move to autoload plugin
-function! s:RegisterFixCTest()
-  let hooks = {
-        \ 'pre':  s:getSNR('QuickFixCleanFolds'),
-        \ 'post': s:getSNR('FixCTestOutput'),
-        \ 'open': s:getSNR('QuickFixDefFolds')
-        \ }
-  call lh#btw#filters#register_hooks(hooks)
-  " call lh#btw#filters#register_hook(s:getSNR('QuickFixCleanFolds'), 'pre')
-  " call lh#btw#filters#register_hook(s:getSNR('FixCTestOutput'),     'post')
-  " call lh#btw#filters#register_hook(s:getSNR('QuickFixDefFolds'),   'open')
-endfunction
-
-" Function: s:QuickFixCleanFolds() {{{3
-function! s:QuickFixCleanFolds()
-  " echomsg "Clean QF folds"
-  let s:qf_folds = {}
-endfunction
-
-" Function: s:FixCTestOutput()       {{{3
-" Parse CTest output to fix filenames, and extract forlding information
-function! s:FixCTestOutput()
-  try
-    " echomsg "parse CTest output"
-    let qf_changed = 0
-    let qflist = getqflist()
-    let s:qf_folds = {-1: {}}
-    let line_nr = 1
-    let test_nr = -1
-    let test_name = ''
-    let test_name_lengths = []
-    for qf in qflist
-      let qft = qf.text
-      " echo '===<'.qft.'>==='
-      if      qft =~ '^test \d\+\s*$'
-        " Test start line
-        let test_nr = matchstr(qft, '^test \zs\d\+\ze\s*$')
-        " assert(!has_key(qf_folds, test_nr))
-        let s:qf_folds[test_nr] = {'begin': line_nr}
-        let s:qf_folds[-1][line_nr] = test_nr
-      elseif qft =~ '^\s*\d\+/\d\+ Test\s\+#\d\+:'
-        " Test end line
-        let test_nr = matchstr(qft, '^\s*\d\+/\d\+ Test\s\+#\zs\d\+\ze:')
-        let test_success = matchstr(qft,  '^\s*\d\+/\d\+ Test\s\+#\d\+:\s\+'.test_name.' \.\+\s*\zs\S\+')
-        let g:qft = qft
-        let s:qf_folds[test_nr].end = line_nr
-        let s:qf_folds[test_nr].complement = test_success
-        let test_nr = -1
-        let test_name = ''
-      elseif qft =~ '^\s*Start\s\+\d\+: '
-        let test_nr = matchstr(qft,  '^\s*Start\s\+\zs\d\+\ze:')
-        if !has_key(s:qf_folds, test_nr)
-          let s:qf_folds[test_nr] = {'begin': line_nr}
-          let s:qf_folds[-1][line_nr] = test_nr
-        endif
-        let test_name = matchstr(qft, '^\s*Start\s\+'.test_nr.': \zs\S\+\ze\s*$')
-        let s:qf_folds[test_nr].name = test_name
-        let test_name_lengths += [ len(test_name) ]
-      elseif qf.bufnr != 0
-        let b_name = bufname(qf.bufnr)
-        let update_bufnr = 0
-        if b_name =~ '^'.test_nr.': ' " CTest messing with errors
-          let b_name = b_name[len(test_nr.': '):]
-          let update_bufnr = 1
-            " echomsg test_nr .' -> '. b_name
-          " else
-            " echomsg test_nr .' != '. b_name
-        endif
-        if b_name =~ '^\S\+\s\+\S\+$' && qf.text =~ '\c.*Assertion.*'
-          let b_name = matchstr(b_name, '^\S\+\s\+\zs.*')
-          let update_bufnr = 1
-        endif
-        if update_bufnr
-          let msg = qf.bufnr . ' -> '
-          let qf.bufnr = lh#buffer#get_nr(b_name)
-          let msg.= qf.bufnr . ' ('.b_name.')'
-          " echomsg msg
-          let qf_changed = 1
-        endif
-      endif
-      let line_nr += 1
-    endfor
-
-    " Find the max length of all test names and align them.
-    let l = max(test_name_lengths)
-    for [t, pos] in items(s:qf_folds)
-      if t != -1
-        let pos.name .= ' '.repeat('.', 3 + l-len(pos.name))
-      endif
-    endfor
-
-    if qf_changed
-      call setqflist(qflist)
-    endif
-  catch /.*/
-    call lh#common#error_msg("Error: ".v:exception. " throw at: ".v:throwpoint)
-  endtry
-endfunction
-
-" Function: s:QuickFixDefFolds()     {{{3
-" Defines folds for each test
-" @param[in] s:qf_folds
-function! s:QuickFixDefFolds()
-  if !exists('s:qf_folds') | return | endif
-  for [t, pos] in items(s:qf_folds)
-    if t != -1
-      " echomsg t.' -> '.string(pos)
-      if has_key(pos, 'begin') && has_key(pos, 'end')
-        exe (pos.begin).','.(pos.end).'fold'
-      else
-        echomsg "Missing " .(has_key(pos, 'begin') ? "" : "-start-").(has_key(pos, 'end') ? "" : "-end-")." fold for test #".t
-      endif
-    endif
-  endfor
-  setlocal foldtext=BTWQFFoldText()
-endfunction
-
-" Function: BTWQFFoldText()          {{{3
-" Defines foldtext for each fold built from s:qf_folds
-" @param[in] s:qf_folds
-function! BTWQFFoldText()
-  let test_nr = s:qf_folds[-1][v:foldstart]
-  if !has_key(s:qf_folds[test_nr], 'complement') | return | endif
-  let t = foldtext().': '
-  let l = (4 - len(test_nr))
-  let t.= repeat(' ', l). (s:qf_folds[test_nr].name) .'   '
-  let t.= s:qf_folds[test_nr].complement
-  return t
-endfunction
-
-" Quickfix auto import:                  {{{2
-" Some variables need to be imported automatically into quickfix buffer
-" Variables:                         {{{3
-if !exists('s:qf_save')
-    let s:qf_save = {}
-endif
-if !exists('s:qf_options_to_import')
-  let s:qf_options_to_import = {}
-endif
-
-" Function: s:QuickFixImport()       {{{3
-function! s:QuickFixImport()
-    " echo "importing:".string(s:qf_save)
-    for var in keys(s:qf_options_to_import)
-      if has_key(s:qf_save, var)
-        exe 'let '.var.' = s:qf_save[var]'
-      endif
-    endfor
-endfunction
-
-" Function: s:QuickFixExport()       {{{3
-function! s:QuickFixExport()
-    " if &ft !~ '^cpp$\|^c$'
-        " return
-    " endif
-    for var in keys(s:qf_options_to_import)
-      if exists(var)
-            exe 'let s:qf_save[var] = '.var
-        else
-            echomsg "Export: {".var."} does not exist"
-        endif
-    endfor
-    " echo "exported:".string(s:qf_save)
-endfunction
-
-" Augroup: QFImport                  {{{3
-aug QFImport
-    au!
-    au FileType qf :call <sid>QuickFixImport()
-    " au BufLeave * :call <sid>QuickFixExport()
-aug END
-
-" Function: s:QFAddVarToImport()     {{{3
-function! s:QFAddVarToImport(varname)
-  let s:qf_options_to_import[a:varname] = 1
-endfunction
-
-" Function: s:QFRemoveVarToImport()  {{{3
-function! s:QFRemoveVarToImport(varname)
-  silent! unlet s:qf_options_to_import[a:varname]
-endfunction
-
-" Function: s:QFClearVarToImport()   {{{3
-function! s:QFRemoveVarToImport(varname)
-  let s:qf_options_to_import = {}
 endfunction
 
 " Internals }}}1
