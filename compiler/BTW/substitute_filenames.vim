@@ -14,6 +14,8 @@
 "       The actual file that needs to be opened in the original file in thoses
 "       cases.
 "
+" Parameters:
+"   - (bg):{ft_}BTW_substitute_names: [ [old1, new1], [old2, new2], ...]
 "------------------------------------------------------------------------
 " TODO:
 "       Support multiple uses:
@@ -26,29 +28,12 @@
 let s:cpo_save=&cpo
 set cpo&vim
 "------------------------------------------------------------------------
-
-" Inputs:
-"   - (bg):{ft_}BTW_substitute_names: [ [old1, new1], [old2, new2], ...]
-"   - (bg):{ft_}BTW_shorten_names: [ patterns, ...]
+" Main {{{1
 function! BTW_Substitute_Filenames() abort
   let list = lh#dev#option#get('BTW_substitute_names', &ft, [])
   if !empty(list)
     call s:Transform(list, 1)
   endif
-endfunction
-
-function! BTW_Shorten_Filenames() abort
-  echomsg bufnr('%')
-  " We cannot apply s:Tranform to shorten filename.
-  " Indeed the qf.text won't contain the filename. Filenames have already
-  " been decoded and replaced by a bufnr.
-  " At best, we can conceal
-  syn match qfFileName /^[^|]*/  nextgroup=qfSeparator contains=qfShortenFile
-  let list = lh#dev#option#get('BTW_shorten_names', &ft, [])
-  for pat in list
-    exe 'syn match qfShortenFile #'.pat.'# conceal contained cchar=&'
-  endfor
-  setlocal conceallevel=1
 endfunction
 
 function! s:Transform(list, doSubstitute) abort
@@ -110,8 +95,8 @@ function! s:Transform(list, doSubstitute) abort
 endfunction
 
 call lh#btw#filters#register_hook(2, 'BTW_Substitute_Filenames', 'post')
-call lh#btw#filters#register_hook(8, 'BTW_Shorten_Filenames', 'syntax')
 
+" }}}1
 let &cpo=s:cpo_save
 "=============================================================================
 " vim600: set fdm=marker:
