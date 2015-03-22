@@ -89,8 +89,8 @@ call lh#btw#filters#register_hook(8, 'BTW_Shorten_Filenames', 'syntax')
 This filters corrects filenames within vim.
 
 Some programs may produce error messages that cannot be decoded with vim
-`'errorformat'` option -- see CTest that prepends each line produce by the number
-of the test followed by a `>`.
+`'errorformat'` option -- see CTest that prepends each line produced by the
+number of the test followed by a `>`.
 
 This filter permits to correct, from within Vim, filenames produced. It has the
 advantage of being portable (the filter relies exclusively on VimL), however
