@@ -98,9 +98,7 @@ function! lh#btw#filters#_apply_quick_fix_hooks(hook_kind) abort
 
   for hooks_of_prio in hooks
     for Hook in values(hooks_of_prio)
-      if s:verbose >= 1
-        echomsg a:hook_kind . ' -> ' . string(Hook)
-      endif
+      call s:Verbose(a:hook_kind . ' -> ' . string(Hook))
       if s:verbose >= 2
         debug call Hook()
       else

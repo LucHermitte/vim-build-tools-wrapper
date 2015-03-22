@@ -207,7 +207,7 @@ endif
 
 " Function: s:QuickFixImport()       {{{3
 function! s:QuickFixImport()
-    echo "importing:".string(s:qf_save)
+    call s:Verbose("importing:".string(s:qf_save))
     for var in keys(s:qf_options_to_import)
       if has_key(s:qf_save, var)
         exe 'let '.var.' = s:qf_save[var]'

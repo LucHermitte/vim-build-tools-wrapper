@@ -191,9 +191,9 @@
 "       * several functions moved to autoload plugins
 "       * filter BTW/sustitute_file supports several substitution lists with
 "         (bg):{ft_}BTW_substitute_names: [ [old1, new1], [old2, new2], ...]
-"       * filter BTW/sustitute_file permit to shorten (/conceal part of)
+"       * filter BTW/shorten_filenames permits to shorten (/conceal part of)
 "         filenames with
-"         (bg):{ft_}BTW_shorten_names: [ patterns, ...]
+"         (bg):{ft_}BTW_shorten_names: [ pattern, [pattern,cchar], ...]
 "       * New hook group: "syntax"
 "       * qf_export_variable rewritten => many tests are required
 "
