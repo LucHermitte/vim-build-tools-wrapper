@@ -3,9 +3,9 @@
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      0.4.0.
-let s:k_version = '040'
+let s:k_version = 040
 " Created:      22nd Mar 2015
-" Last Update:  $Date$
+" Last Update:  23rd Mar 2015
 "------------------------------------------------------------------------
 " Description:
 "       BTW filter to shorter filenames (with conceal feature)
@@ -21,7 +21,6 @@ set cpo&vim
 "------------------------------------------------------------------------
 " Main {{{1
 function! BTW_Shorten_Filenames() abort
-  echomsg bufnr('%')
   " We cannot apply s:Tranform (from substitute_filenames) to shorten filename.
   " Indeed the qf.text won't contain the filename. Filenames have already
   " been decoded and replaced by a bufnr.
@@ -40,6 +39,7 @@ function! BTW_Shorten_Filenames() abort
     exe 'syn match qfShortenFile #'.expr.'# conceal contained cchar='.cchar
   endfor
   setlocal conceallevel=1
+  setlocal concealcursor=nc
 endfunction
 
 call lh#btw#filters#register_hook(8, 'BTW_Shorten_Filenames', 'syntax')
