@@ -91,6 +91,7 @@ endfunction
 
 " Function: lh#btw#filters#_apply_quick_fix_hooks(hook_kind) {{{3
 function! lh#btw#filters#_apply_quick_fix_hooks(hook_kind) abort
+  if !exists('s:qf_hooks') | return | endif
   let hooks_by_prio_dict = s:qf_hooks[a:hook_kind]
   let hooks_by_prio = items(hooks_by_prio_dict)
   call sort(hooks_by_prio, 's:SortByFirstNum')
