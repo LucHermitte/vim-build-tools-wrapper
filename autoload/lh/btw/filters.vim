@@ -6,7 +6,7 @@
 " Version:      0.4.0
 let s:k_version = 040
 " Created:      13th Mar 2014
-" Last Update:  20th Mar 2015
+" Last Update:  23rd Mar 2015
 "------------------------------------------------------------------------
 " Description:
 "       Generic way to add on-the-fly filters and hooks on quickfix results
@@ -17,13 +17,13 @@ let s:k_version = 040
 let s:cpo_save=&cpo
 set cpo&vim
 "------------------------------------------------------------------------
-" ## Misc Functions     {{{1
-" # Version {{{2
+" ## Misc Functions                                               {{{1
+" # Version        {{{2
 function! lh#btw#filters#version()
   return s:k_version
 endfunction
 
-" # Debug   {{{2
+" # Debug          {{{2
 if !exists('s:verbose')
   let s:verbose = 0
 endif
@@ -44,10 +44,10 @@ endfunction
 
 
 "------------------------------------------------------------------------
-" ## Exported functions {{{1
+" ## Exported functions                                           {{{1
 
 " # QuickFix Hooks {{{2
-" Function: lh#btw#filters#register_hook(prio, Hook, kind) {{{3
+" Function: lh#btw#filters#register_hook(prio, Hook, kind)   {{{3
 function! lh#btw#filters#register_hook(prio, Hook, kind)
   if !exists('s:qf_hooks')
     call lh#btw#filters#_clear_hooks()
@@ -66,7 +66,7 @@ function! lh#btw#filters#register_hook(prio, Hook, kind)
   let s:qf_hooks[a:kind][a:prio][a:Hook] = function(a:Hook)
 endfunction
 
-" Function: lh#btw#filters#register_hooks(Hooks) {{{3
+" Function: lh#btw#filters#register_hooks(Hooks)             {{{3
 function! lh#btw#filters#register_hooks(Hooks)
   if !exists('s:qf_hooks')
     call lh#btw#filters#_clear_hooks()
@@ -109,15 +109,15 @@ function! lh#btw#filters#_apply_quick_fix_hooks(hook_kind) abort
   endfor
 endfunction
 
-" Function: lh#btw#filters#_clear_hooks() {{{3
+" Function: lh#btw#filters#_clear_hooks()                    {{{3
 function! lh#btw#filters#_clear_hooks()
   let s:qf_hooks = {'pre':{}, 'post':{}, 'open':{}, 'syntax':{}}
 endfunction
 
 "------------------------------------------------------------------------
-" ## Internal functions {{{1
+" ## Internal functions                                           {{{1
 " # Misc functions {{{2
-" Function: s:SortByFirstNum(lhs, rhs) {{{3
+" Function: s:SortByFirstNum(lhs, rhs)                       {{{3
 function! s:SortByFirstNum(lhs, rhs)
   let diff = eval(a:lhs[0]) - eval(a:rhs[0])
   return    diff  < 0 ? -1

@@ -49,6 +49,15 @@ endfunction
 
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
+" # Misc Functions:                        {{{2
+" s:getSNR([func_name]) {{{3
+function! s:getSNR(...)
+  if !exists("s:SNR")
+    let s:SNR=matchstr(expand('<sfile>'), '<SNR>\d\+_\zegetSNR$')
+  endif
+  return s:SNR . (a:0>0 ? (a:1) : '')
+endfunction
+
 " Function: lh#btw#_evaluate(expr) {{{2
 function! lh#btw#_evaluate(expr)
   if type(a:expr) == type({})
@@ -250,16 +259,6 @@ endfunction
 " Function: lh#btw#qf_clear_import()   {{{3
 function! lh#btw#qf_clear_import()
   let s:qf_options_to_import = {}
-endfunction
-
-
-" # Misc Functions:                        {{{2
-" s:getSNR([func_name]) {{{3
-function! s:getSNR(...)
-  if !exists("s:SNR")
-    let s:SNR=matchstr(expand('<sfile>'), '<SNR>\d\+_\zegetSNR$')
-  endif
-  return s:SNR . (a:0>0 ? (a:1) : '')
 endfunction
 
 "------------------------------------------------------------------------
