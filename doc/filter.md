@@ -7,7 +7,7 @@ When one wants to use another compiler from vim, he has to load it with the `:co
   * If we want to transform cygwin pathnames into windows pathnames (because we are using compilers, coming from cygwin, from win32-gvim), we will have to patch all related compiler-plugins to fix `'makeprg'`.
   * We may also want to parse C++ compilation outputs with the [indispensable STLfilt](http://www.bdsoft.com/tools/stlfilt.html).
   * If we want to use a compiler, or another, from ant+cpp\_task, well. There I don't know what needs to be patched.
-  * If we compile (with whatever compiler) from CMake, or if we run CTest, we will have to get rid of those damn leading "`%d><>«»`" that CMake adds, otherwise vim won't be able to apply correctly `'errorformat'` in order to populate the quickfix-window.
+  * If we compile (with whatever compiler) from CMake, or if we run CTest, we will have to get rid of those damn leading "`%d>`" that CMake adds, otherwise vim won't be able to apply correctly `'errorformat'` in order to populate the quickfix-window.
 
 In short, compiler-plugins don't scale. Sometimes, we need to add one filter, sometimes another or several. This is where BTW saves the day.
 
@@ -44,7 +44,14 @@ Any compiler-plugin installed can be used as a filter.
 Any program available in the path can be a filter (dmSTLfilt.pl, c++filt, ...)
 
 #### `cygwin`
-Fixes cygwin pathnames into windows pathnames.
+This filter fixes cygwin pathnames into windows pathnames.
+
+In the _vimrc\_local file, I write:
+```vim
+if lh#system#OnDOSWindows() && lh#system#SystemDetected() == 'unix'
+    BTW add cygwin
+endif
+```
 
 #### Compilation chains
 `make`, `ant` (fix program output), `aap`
@@ -57,23 +64,33 @@ executables.
 Filters C++ compiler output to in order to have readable error messages (the
 .vim file may need to be tuned to use the right STL filter).
 
+```vim
+BTW add STLfilt
+```
+
 #### `SunSWProLinkIsError`
 To have SunCC link error appear as link errors.
 
 #### `shorten_filenames`
 This filter conceals part of filenames.
 
-It is parametrized with the [lh-dev option](http://github.com/LucHermitte/lh-dev)
+It is parametrized with the [lh-dev option](http://github.com/LucHermitte/lh-dev#options-1)
 `(bg):{ft_}BTW_shorten_names`. The option takes a list of regex to conceal with
 `&` and/or lists of regex+conceal-characters, e.g.
 
 ```vim
-" in a _vimrc_local.vim file
+" #### in a _vimrc_local.vim file
+" Define the concealled file parts
 let b:BTW_shorten_names = [
     \   [ '/usr/include', 'I' ],
     \   [ '/usr/local/include', 'L' ],
     \   'foobar'
     \ ]
+" Tell to automatically import the buffer local variable to the quickfix
+" window
+QFImport b:BTW_shorten_names
+" Add the filter to the list of filter applied
+BTW addlocal shorten_filenames
 ```
 
 Note: It's executed with _syntax_ _hooks_ of priority 8. The way quickfix
@@ -103,17 +120,30 @@ use this filter.
 
 
 The filter is parametrized with the
-[lh-dev option](http://github.com/LucHermitte/lh-dev)
+[lh-dev option](http://github.com/LucHermitte/lh-dev#options-1)
 `(bg):{ft_}BTW_substitute_names`. The option takes a list of lists. Each
 sublist contains a regex to match filenames to corrects, and the replacement
 text.
 
 ```vim
-" in a _vimrc_local.vim file
+" #### in a _vimrc_local.vim file
+" Define how filenames are converted
+" - ^%d> is stripped
+" - */build/{build-type}/copy_xsd (automatically filled and generated during
+"   the compilation by copying files from
+"   {project-root}/data/xsd/GENERATION_SCHEMAS/) is converted to the original file.
 let b:BTW_substitute_names = [
     \   [ '\d\+>\s*', ''],
-    \   [ lh#function#bind(b:build_dir.'/xsd'), b:sources_dir.'/xsd']
+    \   [
+    \     lh#function#bind(string('^'.b:BTW_compilation_dir.'/copy_xsds')),
+    \     g:PRJ_config.paths.trunk.'/../data/xsd/GENERATION_SCHEMAS'
+    \   ]
     \ ]
+" Tell to automatically import the buffer local variable to the quickfix
+" window
+QFImport b:BTW_substitute_names
+" Add the filter to the list of filter applied
+BTW addlocal substitute_filenames
 ```
 
 Note: It's executed with a _post_ _hook_ of priority 2.
@@ -126,16 +156,6 @@ call lh#btw#filters#register_hook(2, 'BTW_Substitute_Filenames', 'post')
 To be documented...
 
 ## Some examples
-
-### Simple C++ project, that may be compiled under cygwin
-
-In the _vimrc\_local file, I write:
-```vim
-BTW add STLfilt
-if lh#system#OnDOSWindows() && lh#system#SystemDetected() == 'unix'
-    BTW add cygwin
-endif
-```_
 
 ### C++ project, compiled with g++ through ant and cpp\_task
 ```vim
