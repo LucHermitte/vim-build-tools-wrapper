@@ -30,8 +30,8 @@ function! BTW_Shorten_Filenames() abort
   let list = lh#dev#option#get('BTW_shorten_names', &ft, [])
   for pat in list
     if type(pat)==type([])
-      let expr  = pat[1]
-      let cchar = pat[2]
+      let expr  = pat[0]
+      let cchar = pat[1]
     else
       let expr  = pat
       let cchar = '&'
