@@ -1,8 +1,7 @@
 "=============================================================================
-" $Id$
 " File:         autoload/lh/btw/cmake.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
-"		<URL:http://code.google.com/p/lh-vim/>
+"		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      0.2.14
 " Created:      12th Sep 2012
 " Last Update:  $Date$
@@ -12,7 +11,7 @@
 " Example:
 "    let s:menu_priority = '50.120.'
 "    let s:menu_name     = '&Project.&FooBar.'
-"    
+"
 "    let g:foorbar_config_menu = {
 "          \ '_project': 'project_config',
 "          \ 'menu': {'priority': s:menu_priority, 'name': s:menu_name}
@@ -32,7 +31,7 @@
 " Installation:
 "       Requires Vim7+, lh-vim-lib 3.1.9+
 " History:      «history»
-" TODO:         
+" TODO:
 "       Simplify the definition of the "_project" sub-dictionary as it requires
 "       many options.
 "       For multiple tests, we need to use -I <coma-sep-list> and not -R
@@ -97,7 +96,7 @@ endfunction
 if !exists('s:config')
   let s:config = {}
 endif
-function! lh#btw#cmake#def_options(config, options)
+function! lh#btw#cmake#def_options(config, options) abort
   let s:config[a:config._project] = a:config " in case it is required to access other config stuff
   " Set default values
   call lh#let#if_undef('g:'.a:config._project.'.compilation.mode',      string('Release'))
@@ -133,8 +132,8 @@ endfunction
 " {menu_def} shall contain:
 " - menu.priority and menu.name
 " - _project settings
-function! lh#btw#cmake#def_toggable_compil_mode(menu_def)
-  function! a:menu_def.project() dict " dereference _project
+function! lh#btw#cmake#def_toggable_compil_mode(menu_def) abort
+  function! a:menu_def.project() dict abort " dereference _project
     return eval('g:'.self._project)
   endfunction
   " Automatically set variables for lh#btw#project_options#add_toggle_option,
@@ -153,7 +152,7 @@ function! lh#btw#cmake#def_toggable_compil_mode(menu_def)
   if !has_key(a:menu_def, 'update_compil_dir')
     let a:menu_def.update_compil_dir = function(s:getSNR('UpdateCompilDir'))
   endif
-  function! a:menu_def.do_update() dict
+  function! a:menu_def.do_update() dict abort
     let b:BTW_project_build_mode = self.eval()
     call self.update_compil_dir()
     BTW rebuild
@@ -166,8 +165,8 @@ endfunction
 " {menu_def} shall contain:
 " - menu.priority and menu.name
 " - _project settings
-function! lh#btw#cmake#def_toggable_ctest_verbosity(menu_def)
-  function! a:menu_def.project() dict " dereference _project
+function! lh#btw#cmake#def_toggable_ctest_verbosity(menu_def) abort
+  function! a:menu_def.project() dict abort " dereference _project
     return eval('g:'.self._project)
   endfunction
   " Automatically set variables for lh#btw#project_options#add_toggle_option,
@@ -187,7 +186,7 @@ function! lh#btw#cmake#def_toggable_ctest_verbosity(menu_def)
   if !has_key(a:menu_def, 'set_ctest_argument')
     let a:menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument'))
   endif
-  function! a:menu_def.do_update() dict
+  function! a:menu_def.do_update() dict abort
     call self.set_ctest_argument()
   endfunction
   call lh#btw#project_options#add_toggle_option(a:menu_def)
@@ -197,8 +196,8 @@ endfunction
 " {menu_def} shall contain:
 " - menu.priority and menu.name
 " - _project settings
-function! lh#btw#cmake#def_ctest_targets(menu_def)
-  function! a:menu_def.project() dict " dereference _project
+function! lh#btw#cmake#def_ctest_targets(menu_def) abort
+  function! a:menu_def.project() dict abort " dereference _project
     return eval('g:'.self._project)
   endfunction
   " Automatically set variables for lh#btw#project_options#add_toggle_option,
@@ -214,7 +213,7 @@ function! lh#btw#cmake#def_ctest_targets(menu_def)
   if !has_key(a:menu_def, 'set_ctest_argument')
     let a:menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument'))
   endif
-  function! a:menu_def.do_update() dict
+  function! a:menu_def.do_update() dict abort
     call self.set_ctest_argument()
   endfunction
   call lh#btw#project_options#add_string_option(a:menu_def)
@@ -224,8 +223,8 @@ endfunction
 " {menu_def} shall contain:
 " - menu.priority and menu.name
 " - _project settings
-function! lh#btw#cmake#def_toggable_ctest_checkmem(menu_def)
-  function! a:menu_def.project() dict " dereference _project
+function! lh#btw#cmake#def_toggable_ctest_checkmem(menu_def) abort
+  function! a:menu_def.project() dict abort " dereference _project
     return eval('g:'.self._project)
   endfunction
   " Automatically set variables for lh#btw#project_options#add_toggle_option,
@@ -242,7 +241,7 @@ function! lh#btw#cmake#def_toggable_ctest_checkmem(menu_def)
   if !has_key(a:menu_def, 'set_ctest_argument')
     let a:menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument'))
   endif
-  function! a:menu_def.do_update() dict
+  function! a:menu_def.do_update() dict abort
     call self.set_ctest_argument()
   endfunction
   call lh#btw#project_options#add_toggle_option(a:menu_def)
@@ -261,7 +260,7 @@ function! lh#btw#cmake#update_list(menu_def) abort
   let p = expand('%:p')
   " a:menu_def.project().paths.trunk
   if empty(p) || lh#path#is_in(p, a:menu_def.project().paths.trunk) != 0
-    return 
+    return
   endif
 
   let menu_def = s:config[proj_id].update_list

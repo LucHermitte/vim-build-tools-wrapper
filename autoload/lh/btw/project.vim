@@ -1,15 +1,14 @@
 "=============================================================================
-" $Id$
 " File:         autoload/lh/btw/project.vim                       {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
-"		<URL:http://code.google.com/p/lh-vim/>
+"		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      0.3.4.
 let s:k_version = 034
 " Created:      15th Jan 2015
-" Last Update:  $Date$
+" Last Update:  24th Mar 2015
 "------------------------------------------------------------------------
 " Description:
-"       «description»
+"       Internal functions to generate new project config files from templates.
 " Todo:
 " * Apply mt_jump_to_first_markers on the 2 other files generated
 " }}}1

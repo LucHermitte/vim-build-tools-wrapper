@@ -1,12 +1,11 @@
 "=============================================================================
-" $Id$
 " File:         autoload/lh/btw/project_options.vim               {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
-"		<URL:http://code.google.com/p/lh-vim/>
+"		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
 " Version:	0.2.14
 " Created:      06th Sep 2012
-" Last Update:  $Date$
+" Last Update:  24th Mar 2015
 "------------------------------------------------------------------------
 " Description:
 "       API to help define project options
@@ -111,7 +110,7 @@ endif
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
 " # s:Hook() dict {{{2
-function! s:Hook() dict
+function! s:Hook() dict abort
   " First check whether the data has already been updated for the buffer
   " considered
   let bid = bufnr('%')
@@ -145,7 +144,7 @@ function! s:Hook() dict
 endfunction
 
 " # s:Update(dict) {{{2
-function! s:Update(dict)
+function! s:Update(dict) abort
   try
     let p = expand('%:p')
     if !empty(p) && lh#path#is_in(p, a:dict._root)
@@ -174,7 +173,7 @@ endfunction
 "------------------------------------------------------------------------
 " ## Exported functions {{{1
 " Function: lh#btw#project_options#add_toggle_option(menu) {{{2
-function! lh#btw#project_options#add_toggle_option(menu)
+function! lh#btw#project_options#add_toggle_option(menu) abort
   if has_key(s:menus, a:menu.variable)
     " need to merge new info (i.e. everything but idx_crt_value)
     let menu = s:menus[a:menu.variable]
@@ -191,7 +190,7 @@ function! lh#btw#project_options#add_toggle_option(menu)
 endfunction
 
 " Function: lh#btw#project_options#add_string_option(menu) {{{2
-function! lh#btw#project_options#add_string_option(menu)
+function! lh#btw#project_options#add_string_option(menu) abort
   if has_key(s:menus, a:menu.variable)
     " need to merge new info (i.e. everything but idx_crt_value)
     let menu = s:menus[a:menu.variable]
