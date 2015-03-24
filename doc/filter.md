@@ -12,24 +12,25 @@ When we want to use another compiler from vim, we have to load it with the
        closing angle bracket: `%d>`.
 
   * Default compiler plugins don't translate pathnames on the fly, nor simplify
-    error messages. This means that we'll to pipe the result of the
+    error messages. This means that we'll have to pipe the result of the
     compilation chain (`make`, `ant`, `bjam`, ...) with:
     * the [indispensable STLfilt](http://www.bdsoft.com/tools/stlfilt.html) or
       [gccfilter](http://www.mixtion.org/gccfilter/) in order to simplify C++
       error messages ;
     * `cygpath` in order to transform cygwin pathnames into windows pathnames
-      (because we are using compilers, coming from cygwin, from win32-gvim).
+      (because we are using compilers, coming from cygwin, from native-gvim).
     * `c++filt` if we want to parse compilation output to transform all C++
       mangled names into something comprehensible.
+
     In any case, we certainly don't want to define one compiler plugin for each
-    possible case (make + gccfilter, make + gccfilter + cygwin, ant + STLFilt +
+    possible situation (make + gccfilter, make + gccfilter + cygwin, ant + STLFilt +
     cygwin, ...)
 
   * Compiler plugins are made to support a single tool. Using several tools
     together is not expected. It means that:
     * We cannot compile with ant, convert cygwin filenames and expect gcc error
       messages (_corrupted_ by ant)
-    * We cannot decode error message from several distinct compilers or tools
+    * We cannot decode error messages from several distinct compilers or tools
       used by a common compilation chain: a Makefile can execute `$(CXX)`,
       `$(FC)`, Doxygen, and LaTeX.
 
@@ -47,7 +48,7 @@ Filters are of several kinds:
   * The ones that fix `'errorformat'`
   * The ones that add useless but neat things (highlighting of result, folding related things, concealling of non pertinent text, ...)
 
-### 2.1- Use a filter
+### 2.1- Using filters
 
 #### Listing active filters: `:BTW echo ToolsChain()`
 The list of active filters in the current buffer can be obtained with:
@@ -73,7 +74,7 @@ Other filters are simply added with either:
 If you're using a plugin that permits to emulate projects like
 [local_vimrc](http://github.com/LucHermitte/local_vimrc) prefer `setlocal` and
 `addlocal` subcommands. The filters used will be local to the buffers (/files)
-belonding to the project.
+belonging to the project.
 
 Note: if `setlocal` or `addlocal` have been used in a buffer, the filters added
 with `set` or `add` will be ignored.
@@ -115,10 +116,11 @@ endif
 `make`, `ant` (fix program output), `aap`
 
 #### `cmake`
-Fixes this damn `%d>` that prepends outputs from `cmake` and `ctest`
+Removes this damn `%d>` that prepends outputs from `cmake` and `ctest`
 executables.
 
 ```vim
+" #### in _vimrc_local.vim
 :BTW setlocal cmake
 ```
 
@@ -126,6 +128,7 @@ This is mainly meant when the compilation is done with `cmake --build`. Tests ex
 thanks to CTest are addressed with the _project execution type_, when the tests
 are run with `<C-F5>`:
 ```vim
+" #### in _vimrc_local.vim
 LetIfUndef b:BTW_project_executable.type 'ctest'
 ```
 
