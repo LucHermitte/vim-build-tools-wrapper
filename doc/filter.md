@@ -1,33 +1,68 @@
 # Filter compilation output
 
-## Rationale
+## 1- Rationale
 
-When one wants to use another compiler from vim, he has to load it with the `:compiler` command. This is nice. But this is not enough.
-  * If we want to parse compilation output to transform all C++ mangled names into something comprehensible, with gcc, sun CC, clang, or whatever compiler, we need to patch {rtp}/compiler/gcc.vim, or to change manually `'makeprg'` to run `c++filt`
-  * If we want to transform cygwin pathnames into windows pathnames (because we are using compilers, coming from cygwin, from win32-gvim), we will have to patch all related compiler-plugins to fix `'makeprg'`.
-  * We may also want to parse C++ compilation outputs with the [indispensable STLfilt](http://www.bdsoft.com/tools/stlfilt.html).
-  * If we want to use a compiler, or another, from ant+cpp\_task, well. There I don't know what needs to be patched.
-  * If we compile (with whatever compiler) from CMake, or if we run CTest, we will have to get rid of those damn leading "`%d>`" that CMake adds, otherwise vim won't be able to apply correctly `'errorformat'` in order to populate the quickfix-window.
+When we want to use another compiler from vim, we have to load it with the
+`:compiler` command. This way we can change the `'errorformat'` and the
+`'makeprg'` options. This is nice. But this is not enough.
+  * This approach does not permit to parse every error format. For instance:
+    *  It's impossible to have `'errorformat'` decode error messages produced
+       by CMake (when used to compile, with whatever compiler) or CTest. Indeed
+       these tools prepend each line produced with a number followed by a
+       closing angle bracket: `%d>`.
 
-In short, compiler-plugins don't scale. Sometimes, we need to add one filter, sometimes another or several. This is where BTW saves the day.
+  * Default compiler plugins don't translate pathnames on the fly, nor simplify
+    error messages. This means that we'll to pipe the result of the
+    compilation chain (`make`, `ant`, `bjam`, ...) with:
+    * the [indispensable STLfilt](http://www.bdsoft.com/tools/stlfilt.html) or
+      [gccfilter](http://www.mixtion.org/gccfilter/) in order to simplify C++
+      error messages ;
+    * `cygpath` in order to transform cygwin pathnames into windows pathnames
+      (because we are using compilers, coming from cygwin, from win32-gvim).
+    * `c++filt` if we want to parse compilation output to transform all C++
+      mangled names into something comprehensible.
+    In any case, we certainly don't want to define one compiler plugin for each
+    possible case (make + gccfilter, make + gccfilter + cygwin, ant + STLFilt +
+    cygwin, ...)
 
-## Filters
+  * Compiler plugins are made to support a single tool. Using several tools
+    together is not expected. It means that:
+    * We cannot compile with ant, convert cygwin filenames and expect gcc error
+      messages (_corrupted_ by ant)
+    * We cannot decode error message from several distinct compilers or tools
+      used by a common compilation chain: a Makefile can execute `$(CXX)`,
+      `$(FC)`, Doxygen, and LaTeX.
+
+  * Compiler-plugins aren't meant either to handle folding, or to conceal text
+    in the quickfix window.
+
+In short, compiler-plugins don't scale. Sometimes, we need to add one filter,
+sometimes another or several. This is where BTW saves the day.
+
+## 2- Filters
 
 Filters are of several kinds:
   * The ones that set what is to used as the main compilation chain (make, nmake, ant, rake, javac, ...)
   * The ones that filter the result of the compilation chain (cygwin make&gcc called from win32-gvim, application of STLfilt, cleaning up of CMake noise, ...)
   * The ones that fix `'errorformat'`
-  * The ones that add useless but neat things (highlighting of result, folding related things, ...)
+  * The ones that add useless but neat things (highlighting of result, folding related things, concealling of non pertinent text, ...)
 
-### Use a filter
+### 2.1- Use a filter
 
-Filters that set the compilation chain are to be used with either:
+#### Listing active filters: `:BTW echo ToolsChain()`
+The list of active filters in the current buffer can be obtained with:
+```vim
+BTW echo ToolsChain()
+```
+
+#### Adding filters: `:BTW set(local)`
+In order to specify the compilation chain use:
 ```vim
 :BTW set _name of the filter_
 :BTW setlocal _name of the filter_
 ```
 
-By default, vim default `'errorformat`' and `'makeprg'` are used.
+By default, vim default `'errorformat`' and `'makeprg'` are used. This is `make` filter.
 
 Other filters are simply added with either:
 ```vim
@@ -35,13 +70,36 @@ Other filters are simply added with either:
 :BTW addlocal _name of the filter_
 ```
 
-### Default filters
+If you're using a plugin that permits to emulate projects like
+[local_vimrc](http://github.com/LucHermitte/local_vimrc) prefer `setlocal` and
+`addlocal` subcommands. The filters used will be local to the buffers (/files)
+belonding to the project.
+
+Note: if `setlocal` or `addlocal` have been used in a buffer, the filters added
+with `set` or `add` will be ignored.
+
+#### Removing filters: `:BTW remove(local)`
+A filter added can be removed with:
+```vim
+:BTW remove _name of the filter_
+:BTW removelocal _name of the filter_
+```
+
+Notes:
+  * This two commands are meant for interactive tests of filters. If you have
+    added your filters with `:BTW addlocal` from a
+    [_vimrc_local file](http://github.com/LucHermitte/local_vimrc), you'll
+    quite certainly observe odd behaviours.
+  * `remove` will only remove global filters
+  * `removelocal` will try to remove the local filter in all known buffers.
+
+### 2.2- Default filters
 
 #### Compiler-plugins
 Any compiler-plugin installed can be used as a filter.
 
 #### Executables
-Any program available in the path can be a filter (dmSTLfilt.pl, c++filt, ...)
+Any program available in the `$PATH` can be a filter (dmSTLfilt.pl, c++filt, ...)
 
 #### `cygwin`
 This filter fixes cygwin pathnames into windows pathnames.
@@ -49,27 +107,38 @@ This filter fixes cygwin pathnames into windows pathnames.
 In the _vimrc\_local file, I write:
 ```vim
 if lh#system#OnDOSWindows() && lh#system#SystemDetected() == 'unix'
-    BTW add cygwin
+    BTW addlocal cygwin
 endif
 ```
 
 #### Compilation chains
 `make`, `ant` (fix program output), `aap`
 
-#### `cmake`, `ctest`
-Fixes this damn "`%d>`" that prepends outputs from `cmake` and `ctest`
+#### `cmake`
+Fixes this damn `%d>` that prepends outputs from `cmake` and `ctest`
 executables.
+
+```vim
+:BTW setlocal cmake
+```
+
+This is mainly meant when the compilation is done with `cmake --build`. Tests executed
+thanks to CTest are addressed with the _project execution type_, when the tests
+are run with `<C-F5>`:
+```vim
+LetIfUndef b:BTW_project_executable.type 'ctest'
+```
 
 #### `STLfilt`
 Filters C++ compiler output to in order to have readable error messages (the
 .vim file may need to be tuned to use the right STL filter).
 
 ```vim
-BTW add STLfilt
+BTW addlocal STLfilt
 ```
 
 #### `SunSWProLinkIsError`
-To have SunCC link error appear as link errors.
+To have SunCC link error appear as errors.
 
 #### `shorten_filenames`
 This filter conceals part of filenames.
@@ -155,12 +224,12 @@ call lh#btw#filters#register_hook(2, 'BTW_Substitute_Filenames', 'post')
 
 To be documented...
 
-## Some examples
+## 3- Some examples
 
 ### C++ project, compiled with g++ through ant and cpp\_task
 ```vim
-BTW add ant
-BTW add STLfilt
+BTW addlocal ant
+BTW addlocal STLfilt
 ```
 
 ### ...
