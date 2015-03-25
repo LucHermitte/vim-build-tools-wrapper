@@ -1,11 +1,10 @@
 "=============================================================================
-" $Id$
 " File:         compiler/BTW/cmake.vim                            {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
-"		<URL:http://code.google.com/p/lh-vim/>
+"		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      001
 " Created:      21st Feb 2012
-" Last Update:  $Date$
+" Last Update:  25th Mar 2015
 "------------------------------------------------------------------------
 " Description:
 "       BTW cmake compilation toolchain
@@ -15,13 +14,9 @@
 " Options:
 "       [bg]:BTW_project_build_dir
 "       [bg]:BTW_project_build_mode
-" 
-"------------------------------------------------------------------------
-" Installation:
-"       Drop this file into {rtp}/compiler/BTW
-"       Requires Vim7+
-" History:      «history»
-" TODO:         «missing features»
+"
+" TODO:         
+"       * Use the internal lh#btw#_register_fix_ctest()
 " }}}1
 "=============================================================================
 

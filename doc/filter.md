@@ -124,6 +124,11 @@ executables.
 :BTW setlocal cmake
 ```
 
+It relies on the following options:
+  * `(bg):BTW_project_build_dir` (This should changed an be masked in future
+    versions)
+  * `(bg):BTW_project_build_mode` (default: `Release`)
+
 This is mainly meant when the compilation is done with `cmake --build`. Tests executed
 thanks to CTest are addressed with the _project execution type_, when the tests
 are run with `<C-F5>`:
