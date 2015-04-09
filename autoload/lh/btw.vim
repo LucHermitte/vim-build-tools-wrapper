@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw.vim                               {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.0
-let s:k_version = 040
+" Version:      0.4.1
+let s:k_version = 041
 " Created:      14th Mar 2014
-" Last Update:  23rd Mar 2015
+" Last Update:  09th Apr 2015
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -58,7 +58,7 @@ function! s:getSNR(...)
   return s:SNR . (a:0>0 ? (a:1) : '')
 endfunction
 
-" Function: lh#btw#_evaluate(expr) {{{2
+" Function: lh#btw#_evaluate(expr) {{{3
 function! lh#btw#_evaluate(expr)
   if type(a:expr) == type({})
     let res = lh#function#execute(a:expr)
@@ -204,39 +204,40 @@ function! s:QuickFixDefFolds() abort
   setlocal foldtext=lh#btw#_qf_fold_text()
 endfunction
 
-" Quickfix auto import:                  {{{2
+" # Quickfix auto import:                  {{{2
 " Some variables need to be imported automatically into quickfix buffer
 " Variables:                         {{{3
-if !exists('s:qf_save')
-    let s:qf_save = {}
-endif
 if !exists('s:qf_options_to_import')
   let s:qf_options_to_import = {}
+  augroup QFExportVar
+    au!
+    au BufWipeout * call s:QuickFixRemoveExports(expand('<afile>'))
+  augroup END
 endif
 
 " Function: s:QuickFixImport()       {{{3
-function! s:QuickFixImport()
-    call s:Verbose("importing:".string(s:qf_save))
-    for var in keys(s:qf_options_to_import)
-      if has_key(s:qf_save, var)
-        exe 'let '.var.' = s:qf_save[var]'
+let s:k_unset = {}
+function! s:QuickFixImport() abort
+    let bid = g:lh#btw#_last_buffer
+    let b:last_buffer = bid
+    if !has_key(s:qf_options_to_import, bid)
+      echomsg "Import: No variable required for buffer ".bid." (".bufname(bid).")"
+      return
+    endif
+    let variables = keys(s:qf_options_to_import[bid])
+    call s:Verbose("importing:".string(variables))
+    for var in variables
+      let value = getbufvar(bid, var, s:k_unset)
+      if value != s:k_unset
+        exe 'let '.var.' = '.string(value)
       endif
     endfor
 endfunction
 
-" Function: s:QuickFixExport()       {{{3
-function! s:QuickFixExport()
-    " if &ft !~ '^cpp$\|^c$'
-        " return
-    " endif
-    for var in keys(s:qf_options_to_import)
-      if exists(var)
-            exe 'let s:qf_save[var] = '.var
-        else
-            echomsg "Export: {".var."} does not exist"
-        endif
-    endfor
-    " echo "exported:".string(s:qf_save)
+" Function: s:QuickFixRemoveExports(fname) {{{3
+function! s:QuickFixRemoveExports(fname)
+  let bid = bufnr(a:fname)
+  silent! unlet s:qf_options_to_import[bid]
 endfunction
 
 " Augroup: QFImport                  {{{3
@@ -244,16 +245,23 @@ call lh#btw#filters#register_hook(1, s:getSNR('QuickFixImport'), 'open')
 
 " Function: lh#btw#qf_add_var_to_import(varname) {{{3
 function! lh#btw#qf_add_var_to_import(varname) abort
-  let s:qf_options_to_import[a:varname] = 1
-  augroup QFExportVar
-    au!
-    exe 'au BufLEave '.expand('%:p').' call s:QuickFixExport()'
-  augroup END
+  let bid = bufnr('%')
+  if !has_key(s:qf_options_to_import, bid)
+    let s:qf_options_to_import[bid] = {}
+  endif
+
+  " Strip b: / &l:
+  let varname = substitute(a:varname, '^b:\|^&\zsl:', '', '')
+  let s:qf_options_to_import[bid][varname] = 1
 endfunction
 
 " Function: lh#btw#qf_remove_var_to_import(varname)  {{{3
 function! lh#btw#qf_remove_var_to_import(varname)
-  silent! unlet s:qf_options_to_import[a:varname]
+  let bid = bufnr('%')
+  silent! unlet s:qf_options_to_import[bid][a:varname]
+  if empty(s:qf_options_to_import[bid])
+    call s:QuickFixRemoveExports(bid)
+  endif
 endfunction
 
 " Function: lh#btw#qf_clear_import()   {{{3

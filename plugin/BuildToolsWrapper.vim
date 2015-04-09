@@ -3,9 +3,10 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.4.0
+" Version:      0.4.1
+let s:k_version = 0410
 " Created:      28th Nov 2004
-" Last Update:  23rd Mar 2015
+" Last Update:  09th Apr 2015
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -197,6 +198,9 @@
 "       * New hook group: "syntax"
 "       * qf_export_variable rewritten => many tests are required
 "       * "BTW remove" & "BTW removelocal" behaviours slightly changed.
+" v0.4.1: 09th Apr 2015
+"       * QFImport feature reworked: now it has to be executed for each buffer
+"         (i.e. in a local vimrc)
 "
 " TODO:                                    {{{2
 "       * &magic
@@ -239,7 +243,7 @@ if exists("g:loaded_BuildToolsWrapper")
     echomsg "Reloading ".expand('<sfile>')
   endif
 endif
-let g:loaded_BuildToolsWrapper = 0330
+let g:loaded_BuildToolsWrapper = s:k_version
 
 " Dependencies                                       {{{1
 runtime plugin/compil-hints.vim
