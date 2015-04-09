@@ -4,7 +4,7 @@
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
 " Version:      0.4.1
-let s:k_version = 0410
+let s:k_version = 0401
 " Created:      28th Nov 2004
 " Last Update:  09th Apr 2015
 "------------------------------------------------------------------------
@@ -201,6 +201,10 @@ let s:k_version = 0410
 " v0.4.1: 09th Apr 2015
 "       * QFImport feature reworked: now it has to be executed for each buffer
 "         (i.e. in a local vimrc)
+"       * Airline extension defined -> "btw".
+"         It relies on:
+"         - b:BTW_project_config['_'].name and
+"         - b:BTW_project_config['_'].compilation.mode.
 "
 " TODO:                                    {{{2
 "       * &magic

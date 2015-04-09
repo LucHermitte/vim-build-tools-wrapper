@@ -9,6 +9,10 @@ let s:k_version = 041
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
+"
+" TODO:
+" * :cclose + :Copen + :cnewer clears the variables imported in the previous
+" run
 " }}}1
 "=============================================================================
 
@@ -209,34 +213,39 @@ endfunction
 " Variables:                         {{{3
 if !exists('s:qf_options_to_import')
   let s:qf_options_to_import = {}
-  augroup QFExportVar
-    au!
-    au BufWipeout * call s:QuickFixRemoveExports(expand('<afile>'))
-  augroup END
 endif
+augroup QFExportVar
+  au!
+  au BufWipeout * call s:QuickFixRemoveExports(expand('<afile>'))
+augroup END
 
 " Function: s:QuickFixImport()       {{{3
 let s:k_unset = {}
 function! s:QuickFixImport() abort
-    let bid = g:lh#btw#_last_buffer
-    let b:last_buffer = bid
-    if !has_key(s:qf_options_to_import, bid)
-      echomsg "Import: No variable required for buffer ".bid." (".bufname(bid).")"
-      return
+  if !exists('g:lh#btw#_last_buffer') | return | endif
+  let bid = g:lh#btw#_last_buffer
+  let b:last_buffer = bid
+  if !has_key(s:qf_options_to_import, bid)
+    echomsg "Import: No variable required for buffer ".bid." (".bufname(bid).")"
+    return
+  endif
+  let variables = keys(s:qf_options_to_import[bid])
+  call s:Verbose("importing:".string(variables))
+  let bhere = bufnr('%')
+  for var in variables
+    let value = getbufvar(bid, var, s:k_unset)
+    if type(value) != type(s:k_unset) || value != s:k_unset
+      call setbufvar(bhere, var, deepcopy(value)) " don't want to be updated if the compilation mode changes
     endif
-    let variables = keys(s:qf_options_to_import[bid])
-    call s:Verbose("importing:".string(variables))
-    for var in variables
-      let value = getbufvar(bid, var, s:k_unset)
-      if value != s:k_unset
-        exe 'let '.var.' = '.string(value)
-      endif
-    endfor
+    silent! unlet value
+  endfor
 endfunction
 
 " Function: s:QuickFixRemoveExports(fname) {{{3
 function! s:QuickFixRemoveExports(fname)
+  if empty(a:fname) | return | endif
   let bid = bufnr(a:fname)
+  call s:Verbose("Removing exported variables for buffer ".bid)
   silent! unlet s:qf_options_to_import[bid]
 endfunction
 
