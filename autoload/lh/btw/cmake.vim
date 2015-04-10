@@ -2,9 +2,10 @@
 " File:         autoload/lh/btw/cmake.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.2.14
+" Version:      0.4.2
+let s:k_version = 0402
 " Created:      12th Sep 2012
-" Last Update:  $Date$
+" Last Update:  10th Apr 2015
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -32,9 +33,11 @@
 "       Requires Vim7+, lh-vim-lib 3.1.9+
 " History:      «history»
 " TODO:
-"       Simplify the definition of the "_project" sub-dictionary as it requires
-"       many options.
-"       For multiple tests, we need to use -I <coma-sep-list> and not -R
+"       * Simplify the definition of the "_project" sub-dictionary as it
+"       requires many options.
+"       * For multiple tests, we need to use -I <coma-sep-list> and not -R
+"       * Get rid of b:BTW_compilation_dir and rely only on
+"       b:BTW_project_config._
 " }}}1
 "=============================================================================
 
@@ -43,7 +46,6 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 0214
 function! lh#btw#cmake#version()
   return s:k_version
 endfunction
@@ -153,7 +155,7 @@ function! lh#btw#cmake#def_toggable_compil_mode(menu_def) abort
     let a:menu_def.update_compil_dir = function(s:getSNR('UpdateCompilDir'))
   endif
   function! a:menu_def.do_update() dict abort
-    let b:BTW_project_build_mode = self.eval()
+    " let b:BTW_project_build_mode = self.eval()
     call self.update_compil_dir()
     BTW rebuild
     call self.set_project_executable()

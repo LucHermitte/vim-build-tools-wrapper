@@ -2,9 +2,9 @@
 " File:         compiler/BTW/cmake.vim                            {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      001
+" Version:      0.4.2
 " Created:      21st Feb 2012
-" Last Update:  25th Mar 2015
+" Last Update:  10th Apr 2015
 "------------------------------------------------------------------------
 " Description:
 "       BTW cmake compilation toolchain
@@ -13,10 +13,12 @@
 "
 " Options:
 "       [bg]:BTW_project_build_dir
-"       [bg]:BTW_project_build_mode
+"       [bg]:BTW_project_config._.compilation.mode/[bg]:BTW_project_build_mode
 "
-" TODO:         
+" TODO:
 "       * Use the internal lh#btw#_register_fix_ctest()
+"       * Have a option function instead of [bg]:BTW_project_build_dir in order
+"       to be able to peek into the unique (to be) [bg]:BTW_project_config.
 " }}}1
 "=============================================================================
 
@@ -27,7 +29,7 @@ set cpo&vim
 function! BTW_compile_cmake(...)
   let target = a:0 ? (' --target '.a:1) : ''
   let build_dir = lh#option#get('BTW_project_build_dir', '.')
-  let config    = lh#option#get('BTW_project_build_mode', 'Release')
+  let config    = lh#btw#build_mode('Release')
   let res = 'cmake --build '.FixPathName(build_dir).' --config '.config.target
   return res
 endfunction

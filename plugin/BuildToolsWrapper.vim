@@ -3,10 +3,10 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.4.1
-let s:k_version = 0401
+" Version:      0.4.2
+let s:k_version = 0402
 " Created:      28th Nov 2004
-" Last Update:  09th Apr 2015
+" Last Update:  10th Apr 2015
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -205,6 +205,11 @@ let s:k_version = 0401
 "         It relies on:
 "         - b:BTW_project_config['_'].name and
 "         - b:BTW_project_config['_'].compilation.mode.
+" v0.4.2: 10th Apr 2015
+"       * b:BTW_project_build_mode deprecated in favour of
+"         b:BTW_project_config['_'].compilation.mode.
+"       * Current project name can be obtained with: lh#btw#project_name()
+"       * Current project build mode can be obtained with: lh#btw#build_mode()
 "
 " TODO:                                    {{{2
 "       * &magic

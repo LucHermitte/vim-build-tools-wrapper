@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw.vim                               {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.1
-let s:k_version = 041
+" Version:      0.4.2
+let s:k_version = 042
 " Created:      14th Mar 2014
-" Last Update:  09th Apr 2015
+" Last Update:  10th Apr 2015
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -49,6 +49,43 @@ endfunction
 " Function: lh#btw#compilation_dir() {{{3
 function! lh#btw#compilation_dir()
   return lh#option#get('BTW_compilation_dir', '.')
+endfunction
+
+" Function: lh#btw#build_mode([default]) {{{3
+function! lh#btw#build_mode(...) abort
+  let default = a:0 == 0 ? '' : a:1
+  let project_config = lh#option#get('BTW_project_config')
+  if lh#option#is_set(project_config)
+    let config = get(project_config, '_', {})
+    let mode   = get(get(config, 'compilation', {}), 'mode', default)
+    return mode
+  else
+    " BTW_project_build_mode is now deprecated!
+    return lh#option#get('BTW_project_build_mode', default)
+  endif
+endfunction
+
+" Function: lh#btw#project_name() {{{3
+function! lh#btw#project_name() abort
+  let project_config = lh#option#get('BTW_project_config')
+  " 1- Information set in b:project_config._.name ?
+  if lh#option#is_set(project_config)
+    let config = get(project_config, '_', {})
+    let name   = get(config, 'name', {})
+    return name
+  else
+    " 2- Information set in b:BTW_project_name ?
+    let name = lh#option#get('BTW_project_name')
+    if lh#option#is_set(name) | return name | endif
+    " 3- Information available in repo name ?
+    "    TODO: we should decode subdirectories
+    let url = lh#vcs#get_url(expand('%:p:h'))
+    if lh#option#is_set(url)
+      return matchstr(url, '.*/\zs.*')
+    endif
+    " N- Return default!
+    return default
+  endif
 endfunction
 
 "------------------------------------------------------------------------
@@ -220,7 +257,6 @@ augroup QFExportVar
 augroup END
 
 " Function: s:QuickFixImport()       {{{3
-let s:k_unset = {}
 function! s:QuickFixImport() abort
   if !exists('g:lh#btw#_last_buffer') | return | endif
   let bid = g:lh#btw#_last_buffer
@@ -233,8 +269,8 @@ function! s:QuickFixImport() abort
   call s:Verbose("importing:".string(variables))
   let bhere = bufnr('%')
   for var in variables
-    let value = getbufvar(bid, var, s:k_unset)
-    if type(value) != type(s:k_unset) || value != s:k_unset
+    let value = lh#option#getbufvar(bid, var)
+    if lh#option#is_set(value)
       call setbufvar(bhere, var, deepcopy(value)) " don't want to be updated if the compilation mode changes
     endif
     silent! unlet value

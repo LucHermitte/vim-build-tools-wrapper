@@ -2,10 +2,10 @@
 " File:         autoload/airline/extensions/btw.vim               {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.1.
-let s:k_version = '041'
+" Version:      0.4.2.
+let s:k_version = '042'
 " Created:      09th Apr 2015
-" Last Update:  09th Apr 2015
+" Last Update:  10th Apr 2015
 "------------------------------------------------------------------------
 " Description:
 "       Airline extension for BuildToolsWrapper
@@ -42,6 +42,10 @@ endfunction
 
 
 "------------------------------------------------------------------------
+" ## Options            {{{1
+LetIfUndef g:airline#extensions#btw#section          'b'
+LetIfUndef g:airline#extensions#btw#section_qf       'a'
+
 " ## Exported functions {{{1
 " # Registration {{{2
 
@@ -71,30 +75,25 @@ function! airline#extensions#btw#apply(...) abort
     return
   endif
 
-  if &ft == 'qf'
-    let w:airline_section_a = get(w:, 'airline_section_a', g:airline_section_a)
-    let w:airline_section_a .= s:spc.g:airline_left_alt_sep.s:spc.'%{airline#extensions#btw#build_mode()}'
-  else
-    " Let's say we want to append to section_b, first we check if there's
-    " already a window-local override, and if not, create it off of the global
-    " section_b.
-    let w:airline_section_b = get(w:, 'airline_section_b', g:airline_section_b)
+  " Get the section to use according to the current filetype
+  let section = lh#dev#option#get_postfixed('airline#extensions#btw#section', &ft, 'b', 'g')
 
-    " Then we just append this extenion to it, optionally using separators.
-    let w:airline_section_b .= s:spc.g:airline_left_alt_sep.s:spc.'%{airline#extensions#btw#build_mode()}'
-  endif
+  " Let's say we want to append to section_{section}, first we check if there's
+  " already a window-local override, and if not, create it off of the global
+  " section_{section}.
+  let w:airline_section_{section} = get(w:, 'airline_section_'.section, g:airline_section_{section})
+
+  " Then we just append this extenion to it, optionally using separators.
+  let fmt    = lh#option#get('airline#extensions#btw#format_section', s:spc.g:airline_left_alt_sep.s:spc.'%s')
+  let w:airline_section_{section} .= printf(fmt, '%{airline#extensions#btw#build_mode()}')
 endfunction
 
 " Function: airline#extensions#btw#build_mode() {{{3
 function! airline#extensions#btw#build_mode() abort
-  if !exists('b:BTW_project_config')
-    return ''
-  else
-    let config = get(b:BTW_project_config, '_', {})
-    let mode   = get(get(config, 'compilation', {}), 'mode', '')
-    let name   = get(config, 'name', '')
-    return name.s:spc.mode
-  endif
+  let mode   = lh#btw#build_mode()
+  let name   = lh#btw#project_name()
+  let fmt    = lh#option#get('airline#extensions#btw#format_mode', '%s'.s:spc.'%s')
+  return printf(fmt, name, mode)
 endfunction
 "------------------------------------------------------------------------
 " ## Internal functions {{{1

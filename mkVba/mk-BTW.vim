@@ -3,10 +3,10 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:	0.4.0
-let s:version = '0.4.0'
+" Version:	0.4.2
+let s:version = '0.4.2'
 " Created:	06th Nov 2007
-" Last Update:	20th Mar 2015
+" Last Update:	10th Apr 2015
 "------------------------------------------------------------------------
 let s:project = 'lh-BTW'
 cd <sfile>:p:h
@@ -20,6 +20,7 @@ finally
   let &rtp = save_rtp
 endtry
 finish
+autoload/airline/extensions/btw.vim
 autoload/lh/btw.vim
 autoload/lh/btw/cmake.vim
 autoload/lh/btw/filters.vim
