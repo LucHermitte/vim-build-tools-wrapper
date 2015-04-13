@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/build.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.1.
-let s:k_version = '041'
+" Version:      0.4.3.
+let s:k_version = '043'
 " Created:      23rd Mar 2015
-" Last Update:  09th Apr 2015
+" Last Update:  13th Apr 2015
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -141,11 +141,6 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
   let bg = has('clientserver') && lh#btw#option#_make_in_bg()
   let cleanup = lh#on#exit()
         \.restore('&makeprg')
-  " Records which was the last buffer
-  if &ft != 'qf'
-    let g:lh#btw#_last_buffer = bufnr('%')
-  endif
-
   if bg
     let run_in = lh#option#get("BTW_make_in_background_in", '')
     if strlen(run_in)
@@ -182,6 +177,11 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
       call lh#common#error_msg("Error: ".v:exception. " thrown at: ".v:throwpoint)
     endif
   finally
+    " Records which was the last buffer
+    if &ft != 'qf'
+      call lh#btw#_save_last_buffer_data()
+    endif
+
     call cleanup.finalize()
   endtry
 

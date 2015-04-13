@@ -3,9 +3,9 @@
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:	0.4.0
+" Version:	0.4.3
 " Created:      14th Mar 2014
-" Last Update:  20th Mar 2015
+" Last Update:  13th Apr 2015
 "------------------------------------------------------------------------
 " Description:
 "       BTW filter to replace expressions on the fly
@@ -87,7 +87,7 @@ function! s:Transform(list, doSubstitute) abort
     endfor
 
     if qf_changed
-      call setqflist(qflist)
+      call setqflist(qflist, 'r')
     endif
   catch /.*/
     call lh#common#error_msg("Error: ".v:exception. " throw at: ".v:throwpoint)

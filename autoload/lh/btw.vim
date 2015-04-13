@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw.vim                               {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.2
-let s:k_version = 042
+" Version:      0.4.3
+let s:k_version = 043
 " Created:      14th Mar 2014
-" Last Update:  10th Apr 2015
+" Last Update:  13th Apr 2015
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -60,7 +60,7 @@ function! lh#btw#build_mode(...) abort
     let mode   = get(get(config, 'compilation', {}), 'mode', default)
     return mode
   else
-    " BTW_project_build_mode is now deprecated!
+    " BTW_project_build_mode is deprecated!
     return lh#option#get('BTW_project_build_mode', default)
   endif
 endfunction
@@ -220,7 +220,7 @@ function! s:FixCTestOutput() abort
     endfor
 
     if qf_changed
-      call setqflist(qflist)
+      call setqflist(qflist, 'r')
     endif
   catch /.*/
     call lh#common#error_msg("Error: ".v:exception. " throw at: ".v:throwpoint)
@@ -250,6 +250,7 @@ endfunction
 " Variables:                         {{{3
 if !exists('s:qf_options_to_import')
   let s:qf_options_to_import = {}
+  let s:qf_saved_options     = []
 endif
 augroup QFExportVar
   au!
@@ -258,23 +259,51 @@ augroup END
 
 " Function: s:QuickFixImport()       {{{3
 function! s:QuickFixImport() abort
-  if !exists('g:lh#btw#_last_buffer') | return | endif
-  let bid = g:lh#btw#_last_buffer
-  let b:last_buffer = bid
-  if !has_key(s:qf_options_to_import, bid)
-    echomsg "Import: No variable required for buffer ".bid." (".bufname(bid).")"
-    return
-  endif
-  let variables = keys(s:qf_options_to_import[bid])
-  call s:Verbose("importing:".string(variables))
   let bhere = bufnr('%')
-  for var in variables
-    let value = lh#option#getbufvar(bid, var)
-    if lh#option#is_set(value)
-      call setbufvar(bhere, var, deepcopy(value)) " don't want to be updated if the compilation mode changes
+
+  let qf = getqflist()
+  if empty(qf) | return | endif
+  let qf0 = qf[0]
+  if qf0.text =~ '^BTW: '
+    " The qf list has already been proccessed, we need to import what it
+    " contains
+    let idx = - qf0.nr
+    let data = s:qf_saved_options[idx]
+    let bid = data.bid
+    let b:last_buffer = bid
+    for [var, value] in items(data)
+      if var != 'bid' && lh#option#is_set(value)
+        call setbufvar(bhere, var, value)
+      endif
+      silent! unlet value
+    endfor
+  else
+    " If everyting works fine, this branch of coe should not be executed!
+    " It could, when not using BTW function to compile.
+
+    " First call to :copen, things haven't been serialized yet
+    if !exists('g:lh#btw#_last_buffer') | return | endif
+    let bid = g:lh#btw#_last_buffer
+
+    if !has_key(s:qf_options_to_import, bid)
+      echomsg "Import: No variable required for buffer ".bid." (".bufname(bid).")"
+      return
     endif
-    silent! unlet value
-  endfor
+    let variables = keys(s:qf_options_to_import[bid])
+    call s:Verbose("Importing: ".string(variables))
+    for var in variables
+      let value = deepcopy(lh#option#getbufvar(bid, var)) " don't want to be updated if the compilation mode changes
+      if lh#option#is_set(value)
+        call setbufvar(bhere, var, value)
+      endif
+      silent! unlet value
+    endfor
+  endif
+
+  let b:last_buffer = g:lh#btw#_last_buffer
+
+  " This has no effect :( Is it because of the aucommand on QF open ?
+  let w:quickfix_title = lh#btw#build_mode(). ' compilation of ' . lh#btw#project_name()
 endfunction
 
 " Function: s:QuickFixRemoveExports(fname) {{{3
@@ -314,6 +343,44 @@ function! lh#btw#qf_clear_import()
   let s:qf_options_to_import = {}
 endfunction
 
+" Function: lh#btw#_save_last_buffer_data() {{{3
+function! lh#btw#_save_last_buffer_data() abort
+  let bid = bufnr('%')
+  let g:lh#btw#_last_buffer = bid
+
+  if !has_key(s:qf_options_to_import, bid)
+    echomsg "Import: No variable required for buffer ".bid." (".bufname(bid).")"
+    return
+  endif
+  let variables = keys(s:qf_options_to_import[bid])
+  call s:Verbose("Saving: ".string(variables))
+  let data = { 'bid': bid }
+  for var in variables
+    let value = deepcopy(lh#option#getbufvar(bid, var)) " don't want to be updated if the compilation mode changes
+    if lh#option#is_set(value)
+      let data[var] = value
+    endif
+    silent! unlet value
+  endfor
+
+  " check whether the same data already exist => reuse the index
+  let idx  = index(s:qf_saved_options, data)
+  if idx == -1
+    " Otherwise, add the data
+    let idx = len(s:qf_saved_options)
+    let s:qf_saved_options += [ data ]
+  endif
+
+  " Put local data in the quickfix for later uses
+  let qf = getqflist()
+  let qf0 = { 'bufnr': 0, 'lnum': 0, 'col': 0, 'vcol': 0, 'pattern': '', 'type': '' }
+  let qf0.nr = - idx
+  let qf0.text = 'BTW: '. lh#btw#build_mode(). ' compilation of ' . lh#btw#project_name()
+  call insert(qf, qf0)
+  call setqflist(qf, 'r')
+endfunction
+
+"}}}1
 "------------------------------------------------------------------------
 let &cpo=s:cpo_save
 "=============================================================================

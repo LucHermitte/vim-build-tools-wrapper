@@ -3,8 +3,8 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.4.2
-let s:k_version = 0402
+" Version:      0.4.3
+let s:k_version = 0403
 " Created:      28th Nov 2004
 " Last Update:  10th Apr 2015
 "------------------------------------------------------------------------
@@ -210,6 +210,11 @@ let s:k_version = 0402
 "         b:BTW_project_config['_'].compilation.mode.
 "       * Current project name can be obtained with: lh#btw#project_name()
 "       * Current project build mode can be obtained with: lh#btw#build_mode()
+" v0.4.3: 13th Apr 2015
+"       * QFImported variables are correctly associated to the state of the
+"         buffer where the compilation is launched at the moment it is launched.
+"       * calls to setqflist() now replace the current qflist (instead of
+"         appending a new one)
 "
 " TODO:                                    {{{2
 "       * &magic
