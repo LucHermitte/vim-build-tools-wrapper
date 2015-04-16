@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw.vim                               {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.3
-let s:k_version = 043
+" Version:      0.4.4
+let s:k_version = 044
 " Created:      14th Mar 2014
-" Last Update:  13th Apr 2015
+" Last Update:  16th Apr 2015
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -71,7 +71,7 @@ function! lh#btw#project_name() abort
   " 1- Information set in b:project_config._.name ?
   if lh#option#is_set(project_config)
     let config = get(project_config, '_', {})
-    let name   = get(config, 'name', {})
+    let name   = get(config, 'name', '')
     return name
   else
     " 2- Information set in b:BTW_project_name ?

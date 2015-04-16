@@ -3,10 +3,10 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.4.3
-let s:k_version = 0403
+" Version:      0.4.4
+let s:k_version = 0404
 " Created:      28th Nov 2004
-" Last Update:  10th Apr 2015
+" Last Update:  16th Apr 2015
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -215,6 +215,8 @@ let s:k_version = 0403
 "         buffer where the compilation is launched at the moment it is launched.
 "       * calls to setqflist() now replace the current qflist (instead of
 "         appending a new one)
+" v0.4.4: 16th Apr 2015
+"       * Fix default value for lh#btw#project_name() to return an empty string 
 "
 " TODO:                                    {{{2
 "       * &magic

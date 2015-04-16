@@ -3,10 +3,10 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:	0.4.3
-let s:version = '0.4.3'
+" Version:	0.4.4
+let s:version = '0.4.4'
 " Created:	06th Nov 2007
-" Last Update:	10th Apr 2015
+" Last Update:	16th Apr 2015
 "------------------------------------------------------------------------
 let s:project = 'lh-BTW'
 cd <sfile>:p:h
