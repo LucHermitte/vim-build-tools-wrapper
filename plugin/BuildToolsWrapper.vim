@@ -216,7 +216,7 @@ let s:k_version = 0404
 "       * calls to setqflist() now replace the current qflist (instead of
 "         appending a new one)
 " v0.4.4: 16th Apr 2015
-"       * Fix default value for lh#btw#project_name() to return an empty string 
+"       * Fix default value for lh#btw#project_name() to return an empty string
 "
 " TODO:                                    {{{2
 "       * &magic
