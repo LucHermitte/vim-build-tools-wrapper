@@ -30,7 +30,7 @@ function! BTW_compile_cmake(...)
   let target = a:0 ? (' --target '.a:1) : ''
   let build_dir = lh#option#get('BTW_project_build_dir', '.')
   let config    = lh#btw#build_mode('Release')
-  let res = 'cmake --build '.FixPathName(build_dir).' --config '.config.target
+  let res = 'cmake --build '.lh#path#fix(build_dir).' --config '.config.target
   return res
 endfunction
 

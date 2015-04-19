@@ -3,10 +3,10 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.4.4
-let s:k_version = 0404
+" Version:      0.4.5
+let s:k_version = 0405
 " Created:      28th Nov 2004
-" Last Update:  16th Apr 2015
+" Last Update:  19th Apr 2015
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -25,7 +25,7 @@ let s:k_version = 0404
 "         c_compile.vim
 "
 "  v0.0.3:
-"       * «:Make» support an optional list of targets
+"       * ?:Make? support an optional list of targets
 "       * BTW_filter_prog can be local to a buffer
 "         => regarding to the current directory (thanks to local_vimrc.vim) we
 "         can use different makefiles, but the same build program.
@@ -39,11 +39,11 @@ let s:k_version = 0404
 "
 "  v0.0.4: 13th Jan 2005
 "       * g:BTW_qf_position -> :vert, :lefta, :abo, ...
-"       * «:BTW reloadPlugin» -> To ease plugin test & maintenance
+"       * ?:BTW reloadPlugin? -> To ease plugin test & maintenance
 "
 "  v0.0.5: 11th Mar 2005
-"       * «:BTW delete»
-"       * «:BTW echo» auto completes the values of various internal functions
+"       * ?:BTW delete?
+"       * ?:BTW echo? auto completes the values of various internal functions
 "         ProjectName() TargetRule() Executable()
 "
 "  v0.0.6: 26th May 2005
@@ -65,7 +65,7 @@ let s:k_version = 0404
 "       * new option for errorformat configuration: g:BTW_ignore_efm_{filter}
 "       * We can ask for using the default value of efm by setting
 "         g:BTW_adjust_efm_{filter} to "default efm".
-"         Default efm: -> «set efm&vim»
+"         Default efm: -> ?set efm&vim?
 "             %f(%l) : %t%*\D%n: %m
 "             %*[^"]"%f"%*\D%l: %m
 "             %f(%l) : %m
@@ -217,12 +217,14 @@ let s:k_version = 0404
 "         appending a new one)
 " v0.4.4: 16th Apr 2015
 "       * Fix default value for lh#btw#project_name() to return an empty string
+" v0.4.4: 19th Apr 2015
+"       * No longer depends on system-tools.
 "
 " TODO:                                    {{{2
 "       * &magic
-"       * Support priority -> «:BTW add cygwin 9»
+"       * Support priority -> ?:BTW add cygwin 9?
 "       * Write doc
-"       * ¿ addlocal when there is already something ?
+"       * ? addlocal when there is already something ?
 "         - or, xor,
 "         - use local only ?
 "       * Folding -> tools names (ld, gcc, g++) + other tools
@@ -237,7 +239,7 @@ let s:k_version = 0404
 "       * if '$*' is already present in the filter_program, then don't append
 "         it.
 "       * Test run_in_background.pl with VimDetect.pm
-"       * Is there a real need for «:LMake», «:LOpen» ? I'm not sure that
+"       * Is there a real need for ?:LMake?, ?:LOpen? ? I'm not sure that
 "         commands like :lmake (et al.) are that useful as long as there is no
 "         way  to say that a particular |location-list| is shared between
 "         several windows from a same project.

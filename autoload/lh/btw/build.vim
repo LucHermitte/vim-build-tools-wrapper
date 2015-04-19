@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/build.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.3.
-let s:k_version = '043'
+" Version:      0.4.5.
+let s:k_version = '045'
 " Created:      23rd Mar 2015
-" Last Update:  13th Apr 2015
+" Last Update:  19th Apr 2015
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -107,7 +107,7 @@ if exists('s:run_in_background')
 endif
 
 function! s:FetchRunInBackground() abort
-  let rib_progname = lh#system#OnDOSWindows()
+  let rib_progname = lh#os#OnDOSWindows()
         \ ? 'run_and_recontact_vim'
         \ : 'run_in_background'
 
@@ -122,7 +122,7 @@ function! s:FetchRunInBackground() abort
     finish
   endif
 
-  let s:run_in_background = 'perl '.lh#system#FixPathName(s:run_in_background, !lh#system#OnDOSWindows())
+  let s:run_in_background = 'perl '.lh#path#fix(s:run_in_background, !lh#os#OnDOSWindows())
 endfunction
 
 function! s:RunInBackground()
@@ -164,7 +164,7 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
   endif
 
   try
-    if lh#system#OnDOSWindows() && bg
+    if lh#os#OnDOSWindows() && bg
       let cmd = ':!start '.substitute(&makeprg, '\$\*', args, 'g')
       exe cmd
     else
@@ -313,7 +313,7 @@ function! lh#btw#build#_execute()
       " todo, check executable(split(path)[0])
       let path = './' . path
     endif
-    exe ':!'.FixPathName(path . s:ext) . ' ' .lh#option#get('BTW_run_parameters','')
+    exe ':!'.lh#path#fix(path . s:ext) . ' ' .lh#option#get('BTW_run_parameters','')
   endif
 endfunction
 
@@ -329,13 +329,13 @@ function! lh#btw#build#_config() abort
     call lh#buffer#jump(wd.'/'.file)
   elseif how.type == 'ccmake'
     let wd = lh#btw#_evaluate(how.wd)
-    if lh#system#OnDOSWindows()
+    if lh#os#OnDOSWindows()
       " - the first ":!start" runs a windows command
       " - "cmd /c" is used to define the second "start" command (see "start /?")
       " - the second "start" is used to set the current directory and run the
       " execution.
-      let prg = 'start /b cmd /c start /D '.FixPathName(wd, 0, '"')
-            \.' /B cmake-gui '.FixPathName(how.arg, 0, '"')
+      let prg = 'start /b cmd /c start /D '.lh#path#fix(wd, 0, '"')
+            \.' /B cmake-gui '.lh#path#fix(how.arg, 0, '"')
     else
       " let's suppose no spaces are used
       " let prg = 'xterm -e "cd '.wd.' ; ccmake '.(how.arg).'"'
