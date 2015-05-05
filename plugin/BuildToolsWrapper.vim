@@ -3,10 +3,10 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.4.4
-let s:k_version = 0404
+" Version:      0.4.5
+let s:k_version = 0405
 " Created:      28th Nov 2004
-" Last Update:  16th Apr 2015
+" Last Update:  05th May 2015
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -217,6 +217,9 @@ let s:k_version = 0404
 "         appending a new one)
 " v0.4.4: 16th Apr 2015
 "       * Fix default value for lh#btw#project_name() to return an empty string
+" v0.4.5: 05th May 2015
+"       * New feature: :ReConfig that'll reload let-modeline, or execute
+"       "cmake ." in the right path.
 "
 " TODO:                                    {{{2
 "       * &magic
@@ -265,9 +268,10 @@ let g:loaded_BuildToolsWrapper = s:k_version
 runtime plugin/compil-hints.vim
 
 " Global options                                     {{{1
-let s:key_make    = lh#option#get('BTW_key_make'   , '<F7>')
-let s:key_execute = lh#option#get('BTW_key_execute', '<C-F5>')
-let s:key_config  = lh#option#get('BTW_key_config' , '<M-F7>')
+let s:key_make       = lh#option#get('BTW_key_make'     , '<F7>')
+let s:key_execute    = lh#option#get('BTW_key_execute'  , '<C-F5>')
+let s:key_config     = lh#option#get('BTW_key_config'   , '<M-F7>')
+let s:key_re_config  = lh#option#get('BTW_key_re_config', '<M-F8>')
 
 " Options }}}1
 "------------------------------------------------------------------------
@@ -285,6 +289,7 @@ command! -nargs=* Make                  :call lh#btw#build#_compile("<args>")
 command! -nargs=0 Execute               :call lh#btw#build#_execute()
 command! -nargs=0 AddLetModeline        :call lh#btw#build#_add_let_modeline()
 command! -nargs=0 Config                :call lh#btw#build#_config()
+command! -nargs=0 ReConfig              :call lh#btw#build#_re_config()
 command! -nargs=0 Copen                 :call lh#btw#build#_show_error('copen')
 command! -nargs=0 Cwindow               :call lh#btw#build#_show_error('cwindow')
 command! -nargs=+ CopenBG               :call lh#btw#build#_copen_bg(<f-args>)
@@ -322,7 +327,9 @@ if has('gui_running') && has ('menu')
       \ && 0!=strlen(globpath(&rtp, 'autoload/lh/menu.vim'))
     " let b:want_buffermenu_or_global_disable = 0
     " 0->no ; 1->yes ; 2->global disable
-  call lh#menu#make('n', '50.10', '&Project.&Config', s:key_config,
+  call lh#menu#make('n', '50.10', '&Project.&ReConfig', s:key_re_config,
+          \ '', ':ReConfig<cr>')
+  call lh#menu#make('n', '50.15', '&Project.&Config', s:key_config,
           \ '', ':Config<cr>')
     amenu 50.29 &Project.--<sep>-- Nop
   call lh#menu#make('ni', '50.30', '&Project.&Make project', s:key_make,
@@ -333,13 +340,14 @@ if has('gui_running') && has ('menu')
   call s:MenuMakeBG()
   call s:MenuMakeMJ()
 else
-  exe '  nnoremap '.s:key_make   .':call lh#btw#build#_compile()<cr>'
-  exe '  inoremap '.s:key_make   .'<c-o>:call lh#btw#build#_compile()<cr>'
+  exe '  nnoremap '.s:key_make      .':call lh#btw#build#_compile()<cr>'
+  exe '  inoremap '.s:key_make      .'<c-o>:call lh#btw#build#_compile()<cr>'
 
-  exe '  nnoremap '.s:key_execute.':call lh#btw#build#_execute()<cr>'
-  exe '  inoremap '.s:key_execute.'<c-o>:call lh#btw#build#_execute()<cr>'
+  exe '  nnoremap '.s:key_execute   .':call lh#btw#build#_execute()<cr>'
+  exe '  inoremap '.s:key_execute   .'<c-o>:call lh#btw#build#_execute()<cr>'
 
-  exe '  nnoremap '.s:key_config .': call <sid>Config()<cr>'
+  exe '  nnoremap '.s:key_re_config .':ReConfig()<cr>'
+  exe '  nnoremap '.s:key_config    .':Config()<cr>'
 endif
 " ## Commands and mappings }}}1
 "------------------------------------------------------------------------
