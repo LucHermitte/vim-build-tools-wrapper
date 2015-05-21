@@ -2,8 +2,8 @@
 " File:         autoload/lh/btw/build.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.5.
-let s:k_version = '045'
+" Version:      0.4.6.
+let s:k_version = '046'
 " Created:      23rd Mar 2015
 " Last Update:  05th May 2015
 "------------------------------------------------------------------------
@@ -55,6 +55,7 @@ endfunction
 " This option can be defined:
 " - with a _vimrc_local file
 " - with a let-modeline
+" @todo deprecate this in favour of lh#btw#project_name()
 function! s:ProjectName() abort
   if     exists('b:BTW_project') | return b:BTW_project
   elseif exists('g:BTW_project') | return g:BTW_project
