@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/build.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.5.
-let s:k_version = '045'
+" Version:      0.4.6.
+let s:k_version = '046'
 " Created:      23rd Mar 2015
-" Last Update:  19th Apr 2015
+" Last Update:  05th May 2015
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -55,6 +55,7 @@ endfunction
 " This option can be defined:
 " - with a _vimrc_local file
 " - with a let-modeline
+" @todo deprecate this in favour of lh#btw#project_name()
 function! s:ProjectName() abort
   if     exists('b:BTW_project') | return b:BTW_project
   elseif exists('g:BTW_project') | return g:BTW_project
@@ -338,12 +339,45 @@ function! lh#btw#build#_config() abort
             \.' /B cmake-gui '.lh#path#fix(how.arg, 0, '"')
     else
       " let's suppose no spaces are used
-      " let prg = 'xterm -e "cd '.wd.' ; ccmake '.(how.arg).'"'
-      let prg = 'cd '.wd.' ; cmake-gui '.(how.arg).'&'
+      " let prg = 'xterm -e "cd '.wd.' && ccmake '.(how.arg).'"'
+      let prg = 'cd '.wd.' && cmake-gui '.(how.arg).'&'
     endif
-    let g:prg = prg
+    " let g:prg = prg
     echo ":!".prg
     exe ':silent !'.prg
+  endif
+endfunction
+
+" Function: lh#btw#build#_re_config()                 {{{3
+function! lh#btw#build#_re_config() abort
+  let how = lh#option#get('BTW_project_config', {'type': 'modeline'} )
+  if     how.type == 'modeline'
+    if exists(':FirstModeLine')
+      :FirstModeLine
+      return
+    endif
+  elseif how.type == 'makefile'
+    " let wd = lh#btw#_evaluate(how.wd)
+    " let file = lh#btw#_evaluate(how.file)
+    " call lh#buffer#jump(wd.'/'.file)
+    return
+  elseif how.type == 'ccmake'
+    let wd = lh#btw#_evaluate(how.wd)
+    if lh#os#OnDOSWindows()
+      " - the first ":!start" runs a windows command
+      " - "cmd /c" is used to define the second "start" command (see "start /?")
+      " - the second "start" is used to set the current directory and run the
+      " execution.
+      let prg = 'start /b cmd /c start /D '.lh#path#fix(wd, 0, '"')
+            \.' /B cmake .'
+    else
+      " let's suppose no spaces are used
+      " let prg = 'xterm -e "cd '.wd.' && cmake ."'
+      let prg = 'cd '.wd.' && cmake .'
+    endif
+    " let g:prg = prg
+    echo ":!".prg
+    exe ':!'.prg
   endif
 endfunction
 
@@ -356,8 +390,8 @@ function! lh#btw#build#_add_let_modeline() abort
   let make_files = glob('Makefile*')
   if strlen(make_files)
     let make_files = substitute("\n".make_files, '\n', '\0Edit \&', 'g')
-  elseif !strlen(aap_files)
-    let make_files = "\nEdit &Makefile"
+  " elseif !strlen(aap_files)
+    " let make_files = "\nEdit &Makefile"
   endif
 
   let which = WHICH('COMBO', 'Which option must be set ?',

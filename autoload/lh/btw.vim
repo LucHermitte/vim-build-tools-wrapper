@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw.vim                               {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.4
-let s:k_version = 044
+" Version:      0.4.5
+let s:k_version = 045
 " Created:      14th Mar 2014
-" Last Update:  16th Apr 2015
+" Last Update:  21st May 2015
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -84,7 +84,9 @@ function! lh#btw#project_name() abort
       return matchstr(url, '.*/\zs.*')
     endif
     " N- Return default!
-    return default
+    if &ft == 'qf'                 | cclose | return lh#btw#project_name()
+    else                           | return '%<'
+    endif
   endif
 endfunction
 
