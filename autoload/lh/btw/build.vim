@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/build.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.6.
-let s:k_version = '046'
+" Version:      0.5.0.
+let s:k_version = '050'
 " Created:      23rd Mar 2015
-" Last Update:  05th May 2015
+" Last Update:  09th Jul 2015
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -123,7 +123,7 @@ function! s:FetchRunInBackground() abort
     finish
   endif
 
-  let s:run_in_background = 'perl '.lh#system#lh#path#fix(s:run_in_background, !lh#os#OnDOSWindows())
+  let s:run_in_background = 'perl '.lh#path#fix(s:run_in_background, !lh#os#OnDOSWindows())
 endfunction
 
 function! s:RunInBackground()
