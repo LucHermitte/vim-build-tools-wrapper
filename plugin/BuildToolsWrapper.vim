@@ -3,10 +3,10 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.4.5
-let s:k_version = 0405
+" Version:      0.5.0
+let s:k_version = 0500
 " Created:      28th Nov 2004
-" Last Update:  05th May 2015
+" Last Update:  09th Jul 2015
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -221,6 +221,9 @@ let s:k_version = 0405
 " v0.4.5: 05th May 2015
 "       * New feature: :ReConfig that'll reload let-modeline, or execute
 "       "cmake ." in the right path.
+" v0.5.0: 09th Jul 2015
+"       * New feature: :BTW setoption that'll help set BTW options (targets,
+"       ...)
 "
 " TODO:                                    {{{2
 "       * &magic
@@ -356,11 +359,13 @@ endif
 
 " # Build Chain:                           {{{2
 " Constants                                                    {{{3
-let s:commands="set\nsetlocal\nadd\naddlocal\nremove\nremovelocal\nrebuild\necho\ndebug\nreloadPlugin\nnew_project\n?\nhelp"
+let s:commands="set\nsetlocal\nsetoption\nsetoptionlocal\nadd\naddlocal\nremove\nremovelocal\nrebuild\necho\ndebug\nreloadPlugin\nnew_project\n?\nhelp"
 let s:functions="ToolsChain()\nHasFilterGuessScope(\nHasFilter(\nFindFilter("
 let s:functions=s:functions. "\nProjectName()\nTargetRule()\nExecutable()"
 let s:variables="commands\nfunctions\nvariables"
 let s:k_new_prj = ['c', 'cpp', 'cmake', 'name=', 'config=', 'src_dir=']
+let s:k_options = ['compilation_dir', 'project_config', 'project_name',
+      \ 'run_parameters', 'project_executable', 'project_target', 'project']
 
 " BTWComplete(ArgLead, CmdLine, CursorPos):      Auto-complete {{{3
 function! BTWComplete(ArgLead, CmdLine, CursorPos)
@@ -380,7 +385,7 @@ function! BTWComplete(ArgLead, CmdLine, CursorPos)
     if     -1 != match(a:CmdLine, '^BTW\s\+\%(echo\|debug\)')
       return s:functions . "\n" . s:variables
     elseif -1 != match(a:CmdLine, '^BTW\s\+\%(help\|?\)')
-    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(set\|add\)\%(local\)\=')
+    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(set\|add\)\%(local\)\=\>')
       " Adds a filter
       " let files =         globpath(&rtp, 'compiler/BT-*')
       " let files = files . globpath(&rtp, 'compiler/BT_*')
@@ -390,6 +395,8 @@ function! BTWComplete(ArgLead, CmdLine, CursorPos)
             \ '\(^\|\n\).\{-}compiler[\\/]BTW[-_\\/]\(.\{-}\)\.vim\>\ze\%(\n\|$\)',
             \ '\1\2', 'g')
       return files
+    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(setoption\)\%(local\)\=\>')
+      return join(s:k_options, "\n")
     elseif -1 != match(a:CmdLine, '^BTW\s\+remove\%(local\)\=')
       " Removes a filter
       return join(lh#btw#chain#_filters_list(), "\n")

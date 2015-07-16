@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/chain.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.0.
-let s:k_version = '040'
+" Version:      0.5.0.
+let s:k_version = '050'
 " Created:      23rd Mar 2015
-" Last Update:  23rd Mar 2015
+" Last Update:  09th Jul 2015
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -176,19 +176,21 @@ if !exists('g:BTW_BTW_in_use')
       if exists('b:BTW_build_tool')
         let b:BTW_build_tool = a:1
       endif
-    elseif 'setlocal'     == a:command | let b:BTW_build_tool = a:1
-    elseif 'add'          == a:command | call s:AddFilter('g', a:1)
-    elseif 'addlocal'     == a:command | call s:AddFilter('b', a:1)
+    elseif 'setlocal'       == a:command | let b:BTW_build_tool = a:1
+    elseif 'setoption'      == a:command | call s:SetOption('g', a:000)
+    elseif 'setoptionlocal' == a:command | call s:SetOption('b', a:000)
+    elseif 'add'            == a:command | call s:AddFilter('g', a:1)
+    elseif 'addlocal'       == a:command | call s:AddFilter('b', a:1)
       " if exists('b:BTW_filters_list') " ?????
         " call s:AddFilter('b', a:1)
       " endif
-    elseif 'remove'       == a:command | call s:RemoveFilter('g', a:1)
-    elseif 'removelocal'  == a:command | call s:RemoveFilter('b', a:1)
-    elseif 'rebuild'      == a:command " wait for lh#btw#chain#_reconstruct()
-    elseif 'echo'         == a:command | exe "echo s:".a:1
-    elseif 'debug'        == a:command | exe "debug echo s:".a:1
+    elseif 'remove'         == a:command | call s:RemoveFilter('g', a:1)
+    elseif 'removelocal'    == a:command | call s:RemoveFilter('b', a:1)
+    elseif 'rebuild'        == a:command " wait for lh#btw#chain#_reconstruct()
+    elseif 'echo'           == a:command | exe "echo s:".a:1
+    elseif 'debug'          == a:command | exe "debug echo s:".a:1
       " echo s:{a:f1} ## don't support «echo s:f('foo')»
-    elseif 'reloadPlugin' == a:command
+    elseif 'reloadPlugin'   == a:command
       let cleanup = lh#on#exit()
             \.restore('g:force_reload_BuildToolsWrapper')
             \.restore('g:BTW_BTW_in_use')
@@ -360,6 +362,30 @@ function! s:Usage()
   echo "Build Tools Wrapper: USAGE"
 endfunction
 
+" # Miscelleanous:                       {{{2
+
+" Function: s:SetOption(scope, opts) {{{3
+function! s:SetOption(scope, opts) abort
+  let a_name = 'BTW_'.a:opts[0]
+  if len(a:opts) > 1
+    let value = a:opts[1]
+    if a:scope == 'g'
+      let name = 'b:'.a_name
+      if exists(name)
+        call lh#common#warning_msg("Warning: ".name." is already set to ".{name})
+      endif
+    endif
+    let name = a:scope.':'.a_name
+    let {name} = value
+  else " only display the value
+    let value = lh#option#get(a_name)
+    if lh#option#is_set(value)
+      echo "Option " . a_name . " is set to ".string(value)
+    else
+        call lh#common#warning_msg("Warning: ".a_name." is not set.")
+    endif
+  endif
+endfunction
 " }}}1
 "------------------------------------------------------------------------
 let &cpo=s:cpo_save

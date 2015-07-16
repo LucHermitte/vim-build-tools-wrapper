@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/build.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.6.
-let s:k_version = '046'
+" Version:      0.5.0.
+let s:k_version = '050'
 " Created:      23rd Mar 2015
-" Last Update:  05th May 2015
+" Last Update:  09th Jul 2015
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
