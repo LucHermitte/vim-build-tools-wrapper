@@ -3,8 +3,8 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.5.0
-let s:k_version = 0500
+" Version:      0.5.1
+let s:k_version = 0501
 " Created:      28th Nov 2004
 " Last Update:  09th Jul 2015
 "------------------------------------------------------------------------
@@ -224,6 +224,8 @@ let s:k_version = 0500
 " v0.5.0: 09th Jul 2015
 "       * New feature: :BTW setoption that'll help set BTW options (targets,
 "       ...)
+" v0.5.1: 24th Sep 2015
+"       * ":Execute" on scripts will correctly work. Requires lh-vim-lib 3.3.3.
 "
 " TODO:                                    {{{2
 "       * &magic

@@ -3,9 +3,9 @@
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      0.5.0.
-let s:k_version = '050'
+let s:k_version = '051'
 " Created:      23rd Mar 2015
-" Last Update:  09th Jul 2015
+" Last Update:  24th Sep 2015
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -60,6 +60,7 @@ function! s:ProjectName() abort
   if     exists('b:BTW_project') | return b:BTW_project
   elseif exists('g:BTW_project') | return g:BTW_project
   elseif &ft == 'qf'             | cclose | return s:ProjectName()
+  elseif lh#ft#is_script()       | return '%'
   else                           | return '%<'
   endif
 endfunction
