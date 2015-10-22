@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/project.vim                       {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.3.4.
-let s:k_version = 034
+" Version:      0.5.2.
+let s:k_version = 052
 " Created:      15th Jan 2015
-" Last Update:  24th Mar 2015
+" Last Update:  22nd Oct 2015
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions to generate new project config files from templates.
@@ -48,6 +48,9 @@ endfunction
 " # New project {{{2
 " Function: lh#btw#project#new(...) {{{3
 function! lh#btw#project#new(...) abort
+  if a:0 == 0
+    call lh#common#warning_msg('BTW new_project <kinds>... name=<name> config=<BTW-config-varname> -src_dir=<src_dir> (def=expand("%:p:h"))')
+  endif
   let extension_for_configurable_files = ''
 
   let args = call('lh#btw#project#_analyse_params', a:000)

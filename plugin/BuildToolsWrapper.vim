@@ -3,10 +3,10 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.5.1
-let s:k_version = 0501
+" Version:      0.5.2
+let s:k_version = 0502
 " Created:      28th Nov 2004
-" Last Update:  09th Jul 2015
+" Last Update:  22nd Oct 2015
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -226,6 +226,8 @@ let s:k_version = 0501
 "       ...)
 " v0.5.1: 24th Sep 2015
 "       * ":Execute" on scripts will correctly work. Requires lh-vim-lib 3.3.3.
+" v0.5.2: 22nd Oct 2015
+"       * Usage message for ":BTW new_project"
 "
 " TODO:                                    {{{2
 "       * &magic
