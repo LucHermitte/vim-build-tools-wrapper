@@ -230,6 +230,7 @@ let s:k_version = 0503
 "       * Usage message for ":BTW new_project"
 " v0.5.3: 30th Oct 2015
 "       * Updated to new lh-vim-lib functions that create new splits, ignoring E36
+"       * Bug fix in ':BTW new_project' usage feature
 "
 " TODO:                                    {{{2
 "       * &magic

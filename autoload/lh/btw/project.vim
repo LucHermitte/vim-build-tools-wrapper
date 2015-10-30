@@ -50,6 +50,7 @@ endfunction
 function! lh#btw#project#new(...) abort
   if a:0 == 0
     call lh#common#warning_msg('BTW new_project <kinds>... name=<name> config=<BTW-config-varname> -src_dir=<src_dir> (def=expand("%:p:h"))')
+    return
   endif
   let extension_for_configurable_files = ''
 
