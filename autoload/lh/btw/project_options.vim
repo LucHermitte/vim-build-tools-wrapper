@@ -3,9 +3,10 @@
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:	0.2.14
+" Version:	0.5.3
+let s:k_version = 0530
 " Created:      06th Sep 2012
-" Last Update:  24th Mar 2015
+" Last Update:  30th Oct 2015
 "------------------------------------------------------------------------
 " Description:
 "       API to help define project options
@@ -15,10 +16,8 @@
 "       Drop this file into {rtp}/autoload/lh/btw
 "       Requires Vim7+, lh-vim 3.1.6
 " History:
-"       v0.2.0: first factorization
-"       v0.2.11:
-"       * bug: don't prevent syntax highlighting & ft detection to be triggered
-"         when launching vim with several files
+"       v0.5.3
+"       * Updated to new lh-vim-lib functions that create new splits, ignoring E36
 "       v0.2.14:
 "       * bug: When the project is organized with symbolic links, settings
 "         weren't applied. e.g.
@@ -26,6 +25,10 @@
 "          +-> repo/branches/B42
 "          +-> sources/ -> symlink to $$/repo/branches/B42
 "          +-> build/
+"       v0.2.11:
+"       * bug: don't prevent syntax highlighting & ft detection to be triggered
+"         when launching vim with several files
+"       v0.2.0: first factorization
 " TODO:         «missing features»
 " Example: Defining CTest verbosity from local_vimrc: {{{2
 "    let s:root = expand("<sfile>:p:h")
@@ -73,7 +76,6 @@ set cpo&vim
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
-let s:k_version = 0214
 function! lh#btw#project_options#version()
   return s:k_version
 endfunction
@@ -127,7 +129,7 @@ function! s:Hook() dict abort
     return
   endif
   try
-    sp
+    call lh#window#split()
     " Bug: iterating on listed buffers (e.g. from vim *.cpp) is enough to
     " disable syntax highlighting
     " =>

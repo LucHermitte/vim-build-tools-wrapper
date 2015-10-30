@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/build.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.5.0.
-let s:k_version = '051'
+" Version:      0.5.3.
+let s:k_version = '053'
 " Created:      23rd Mar 2015
-" Last Update:  24th Sep 2015
+" Last Update:  30th Oct 2015
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -405,7 +405,7 @@ function! lh#btw#build#_add_let_modeline() abort
   if which =~ 'Abort\|^$'
     " Nothing to do
   elseif which =~ '^Edit.*$'
-    exe 'sp '. matchstr(which, 'Edit\s*\zs.*')
+    call lh#window#split(matchstr(which, 'Edit\s*\zs.*'))
   else
     below split
     let s = search('Vim:\s*let\s\+.*'.which.'\s*=\zs')

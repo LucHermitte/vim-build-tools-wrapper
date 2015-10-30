@@ -3,8 +3,8 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:	0.5.2
-let s:version = '0.5.2'
+" Version:	0.5.3
+let s:version = '0.5.3'
 " Created:	06th Nov 2007
 " Last Update:	22nd Oct 2015
 "------------------------------------------------------------------------

@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/project.vim                       {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.5.2.
-let s:k_version = 052
+" Version:      0.5.3.
+let s:k_version = 053
 " Created:      15th Jan 2015
-" Last Update:  22nd Oct 2015
+" Last Update:  30th Oct 2015
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions to generate new project config files from templates.
@@ -68,11 +68,11 @@ function! lh#btw#project#new(...) abort
   try
     let g:mt_IDontWantTemplatesAutomaticallyInserted = 1
     let g:mt_jump_to_first_markers = 0
-    sp _vimrc_local.vim
+    call lh#window#split('_vimrc_local.vim')
     call lh#mut#expand_and_jump(0, 'vim', args)
 
     if has_key(args.project_kind, 'c') || has_key(args.project_kind, 'cpp')
-      sp _vimrc_cpp_style.vim
+      call lh#window#split('_vimrc_cpp_style.vim')
       call lh#mut#expand_and_jump(0, 'vim/internals/vim-header', args)
       normal! G
       call lh#mut#expand_and_jump(0, 'vim/internals/vim-rc-local-cpp-style', args)
@@ -82,7 +82,7 @@ function! lh#btw#project#new(...) abort
     let using_cmake = has_key(args.project_kind, 'cmake')
     if using_cmake
       let extension_for_configurable_files = 'in'
-      sp _vimrc_local_global_defs.vim
+      call lh#window#split('_vimrc_local_global_defs.vim')
       call lh#mut#expand_and_jump(0, 'vim/internals/vim-header', args)
       normal! G
       call lh#mut#expand_and_jump(0, 'vim/internals/vim-rc-local-global-cmake-def', args)
@@ -93,10 +93,10 @@ function! lh#btw#project#new(...) abort
     call cleanup.finalize()
   endtry
   if has_key(args.project_kind, 'doxygen')
-    exe 'sp Doxyfile'.extension_for_configurable_files
+    call lh#window#split('Doxyfile'.extension_for_configurable_files)
   endif
   if using_cmake
-    sp CMakeLists.txt
+    call lh#window#split('CMakeLists.txt')
   endif
 endfunction
 
