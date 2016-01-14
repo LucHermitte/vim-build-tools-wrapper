@@ -4,9 +4,9 @@
 " 		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
 " Version:	0.5.4
-let s:version = '0.5.4'
+let s:version = '0.5.5'
 " Created:	06th Nov 2007
-" Last Update:	18th Nov 2015
+" Last Update:	14th Jan 2016
 "------------------------------------------------------------------------
 let s:project = 'lh-BTW'
 cd <sfile>:p:h
@@ -49,6 +49,7 @@ compiler/BTW/run_in_background.pl
 compiler/BTW/substitute_filenames.vim
 compiler/BTW/syntax/cc.vim
 doc/BuildToolsWrapper.txt
+doc/cmake.md
 lh-build-tools-wrapper-addon-info.txt
 plugin/BuildToolsWrapper.vim
 tests/lh/UT_project_create.vim
