@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/cmake.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.2
-let s:k_version = 0402
+" Version:      0.5.5
+let s:k_version = 0505
 " Created:      12th Sep 2012
-" Last Update:  10th Apr 2015
+" Last Update:  14th Jan 2016
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -380,6 +380,10 @@ function! s:UpdateCompilDir() dict
   let paths._build = paths.project.'/'.self.project().build[self.project().compilation.mode]
   let b:BTW_compilation_dir    = paths._build
   " echoerr "Compiling ".expand('%')." in ".b:BTW_compilation_dir
+  if has_key(self, '_update_compil_dir_hook')
+    " Can be used to update things like LD_LIBRARY_PATH, ...
+    call self._update_compil_dir_hook()
+  endif
 endfunction
 
 " # s:GetClic() dict {{{2
