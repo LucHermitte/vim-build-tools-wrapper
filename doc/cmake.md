@@ -91,8 +91,8 @@ item. For instance, given your project is named `FooBar`
 | ...to change the option | ... type the command                   |
 |-------------------------|----------------------------------------|
 | Compilation mode        | `:Toggle ProjectFooBarMode`            |
-| Test verbosity          | `:Toggle ProjectFooBarCTestVerbosity   |
-| Use valgrind            | `:Toggle ProjectFooBarCTestCheckMemory |
+| Test verbosity          | `:Toggle ProjectFooBarCTestVerbosity`  |
+| Use valgrind            | `:Toggle ProjectFooBarCTestCheckMemory`|
 
 
 __Warning:__ do not try to find the global variables associated to these
