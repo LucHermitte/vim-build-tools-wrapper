@@ -81,7 +81,7 @@ endfunction
 "     - sources
 "     - _build          // Internal, points to the compilation dir used
 "                       // to set b:BTW_compilation_dir
-"     - _clic           // Subpath whete clang indexer DB is stored from _build
+"     - _clic           // Subpath where clang indexer DB is stored from _build
 "                       // defaults to ".clic/index.bd"
 "     - clic()          // Returns _build + _clic (by default)
 "   - build
