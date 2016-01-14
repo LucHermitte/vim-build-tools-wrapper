@@ -4,7 +4,7 @@ BTW has two main purposes:
   * [To simplify the on-the-fly tuning of `'compiler'` settings.](doc/filter.md)
   * [To offer a simplified interface to build, execute, test our programs.](doc/make_run.md)
 
-It is also able to interface with [projects under CMake](doc/CMake.md).
+It is also able to interface with [projects under CMake](doc/cmake.md).
 
 And, it provides an [airline](https://github.com/bling/vim-airline) extension
 that displays the current project name and compilation mode. This informations
