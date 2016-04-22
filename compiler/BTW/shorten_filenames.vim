@@ -2,10 +2,10 @@
 " File:         compiler/BTW/shorten_filenames.vim                {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.0.
-let s:k_version = 040
+" Version:      0.5.5.
+let s:k_version = 055
 " Created:      22nd Mar 2015
-" Last Update:  23rd Mar 2015
+" Last Update:  22nd Apr 2016
 "------------------------------------------------------------------------
 " Description:
 "       BTW filter to shorter filenames (with conceal feature)
@@ -35,8 +35,11 @@ function! BTW_Shorten_Filenames() abort
       let expr  = pat
       let cchar = '&'
     endif
-
-    exe 'syn match qfShortenFile #'.expr.'# conceal contained cchar='.cchar
+    if lh#encoding#strlen(cchar) > 1
+      call lh#common#warning_msg('Invalid conceal-character `'.cchar."' for `".expr."' given to shorten_filenames BTW filter: its length is > 1")
+    else
+      exe 'syn match qfShortenFile #'.expr.'# conceal contained cchar='.cchar
+    endif
   endfor
   setlocal conceallevel=1
   setlocal concealcursor=nc
