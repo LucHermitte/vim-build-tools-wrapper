@@ -22,17 +22,19 @@ function! lh#btw#build#version()
 endfunction
 
 " # Debug          {{{2
-if !exists('s:verbose')
-  let s:verbose = 0
-endif
+let s:verbose = get(s:, 'verbose', 0)
 function! lh#btw#build#verbose(...)
   if a:0 > 0 | let s:verbose = a:1 | endif
   return s:verbose
 endfunction
 
-function! s:Verbose(expr)
+function! s:Log(expr, ...)
+  call call('lh#log#this',[a:expr]+a:000)
+endfunction
+
+function! s:Verbose(expr, ...)
   if s:verbose
-    echomsg a:expr
+    call call('s:Log',[a:expr]+a:000)
   endif
 endfunction
 
@@ -317,7 +319,8 @@ function! lh#btw#build#_execute()
       " todo, check executable(split(path)[0])
       let path = './' . path
     endif
-    exe ':!'.lh#path#fix(path . s:ext) . ' ' .lh#option#get('BTW_run_parameters','')
+    call s:Verbose(':!'.lh#path#fix(path) . ' ' .lh#option#get('BTW_run_parameters',''))
+    exe ':!'.lh#path#fix(path) . ' ' .lh#option#get('BTW_run_parameters','')
   endif
 endfunction
 
@@ -346,7 +349,7 @@ function! lh#btw#build#_config() abort
       let prg = 'cd '.wd.' && cmake-gui '.(how.arg).'&'
     endif
     " let g:prg = prg
-    echo ":!".prg
+    call s:Verbose(":!".prg)
     exe ':silent !'.prg
   endif
 endfunction
@@ -379,7 +382,7 @@ function! lh#btw#build#_re_config() abort
       let prg = 'cd '.wd.' && cmake .'
     endif
     " let g:prg = prg
-    echo ":!".prg
+    call s:Verbose(":!".prg)
     exe ':!'.prg
   endif
 endfunction
