@@ -3,10 +3,10 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.5.3
-let s:k_version = 0503
+" Version:      0.5.5
+let s:k_version = 0505
 " Created:      28th Nov 2004
-" Last Update:  30th Oct 2015
+" Last Update:  26th Apr 2016
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -231,6 +231,9 @@ let s:k_version = 0503
 " v0.5.3: 30th Oct 2015
 "       * Updated to new lh-vim-lib functions that create new splits, ignoring E36
 "       * Bug fix in ':BTW new_project' usage feature
+" v0.5.5: 26th Apr 2016
+"       * On Windows, when `[bg]:BTW_project_executable`  is set, ".exe" won't
+"       be appended automatically
 "
 " TODO:                                    {{{2
 "       * &magic
@@ -414,7 +417,7 @@ function! BTWComplete(ArgLead, CmdLine, CursorPos)
     let p = matchend(a:CmdLine, '^BTW\s\+\<new\%[_project]\>')
     if -1 != p
       let already_there = split(a:CmdLine[p : ])
-      let g:already_there = already_there
+      " let g:already_there = already_there
       return join(filter(copy(s:k_new_prj), 'match(already_there, "\\<".v:val."\\>")==-1'), "\n")
     endif
   endif

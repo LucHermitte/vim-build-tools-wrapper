@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/build.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.5.3.
-let s:k_version = '053'
+" Version:      0.5.5.
+let s:k_version = '055'
 " Created:      23rd Mar 2015
-" Last Update:  30th Oct 2015
+" Last Update:  26th Apr 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -83,6 +83,7 @@ function! s:TargetRule() abort
 endfunction
 
 " Function: s:Executable()                            {{{3
+let s:ext = (has('win32')||has('win64')||has('win16')) ? '.exe' : ''
 function! s:Executable() abort
   " TODO: find a better name
   " TODO: try to detect available rules in Makefile/main.aap/...,
@@ -94,10 +95,12 @@ function! s:Executable() abort
   elseif exists('g:BTW_project_executable') | return g:BTW_project_executable
   else
     let res = s:ProjectName()
-    if !strlen(res)
+    if empty(res)
+      throw "BTW: Sorry, I'm not able to deduce project name in order to know which executable to run. Please see `:h BTW-project-executable`"
       " TODO: glob()+executable() -> possible executable in the build
       " directory
     endif
+    let res .= s:ext
     return res
   endif
 endfunction
@@ -278,7 +281,6 @@ endfunction
 
 " # Execute        {{{2
 " Function: lh#btw#build#_execute()                   {{{3
-let s:ext = (has('win32')||has('win64')||has('win16')) ? '.exe' : ''
 function! lh#btw#build#_execute()
   let path = s:Executable()
   if type(path) == type({})
