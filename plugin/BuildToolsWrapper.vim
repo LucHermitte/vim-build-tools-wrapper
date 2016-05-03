@@ -3,8 +3,8 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.5.5
-let s:k_version = 0505
+" Version:      0.5.6
+let s:k_version = 0506
 " Created:      28th Nov 2004
 " Last Update:  26th Apr 2016
 "------------------------------------------------------------------------
@@ -234,6 +234,8 @@ let s:k_version = 0505
 " v0.5.5: 26th Apr 2016
 "       * On Windows, when `[bg]:BTW_project_executable`  is set, ".exe" won't
 "       be appended automatically
+" v0.5.5: 03rd May 2016
+"       * Fix "No maping found" on plain vim (!= gvim)
 "
 " TODO:                                    {{{2
 "       * &magic
@@ -354,14 +356,14 @@ if has('gui_running') && has ('menu')
   call s:MenuMakeBG()
   call s:MenuMakeMJ()
 else
-  exe '  nnoremap '.s:key_make      .':call lh#btw#build#_compile()<cr>'
-  exe '  inoremap '.s:key_make      .'<c-o>:call lh#btw#build#_compile()<cr>'
-
-  exe '  nnoremap '.s:key_execute   .':call lh#btw#build#_execute()<cr>'
-  exe '  inoremap '.s:key_execute   .'<c-o>:call lh#btw#build#_execute()<cr>'
-
-  exe '  nnoremap '.s:key_re_config .':ReConfig()<cr>'
-  exe '  nnoremap '.s:key_config    .':Config()<cr>'
+  exe '  nnoremap '.s:key_make      .' :call lh#btw#build#_compile()<cr>'
+  exe '  inoremap '.s:key_make      .' <c-o>:call lh#btw#build#_compile()<cr>'
+                                       
+  exe '  nnoremap '.s:key_execute   .' :call lh#btw#build#_execute()<cr>'
+  exe '  inoremap '.s:key_execute   .' <c-o>:call lh#btw#build#_execute()<cr>'
+                                       
+  exe '  nnoremap '.s:key_re_config .' :ReConfig()<cr>'
+  exe '  nnoremap '.s:key_config    .' :Config()<cr>'
 endif
 " ## Commands and mappings }}}1
 "------------------------------------------------------------------------
