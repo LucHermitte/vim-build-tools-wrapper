@@ -17,31 +17,32 @@ let s:k_version = 040
 let s:cpo_save=&cpo
 set cpo&vim
 "------------------------------------------------------------------------
-" ## Misc Functions                                               {{{1
-" # Version        {{{2
+" ## Misc Functions     {{{1
+" # Version {{{2
 function! lh#btw#filters#version()
   return s:k_version
 endfunction
 
-" # Debug          {{{2
-if !exists('s:verbose')
-  let s:verbose = 0
-endif
+" # Debug   {{{2
+let s:verbose = get(s:, 'verbose', 0)
 function! lh#btw#filters#verbose(...)
   if a:0 > 0 | let s:verbose = a:1 | endif
   return s:verbose
 endfunction
 
-function! s:Verbose(expr)
+function! s:Log(expr, ...)
+  call call('lh#log#this',[a:expr]+a:000)
+endfunction
+
+function! s:Verbose(expr, ...)
   if s:verbose
-    echomsg a:expr
+    call call('s:Log',[a:expr]+a:000)
   endif
 endfunction
 
-function! lh#btw#filters#debug(expr)
+function! lh#btw#filters#debug(expr) abort
   return eval(a:expr)
 endfunction
-
 
 "------------------------------------------------------------------------
 " ## Exported functions                                           {{{1

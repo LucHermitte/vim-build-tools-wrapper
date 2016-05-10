@@ -125,7 +125,7 @@ function! s:FetchRunInBackground() abort
   else
     call lh#common#error_msg( "Build Tools Wrapper:\n  This plugin requires either a version of Vim that defines |globpath()| or the script searchInRuntime.vim.\n"
           \."  Please upgrade your version of vim, or install searchInRuntime.vim\n"
-          \."  Check on <http://hermitte.free.fr/vim/> or <http://vim.sf.net/> script #229")
+          \."  Check on <https://github.com/LucHermitte/SearchInRuntime> or <http://vim.sf.net/> script #229")
     finish
   endif
 
