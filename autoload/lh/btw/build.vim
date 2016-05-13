@@ -1,7 +1,7 @@
 "=============================================================================
 " File:         autoload/lh/btw/build.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
-"		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
+"               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      0.5.5.
 let s:k_version = '055'
 " Created:      23rd Mar 2015
@@ -149,16 +149,18 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
   let cleanup = lh#on#exit()
         \.restore('&makeprg')
   if bg
-    let run_in = lh#option#get("BTW_make_in_background_in", '')
-    if strlen(run_in)
-      " Typically xterm -e
-      let run_in = ' --program="'.run_in.'"'
+    if !exists('*job_start') " case handled latter
+      let run_in = lh#option#get("BTW_make_in_background_in", '')
+      if strlen(run_in)
+        " Typically xterm -e
+        let run_in = ' --program="'.run_in.'"'
+      endif
+      let &makeprg = s:RunInBackground()
+            \ . ' --vim=' . v:progname
+            \ . ' --servername=' . v:servername
+            \ . run_in
+            \ . ' "' . (a:program) . '"'
     endif
-    let &makeprg = s:RunInBackground()
-          \ . ' --vim=' . v:progname
-          \ . ' --servername=' . v:servername
-          \ . run_in
-          \ . ' "' . (a:program) . '"'
   else
     let &makeprg = a:program
   endif
@@ -171,7 +173,12 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
   endif
 
   try
-    if lh#os#OnDOSWindows() && bg
+    if bg && exists('*job_start') 
+      let cmd = substitute(&makeprg, '\$\*', args, 'g')
+      " makeprg escapes pipes, we need to unescape them for job_start
+      let cmd = substitute(cmd, '\\|', '|', 'g')
+      call lh#btw#job_build#execute(cmd)
+    elseif lh#os#OnDOSWindows() && bg
       let cmd = ':!start '.substitute(&makeprg, '\$\*', args, 'g')
       exe cmd
     else
@@ -219,6 +226,12 @@ function! lh#btw#build#_compile(...) abort
   endif
 endfunction
 
+" Function: lh#btw#build#_get_qf_size() {{{3
+function! lh#btw#build#_get_qf_size() abort
+  let nl = 15 > &winfixheight ? 15 : &winfixheight
+  let nl = lh#option#get('BTW_QF_size', nl, 'g')
+  return nl
+endfunction
 
 " Function: lh#btw#build#_show_error([cop|cwin])      {{{3
 function! lh#btw#build#_show_error(...) abort
@@ -229,6 +242,7 @@ function! lh#btw#build#_show_error(...) abort
   else
     let open_qf = 'cwindow'
   endif
+  let winid = lh#window#getid()
 
   " --- The following code is borrowed from LaTeXSuite
   " close the quickfix window before trying to open it again, otherwise
@@ -245,8 +259,7 @@ function! lh#btw#build#_show_error(...) abort
   " if we moved to a different window, then it means we had some errors.
   if winnum != winnr()
     " resize the window to just fit in with the number of lines.
-    let nl = 15 > &winfixheight ? 15 : &winfixheight
-    let nl = lh#option#get('BTW_QF_size', nl, 'g')
+    let nl = lh#btw#build#_get_qf_size()
     let nl = line('$') < nl ? line('$') : nl
     exe nl.' wincmd _'
 
@@ -257,22 +270,26 @@ function! lh#btw#build#_show_error(...) abort
     endif
     call lh#btw#filters#_apply_quick_fix_hooks('syntax')
   endif
-  if lh#option#get('BTW_GotoError', 1, 'g') == 1
-  else
-    exe origwinnum . 'wincmd w'
+  if lh#option#get('BTW_GotoError', 1, 'g') != 1
+    call lh#window#gotoid(winid)
   endif
 endfunction
 
 " Function: lh#btw#build#_copen_bg(f,[cop|cwin])      {{{3
 function! lh#btw#build#_copen_bg(errorfile,...) abort
   " Load a file containing the errors
-  :exe ":cgetfile ".a:errorfile
+  if type(a:errorfile) == type(0)
+    " Actually using a bufnr
+    :exe ":cgetbuffer ".a:errorfile
+  else
+    :exe ":cgetfile ".a:errorfile
+  endif
   " delete the temporary file
   if a:errorfile =~ 'tmp-make-bg'
     call delete(a:errorfile)
   endif
   let opt = (a:0>0) ? a:1 : ''
-  exe 'call lh#btw#build#_show_error('.opt.')'
+  call call('lh#btw#build#_show_error', a:000)
   echohl WarningMsg
   echo "Build complete!"
   echohl None

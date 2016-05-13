@@ -239,10 +239,10 @@ function! lh#btw#chain#_reconstruct() abort
     call s:AdjustEFM(filter, efm)
     let prg = lh#option#get(s:ToVarName('BTW_filter_program_'.filter), '', 'bg')
 
-    if strlen(prg)
+    if !empty(prg)
       " Faire dans BTW-{filter}.vim
       " let prg = substitute(expand('<sfile>:p:h'), ' ', '\\ ', 'g')
-      let makeprg .= " 2>&1 \\| ".prg
+      let makeprg .= ' 2>&1 \| '.prg
     endif
   endfor
 
