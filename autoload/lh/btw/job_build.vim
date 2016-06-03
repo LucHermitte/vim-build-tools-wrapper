@@ -5,7 +5,7 @@
 " Version:      0.5.6.
 let s:k_version = '056'
 " Created:      10th May 2016
-" Last Update:  10th May 2016
+" Last Update:  03rd Jun 2016
 "------------------------------------------------------------------------
 " Description:
 "       Background compilation with latest job_start() API
@@ -66,8 +66,9 @@ endfunction
 
 " # Compilation {{{2
 " TODO: hide function name
-function! ExitCB(channel, status)
-  call s:Verbose("Background compilation with `%1' %2", s:cmd, job_status(a:channel))
+function! CloseCB(channel)
+  " call s:Verbose("Background compilation with `%1' %2", s:cmd, job_status(a:channel))
+  call s:Verbose("Background compilation with `%1'", s:cmd)
   call lh#btw#build#_copen_bg(s:bid)
   redraw
   if bufnr('%') != s:bid
@@ -98,7 +99,7 @@ function! s:init(cmd)
           \ {
           \   'out_io': 'buffer', 'out_buf': s:bid
           \ , 'err_io': 'buffer', 'err_buf': s:bid
-          \ , 'exit_cb': ('ExitCB')
+          \ , 'close_cb': ('CloseCB')
           \ })
   catch /.*/
     " The operation failed. => clear the buffer
