@@ -135,6 +135,9 @@ They contain:
     * `trunk`: Where the sources are -- important to tune to distinguish
       between subprojects
     * `sources`: this matches all the trunk => complete even with test files
+    * `build_root_dir`: points to the root (/list of root) directory(/ies)
+      where build directories are stored. Meant to be used with `auto_detect_compil_modes`.
+      This option is relative to `paths.project` key. 
     * `doxyfile`: where the doxyfile is
     * `_build`: internal, points to the current compilation directory at any
       time
@@ -142,10 +145,12 @@ They contain:
       stored
     * `clic()`: Returns `_build` + `_clic` (by default)
  * `build`: path relative from `paths.project` -- the following are not
-   mandatory, any name, and any number of modes can be used
+   mandatory, any name, and any number of modes can be used.
     * `Debug`:  tells where to find the debug mode directory
     * `Release`: tells where to find the release mode directory
     *  ...
+   Filling this key is not mandatory. Instead we can fill
+   `paths.build_root_dir` and use `auto_detect_compil_modes`.
  * `compilation`
     *  `mode`: The current compilation mode: any name from `build`
  * `tests`
@@ -237,10 +242,16 @@ LetIfUndef g:project_name_config.name                       'project_name'
 LetIfUndef g:project_name_config.paths.project    fnamemodify(g:project_name_config.paths.trunk,':h:h')
 LetIfUndef g:project_name_config.paths.doxyfile   g:project_name_config.paths.project
 " Note: this could be anything like: MyProject_config.build.ARM-release
+
+" Two options to Fill the build Modes:
+" *  Option 1: manually
 LetIfUndef g:project_name_config.build.Debug                  'build/debug'
 LetIfUndef g:project_name_config.build.Release                'build/release'
 LetIfUndef g:project_name_config.build.ReleaseWithDebugInfo   'build/reldeb'
 LetIfUndef g:project_name_config.build.Sanitize               'build/sanitize'
+" * Option 2: automatically
+LetIfUndef g:project_name_config.paths.build_root_dir         'build'
+
 " Stuff that I've added
 LetIfUndef g:project_name_config.install.Debug                'install/debug'
 LetIfUndef g:project_name_config.install.Release              'install/release'
@@ -304,7 +315,10 @@ let g:project_name_config_menu = {
       \ }
 
 let s:cmake_integration = []
-let s:cmake_integration += [ 'def_toggable_compil_mode' ]
+" Back to adding compilation modes
+let s:cmake_integration += [ 'def_toggable_compil_mode' ] " Option 1
+" or
+let s:cmake_integration += [ 'auto_detect_compil_modes' ] " Option 2
 let s:cmake_integration += [ 'def_toggable_ctest_verbosity' ]
 let s:cmake_integration += [ 'def_toggable_ctest_checkmem' ]
 let s:cmake_integration += [ 'def_ctest_targets' ]
