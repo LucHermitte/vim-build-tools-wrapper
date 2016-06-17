@@ -145,12 +145,12 @@ They contain:
       stored
     * `clic()`: Returns `_build` + `_clic` (by default)
  * `build`: path relative from `paths.project` -- the following are not
-   mandatory, any name, and any number of modes can be used.
+   mandatory, any name, and any number of modes can be used.  
+   Filling this key is not mandatory. Instead we can fill
+   `paths.build_root_dir` and use `auto_detect_compil_modes`.
     * `Debug`:  tells where to find the debug mode directory
     * `Release`: tells where to find the release mode directory
     *  ...
-   Filling this key is not mandatory. Instead we can fill
-   `paths.build_root_dir` and use `auto_detect_compil_modes`.
  * `compilation`
     *  `mode`: The current compilation mode: any name from `build`
  * `tests`
