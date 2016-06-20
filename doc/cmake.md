@@ -459,7 +459,7 @@ let b:BTW_project_target = ''
 let b:BTW_project_config = {
       \ 'type': 'ccmake',
       \ 'arg': (b:project_sources_dir),
-      \ 'wd' : lh#function#bind(string(b:BTW_compilation_dir)),
+      \ 'wd' : lh#function#bind('b:BTW_compilation_dir'),
       \ '_'  : g:project_name_config
       \ }
 
@@ -718,7 +718,7 @@ let b:BTW_project_target = ''
 let b:BTW_project_config = {
       \ 'type': 'ccmake',
       \ 'arg': (b:project_sources_dir),
-      \ 'wd' : lh#function#bind(string(b:BTW_compilation_dir)),
+      \ 'wd' : lh#function#bind('b:BTW_compilation_dir'),
       \ '_'  : g:{b:component_varname}_config
       \ }
 
