@@ -30,11 +30,11 @@ git clone git@github.com:LucHermitte/lh-tags.git
 ```vim
 Bundle 'LucHermitte/lh-vim-lib'
 Bundle 'LucHermitte/SearchInRuntime'
-Bundle 'LucHermitte/vim-build-tools-wrappers'
+Bundle 'LucHermitte/vim-build-tools-wrapper'
 " lh-dev is required by airline extension for BTW
 Bundle 'LucHermitte/lh-dev'
 " lh-dev requires lh-tags, which won't be used bt BTW
-Bundle 'LucHermitte/lh-tags
+Bundle 'LucHermitte/lh-tags'
 ```
 
 # See also
