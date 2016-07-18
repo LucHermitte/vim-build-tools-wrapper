@@ -7,7 +7,7 @@ BTW has two main purposes:
 It is also able to interface with [projects under CMake](doc/cmake.md).
 
 And, it provides an [airline](https://github.com/bling/vim-airline) extension
-that displays the current project name and compilation mode. This informations
+that displays the current project name and compilation mode. This information
 will also be displayed for the quickfix window.
 
 # Installation
