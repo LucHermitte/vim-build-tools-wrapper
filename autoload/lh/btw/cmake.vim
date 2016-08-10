@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/cmake.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.5.5
-let s:k_version = 0505
+" Version:      0.6.0
+let s:k_version = 0600
 " Created:      12th Sep 2012
-" Last Update:  14th Jan 2016
+" Last Update:  17th Jun 2016
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -76,9 +76,11 @@ endfunction
 " - _project settings
 "   - paths
 "     - trunk           // It's important to tune this variable to distinguish between subprojects
-"     - project
+"     - project         // Root path of the project
 "     - doxyfile
-"     - sources
+"     - sources         // This matches all the trunk => complete even with test files
+"     - build_root_dir  // Points to the root (/list of root) directory(/ies)
+"                       // where build directories are stored. Meant to be used with `auto_detect_compil_modes`.
 "     - _build          // Internal, points to the compilation dir used
 "                       // to set b:BTW_compilation_dir
 "     - _clic           // Subpath where clang indexer DB is stored from _build
@@ -128,6 +130,50 @@ function! lh#btw#cmake#def_options(config, options) abort
     " execute the action to initialize everything
     call lh#btw#cmake#{option}(menu_def)
   endfor
+endfunction
+
+" Function: lh#btw#cmake#auto_detect_compil_modes(menu_def) {{{2
+" This function will automaticall fill _config.build dict, AND execute
+" def_toggable_compil_mode
+function! lh#btw#cmake#auto_detect_compil_modes(menu_def) abort
+  let a:menu_def.project = function(s:getSNR('project'))
+  " It may be a list of directories actually...
+  " but relative to `project`
+  let build_root = get(a:menu_def.project().paths, 'build_root_dir', lh#option#unset())
+  if lh#option#is_unset(build_root)
+    throw "Please set `g:".a:menu_def._project.".path.build_root_dir` in order to autodetect compilation modes"
+  endif
+  let project_root = a:menu_def.project().paths.project
+
+  let subs = lh#path#glob_as_list(project_root.'/'.build_root, '*')
+  call filter(subs, 'isdirectory(v:val)')
+  if empty(subs)
+    throw "No subdirectories found in `".build_root."`: cannot deduce compilations modes"
+  endif
+
+  " Check directories without Makefiles
+  let without_makefile = filter(copy(subs), '! filereadable(v:val."/Makefile")')
+  " Check directories without CMakeLists
+  let without_cmakecache = filter(copy(subs), '! filereadable(v:val."/CMakeCache.txt")')
+
+  let msg = ''
+  if !empty(without_makefile)
+    let msg .= "\nThe following build directories have no Makefile: ".join(without_makefile, ', ')
+  endif
+  if !empty(without_cmakecache)
+    let msg .= "\nThe following build directories have no CMakeCache.txt file ".join(without_cmakecache, ', ')
+  endif
+  if !empty(msg)
+    let msg = "Warning:" . msg
+    call lh#common#echomsg_multilines(msg)
+  endif
+
+  for sub in subs
+    call lh#let#if_undef('g:'.a:menu_def._project.'.build.'.fnamemodify(sub, ':t'), string(lh#path#strip_start(sub, project_root)))
+  endfor
+
+  " And finally, prepare everything
+  call lh#btw#cmake#def_toggable_compil_mode(a:menu_def)
 endfunction
 
 " Function: lh#btw#cmake#def_toggable_compil_mode(menu_def) {{{2
@@ -370,6 +416,11 @@ function! s:getSNR(...)
     let s:SNR=matchstr(expand('<sfile>'), '<SNR>\d\+_\zegetSNR$')
   endif
   return s:SNR . (a:0>0 ? (a:1) : '')
+endfunction
+
+" # s:project() {{{2
+function! s:project() dict abort " dereference _project
+  return eval('g:'.self._project)
 endfunction
 
 " # s:UpdateCompilDir() dict {{{2

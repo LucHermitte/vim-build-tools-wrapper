@@ -7,16 +7,21 @@ BTW has two main purposes:
 It is also able to interface with [projects under CMake](doc/cmake.md).
 
 And, it provides an [airline](https://github.com/bling/vim-airline) extension
-that displays the current project name and compilation mode. This informations
+that displays the current project name and compilation mode. This information
 will also be displayed for the quickfix window.
 
 # Installation
-  * Requirements: Vim 7.+, [lh-vim-lib](http://github.com/LucHermitte/lh-vim-lib) (v3.2.12), [lh-dev](http://github.com/LucHermitte/lh-dev) (v1.1.8), [SearchInRuntime](http://github.com/LucHermitte/SearchInRuntime).
+  * Requirements: Vim 7.+, [lh-vim-lib](http://github.com/LucHermitte/lh-vim-lib) (v3.2.12), [lh-dev](http://github.com/LucHermitte/lh-dev) (v1.3.5), [SearchInRuntime](http://github.com/LucHermitte/SearchInRuntime).
   * With [vim-addon-manager](https://github.com/MarcWeber/vim-addon-manager), install build-tools-wrapper (this is the preferred method because of the dependencies)
 ```vim
 ActivateAddons build-tools-wrapper
 ```
-  * or you can clone the git repositories
+  * or with [vim-flavor](http://github.com/kana/vim-flavor) which also supports
+    dependencies:
+```
+flavor 'LucHermitte/vim-build-tools-wrapper'
+```
+  * or you can clone the git repositories (expecting I haven't forgotten anything):
 ```vim
 git clone git@github.com:LucHermitte/lh-vim-lib.git
 git clone git@github.com:LucHermitte/SearchInRuntime.git
@@ -26,15 +31,15 @@ git clone git@github.com:LucHermitte/lh-dev.git
 " lh-dev requires lh-tags, which won't be used bt BTW
 git clone git@github.com:LucHermitte/lh-tags.git
 ```
-  * or with Vundle/NeoBundle:
+  * or with Vundle/NeoBundle (expecting I haven't forgotten anything):
 ```vim
 Bundle 'LucHermitte/lh-vim-lib'
 Bundle 'LucHermitte/SearchInRuntime'
-Bundle 'LucHermitte/vim-build-tools-wrappers'
+Bundle 'LucHermitte/vim-build-tools-wrapper'
 " lh-dev is required by airline extension for BTW
 Bundle 'LucHermitte/lh-dev'
 " lh-dev requires lh-tags, which won't be used bt BTW
-Bundle 'LucHermitte/lh-tags
+Bundle 'LucHermitte/lh-tags'
 ```
 
 # See also

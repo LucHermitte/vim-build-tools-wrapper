@@ -208,6 +208,7 @@ function! lh#btw#project_options#add_string_option(menu) abort
   return menu
 endfunction
 
+" }}}1
 "------------------------------------------------------------------------
 let &cpo=s:cpo_save
 "=============================================================================
