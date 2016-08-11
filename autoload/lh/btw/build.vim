@@ -288,7 +288,9 @@ endfunction
 " Function: lh#btw#build#_copen_bg_complete([cop|cwin])      {{{3
 function! lh#btw#build#_copen_bg_complete(...) abort
   let opt = (a:0>0) ? a:1 : ''
-  call call('lh#btw#build#_show_error', a:000)
+  if get(g:, 'lh#btw#auto_cbottom', 1)
+    call call('lh#btw#build#_show_error', a:000)
+  endif
   echohl WarningMsg
   echo "Build complete!"
   echohl None
