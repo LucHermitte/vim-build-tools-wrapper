@@ -95,10 +95,11 @@ endfunction
 function! CloseCB(channel) abort
   " call s:Verbose("Background compilation with `%1' %2", s:cmd, job_status(a:channel))
   try
-    call s:Verbose("Background compilation with `%1'", s:cmd)
+    call s:Verbose("Background compilation with `%1' finished", s:cmd)
     while ch_status(a:channel) == 'buffered'
       call CallbackCB(a:channel, ch_read(a:channel))
     endwhile
+    call setqflist([{'text': "Background compilation with `".(s:cmd)."` finished"}], 'a')
   finally
     unlet s:job
   endtry
@@ -140,7 +141,7 @@ function! s:init(cmd) abort
   call s:Verbose("Background compilation with `%1' started", a:cmd)
   " Filling qflist is required because of lh#btw#build#_show_error() in caller
   " function
-  call setqflist([{'text': "Background compilation with `".string(a:cmd)."` started"}])
+  call setqflist([{'text': "Background compilation with `".(a:cmd)."` started"}])
   let s:job = job_start(['sh', '-c', a:cmd],
         \ {
         \   'close_cb': ('CloseCB')

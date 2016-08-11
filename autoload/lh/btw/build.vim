@@ -270,7 +270,7 @@ function! lh#btw#build#_show_error(...) abort
 
     " Apply syntax hooks
     let syn = lh#option#get('BTW_qf_syntax', '', 'gb')
-    if strlen(syn)
+    if !empty(syn)
       silent exe 'runtime compiler/BTW/syntax/'.syn.'.vim'
     endif
     call lh#btw#filters#_apply_quick_fix_hooks('syntax')
@@ -319,14 +319,16 @@ function! lh#btw#build#_copen_bg(...) abort
 
   setlocal nowrap
 
-  " if we moved to a different window, then it means we had some errors.
+  call assert_notequal(winid, lh#window#getid()) " a call to setqflist() should move us to the qfwindow
+  call assert_equal(&ft, 'qf')
   " resize the window to have the right number of lines
   let nl = lh#btw#build#_get_qf_size()
   exe nl.' wincmd _'
+  let w:quickfix_title = lh#btw#build_mode(). ' compilation of ' . lh#btw#project_name()
 
   " Apply syntax hooks
   let syn = lh#option#get('BTW_qf_syntax', '', 'gb')
-  if strlen(syn)
+  if !empty(syn)
     silent exe 'runtime compiler/BTW/syntax/'.syn.'.vim'
   endif
   call lh#btw#filters#_apply_quick_fix_hooks('syntax')
