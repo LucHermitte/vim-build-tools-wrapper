@@ -3,8 +3,8 @@
 " Maintainer:	Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 " 		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:	0.6.0
-let s:version = '0.6.0'
+" Version:	0.7.0
+let s:version = '0.7.0'
 " Created:	06th Nov 2007
 " Last Update:	17th Jun 2016
 "------------------------------------------------------------------------
@@ -26,8 +26,12 @@ VimFlavor
 addon-info.json
 autoload/airline/extensions/btw.vim
 autoload/lh/btw.vim
+autoload/lh/btw/build.vim
+autoload/lh/btw/chain.vim
 autoload/lh/btw/cmake.vim
 autoload/lh/btw/filters.vim
+autoload/lh/btw/job_build.vim
+autoload/lh/btw/option.vim
 autoload/lh/btw/project.vim
 autoload/lh/btw/project_options.vim
 compiler/BTW/STLFilt.vim

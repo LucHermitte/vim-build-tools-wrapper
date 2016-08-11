@@ -8,24 +8,32 @@ BTW offers a simplified way to build and execute programs from vim. In essence, 
 Several options can permit to tune the behaviour of BTW.
 
 ## Keybindings
-|   Command   |   Default keybinding   |  Variable to set in `.vimrc`  |
-|:------------|:-----------------------|:------------------------------|
-| `:Make`     | `<F7>`                 | `g:BTW_key_make`              |
-| `:Execute`  | `<C-F5>`               | `g:BTW_key_execute`           |
-| `:Config`   | `<M-F7>`               | `g:BTW_key_config`            |
+|   Command                        |   Default keybinding   |  Variable to set in `.vimrc`  |
+|:---------------------------------|:-----------------------|:------------------------------|
+| `:Make`                          | `<F7>`                 | `g:BTW_key_make`              |
+| `:StopBGCompilation`<sup>1</sup> | N/A (yet)              | N/A (yet)                     |
+| `:Execute`                       | `<C-F5>`               | `g:BTW_key_execute`           |
+| `:Config`                        | `<M-F7>`               | `g:BTW_key_config`            |
+
+#### Notes:
+  * <sup>1</sup> Requires Vim 7.4-1980 compiled with +job feature.
 
 ## Behaviour
 ### Compilation
 
-|   Role                                                                                          |   Option name                     |   Values (default)      |   Best set in/changed with   |
-|:------------------------------------------------------------------------------------------------|:----------------------------------|:------------------------|:-----------------------------|
-| Shall the compilation happen in background ?                                                    | `g:BTW_make_in_background`        | 1/(0)                   | `.vimrc`/`:ToggleMakeBG`     |
-| Shall the compilation use all available cores ?                                                 | `g:BTW_make_multijobs`            | 1/(0)                   | `.vimrc`/`:ToggleMakeMJ`     |
-| Directory where the compilation shall be done                                                   | `(bg):BTW_compilation_dir`        | path ('')               | `local_vimrc` / [BTW CMake submodule](doc/cmake.md) |
-| Shall we update BTW tools chain every time we compile ?                                         | `(bg):BTW_use_prio`               | `''`/(`'update'`)       | `local_vimrc`                |
-| Command to use to compile in background (useful to follow the compilation in an external xterm) | `(bg):BTW_make_in_background_in`  | (`''`)/`'xterm -e'`/... | `local_vimrc`                |
-| Name of the project                                                                             | `(bg):BTW_Project`                | (`'%<'`)                | `local_vimrc`                |
-| Build Target                                                                                    | `(bg):BTW_project_target`         | (project name, or `'all'` if empty) | `local_vimrc`                |
+|   Role                                                                                          |   Option name                             |   Values (default)      |   Best set in/changed with   |
+|:------------------------------------------------------------------------------------------------|:------------------------------------------|:------------------------|:-----------------------------|
+| Shall the compilation happen in background?                                                     | `g:BTW_make_in_background`                | 1/(0)                   | `.vimrc`/`:ToggleMakeBG`     |
+| Shall the background compilation autoscroll the qf-window to display last message?<sup>1</sup>  | `g:BTW_autoscroll_background_compilation` | 1/(0)                   | `.vimrc`/`:ToggleAutoScrollBG` |
+| Shall the compilation use all available cores?                                                  | `g:BTW_make_multijobs`                    | _n_/(0)                 | `.vimrc`/`:ToggleMakeMJ`     |
+| Directory where the compilation shall be done                                                   | `(bg):BTW_compilation_dir`                | path ('')               | `local_vimrc` / [BTW CMake submodule](doc/cmake.md) |
+| Shall we update BTW tools chain every time we compile?                                          | `(bg):BTW_use_prio`                       | `''`/(`'update'`)       | `local_vimrc`                |
+| Command to use to compile in background (useful to follow the compilation in an external xterm) | `(bg):BTW_make_in_background_in`          | (`''`)/`'xterm -e'`/... | `local_vimrc`                |
+| Name of the project                                                                             | `(bg):BTW_Project`                        | (`'%<'`)                | `local_vimrc`                |
+| Build Target                                                                                    | `(bg):BTW_project_target`                 | (project name, or `'all'` if empty) | `local_vimrc`    |
+
+#### Notes:
+  * <sup>1</sup> Requires Vim 7.4-1980 compiled with +job feature.
 
 ### Configuration
 

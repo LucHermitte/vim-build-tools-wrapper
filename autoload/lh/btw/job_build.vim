@@ -2,17 +2,19 @@
 " File:         autoload/lh/btw/job_build.vim                     {{{1
 " Author:       Luc Hermitte <EMAIL:luc {dot} hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.5.6.
-let s:k_version = '056'
+" Version:      0.7.0.
+let s:k_version = '070'
 " Created:      10th May 2016
-" Last Update:  03rd Jun 2016
+" Last Update:  11th Aug 2016
 "------------------------------------------------------------------------
 " Description:
 "       Background compilation with latest job_start() API
 "
+"       This feature requires patch 7.4.1980 (if I'm not mistaken)
+"
 "------------------------------------------------------------------------
-" History:      «history»
-" TODO:         «missing features»
+" TODO:
+" - abort compilation (GUI button compile/stop)
 " }}}1
 "=============================================================================
 
@@ -49,10 +51,9 @@ endfunction
 
 "------------------------------------------------------------------------
 " ## Globals private variables {{{1
-" - s:buffer
-" - s:buffer_nr
 " - s:job
 " - s:cmd
+" - g:lh#btw#auto_cbottom
 
 "------------------------------------------------------------------------
 " ## Exported functions {{{1
@@ -60,6 +61,18 @@ endfunction
 function! lh#btw#job_build#execute(cmd) abort
   let s:job = s:init(a:cmd)
 endfunction
+
+" Function: lh#btw#job_build#_stop() {{{3
+function! lh#btw#job_build#_stop() abort
+  if !exists('s:job')
+    throw "No undergoing background compilation."
+  endif
+  let st = job_stop(s:job)
+  if st == 0
+    throw "Cannot stop the background compilation"
+  endif
+endfunction
+
 
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
@@ -69,48 +82,49 @@ endfunction
 function! CloseCB(channel)
   " call s:Verbose("Background compilation with `%1' %2", s:cmd, job_status(a:channel))
   call s:Verbose("Background compilation with `%1'", s:cmd)
-  call lh#btw#build#_copen_bg(s:bid)
-  redraw
-  if bufnr('%') != s:bid
-    silent! exe 'bw! '.s:bid
-  endif
-  " silent call delete(s:buffer) " unless raw is displayed (TODO)
+  while ch_status(a:channel) == 'buffered'
+    call CallbackCB(a:channel, ch_read(a:channel))
+  endwhile
+  unlet s:job
+  call lh#btw#build#_copen_bg_complete()
   redraw
 endfunction
 
-" Function: s:init(cmd) {{{3
-function! s:init(cmd)
-  let winid = lh#window#getid()
+function! CallbackCB(channel, msg)
+  caddexpr a:msg
+  if exists(':cbottom') && g:lh#btw#auto_cbottom
+    let qf = getqflist()
+    call assert_true(!empty(qf))
+    cbottom
+    if qf[-1].valid
+      let g:lh#btw#auto_cbottom = 0
+    endif
+  endif
+endfunction
 
+if exists(':cbottom')
+  let g:lh#btw#auto_cbottom = 0
+  augroup BTW_stop_cbottom
+    au!
+    au BufEnter * if &ft=='qf' | let g:lh#btw#auto_cbottom = 0 | endif
+  augroup END
+endif
+
+" Function: s:init(cmd) {{{3
+function! s:init(cmd) abort
   let s:cmd = a:cmd
-  let cmd_as_name = lh#string#substitute_unless(a:cmd, '\f', '¤')
-  " TODO: don't use "/tmp" directly!
-  let s:bid = lh#buffer#scratch('/tmp/'.cmd_as_name, 'below')
-  " Remove readonly set by #scratch() function
-  setlocal noro
-  " Resize with BTW_QF_size
-  let nl = lh#btw#build#_get_qf_size()
-  exe nl.' wincmd _'
-  " TODO: copy BTW project variables here
-  redraw
+  if exists(':cbottom')
+    let g:lh#btw#auto_cbottom = lh#btw#option#_auto_scroll_in_bg()
+  endif
   call s:Verbose("Background compilation with `%1' started", a:cmd)
-  try
-    let s:job = job_start(['sh', '-c', a:cmd],
-          \ {
-          \   'out_io': 'buffer', 'out_buf': s:bid
-          \ , 'err_io': 'buffer', 'err_buf': s:bid
-          \ , 'close_cb': ('CloseCB')
-          \ })
-  catch /.*/
-    " The operation failed. => clear the buffer
-    silent bw
-    throw v:exception
-  endtry
   " Filling qflist is required because of lh#btw#build#_show_error() in caller
   " function
-  call setqflist([{'text': "Background compilation with `".string(a:cmd)."' started"}])
-  " Return to the window we come from
-  call lh#window#gotoid(winid)
+  call setqflist([{'text': "Background compilation with `".string(a:cmd)."` started"}])
+  let s:job = job_start(['sh', '-c', a:cmd],
+        \ {
+        \   'close_cb': ('CloseCB')
+        \ , 'callback': ('CallbackCB')
+        \ })
   return s:job
 endfunction
 

@@ -3,10 +3,10 @@
 " Maintainer:   Luc Hermitte <MAIL:hermitte {at} free {dot} fr>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:      0.6.0
-let s:k_version = 0600
+" Version:      0.7.0
+let s:k_version = 0700
 " Created:      28th Nov 2004
-" Last Update:  20th Jun 2016
+" Last Update:  11th Aug 2016
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -238,6 +238,8 @@ let s:k_version = 0600
 "       * Fix "No maping found" on plain vim (!= gvim)
 " v0.6.0: 20th Jun 2016
 "       * Fix incorrect mapping definition
+" v0.7.0: 11th Aug 2016
+"       * Add toggle menu/command from autoscroll bg compilation
 "
 " TODO:                                    {{{2
 "       * &magic
@@ -311,8 +313,16 @@ command! -nargs=0 ReConfig              :call lh#btw#build#_re_config()
 command! -nargs=0 Copen                 :call lh#btw#build#_show_error('copen')
 command! -nargs=0 Cwindow               :call lh#btw#build#_show_error('cwindow')
 command! -nargs=+ CopenBG               :call lh#btw#build#_copen_bg(<f-args>)
-command! -nargs=0 ToggleMakeBG          :call s:ToggleMakeInBG()
 command! -nargs=0 ToggleMakeMJ          :call s:ToggleMakeMJ()
+command! -nargs=0 ToggleMakeBG          :call s:ToggleMakeInBG()
+
+let s:has_jobs = exists('*job_start') && has("patch-7.4.1980")
+if s:has_jobs
+  command! -nargs=0 StopBGCompilation     :call lh#btw#job_build#_stop()
+  if exists(':cbottom')
+    command! -nargs=0 ToggleAutoScrollBG    :call s:ToggleAutoScrollInBG()
+  endif
+endif
 
 " # Menus                                  {{{2
 
@@ -324,6 +334,17 @@ function! s:MenuMakeBG()
     let UC = value ? "\\ " : 'X'
     silent! exe "anoremenu 50.100 &Project.&[" . C . escape("] Make in &background", '\ ') . " :ToggleMakeBG<cr>"
     silent! exe "aunmenu Project.[" . UC . escape ("] Make in background", ' ')
+  endif
+endfunction
+
+function! s:MenuAutoScrollBG()
+  if has('gui_running') && has ('menu')
+    let value = lh#btw#option#_auto_scroll_in_bg()
+    amenu 50.99 &Project.---<sep>--- Nop
+    let C  = value ? 'X' : "\\ "
+    let UC = value ? "\\ " : 'X'
+    silent! exe "anoremenu 50.100 &Project.&[" . C . escape("] AutoScroll in &background", '\ ') . " :ToggleAutoScrollBG<cr>"
+    silent! exe "aunmenu Project.[" . UC . escape ("] AutoScroll in background", ' ')
   endif
 endfunction
 
@@ -437,6 +458,14 @@ function! s:ToggleMakeInBG() abort
   let g:BTW_make_in_background = 1 - value
 
   call s:MenuMakeBG()
+endfunction
+
+" Function: s:ToggleAutoScrollInBG()                                 {{{3
+function! s:ToggleAutoScrollInBG() abort
+  let value = lh#btw#option#_auto_scroll_in_bg()
+  let g:BTW_autoscroll_background_compilation = 1 - value
+
+  call s:MenuAutoScrollBG()
 endfunction
 
 " Function: s:ToggleMakeMJ()                                   {{{3

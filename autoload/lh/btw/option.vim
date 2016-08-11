@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/option.vim                        {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-option-tools-wrapper>
-" Version:      0.4.0.
-let s:k_version = '040'
+" Version:      0.7.0.
+let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  23rd Mar 2015
+" Last Update:  10th Aug 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions relative to BTW options
@@ -59,7 +59,12 @@ function! lh#btw#option#_make_mj() abort
   return value
 endfunction
 
+" Function: lh#btw#option#_auto_scroll_in_bg() {{{3
+function! lh#btw#option#_auto_scroll_in_bg() abort
+  return get(g:, 'BTW_autoscroll_background_compilation', 1)
+endfunction
 
+" }}}1
 "------------------------------------------------------------------------
 let &cpo=s:cpo_save
 "=============================================================================

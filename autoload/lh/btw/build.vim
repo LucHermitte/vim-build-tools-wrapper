@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/build.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "               <URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.5.5.
-let s:k_version = '055'
+" Version:      0.7.0.
+let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  26th Apr 2016
+" Last Update:  10th Aug 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -144,12 +144,13 @@ endfunction
 let s:k_multijobs_options = {
       \ 'make': '-j'
       \}
+let s:has_jobs = exists('*job_start') && has("patch-7.4.1980")
 function! s:DoRunAndCaptureOutput(program, ...) abort
   let bg = has('clientserver') && lh#btw#option#_make_in_bg()
   let cleanup = lh#on#exit()
         \.restore('&makeprg')
   if bg
-    if !exists('*job_start') " case handled latter
+    if !s:has_jobs " case handled latter
       let run_in = lh#option#get("BTW_make_in_background_in", '')
       if strlen(run_in)
         " Typically xterm -e
@@ -173,7 +174,7 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
   endif
 
   try
-    if bg && exists('*job_start') 
+    if bg && s:has_jobs
       let cmd = substitute(&makeprg, '\$\*', args, 'g')
       " makeprg escapes pipes, we need to unescape them for job_start
       let cmd = substitute(cmd, '\\|', '|', 'g')
@@ -199,7 +200,11 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
     call cleanup.finalize()
   endtry
 
-  call lh#btw#build#_show_error()
+  if bg && s:has_jobs
+    call lh#btw#build#_copen_bg()
+  else
+    call lh#btw#build#_show_error()
+  endif
   return bg
 endfunction
 
@@ -273,21 +278,15 @@ function! lh#btw#build#_show_error(...) abort
   if lh#option#get('BTW_GotoError', 1, 'g') != 1
     call lh#window#gotoid(winid)
   endif
+  " When calling :Copen, restore automatic scroll of qf window
+  if exists('g:lh#btw#auto_cbottom')
+    let g:lh#btw#auto_cbottom = lh#btw#option#_auto_scroll_in_bg()
+    cbottom
+  endif
 endfunction
 
-" Function: lh#btw#build#_copen_bg(f,[cop|cwin])      {{{3
-function! lh#btw#build#_copen_bg(errorfile,...) abort
-  " Load a file containing the errors
-  if type(a:errorfile) == type(0)
-    " Actually using a bufnr
-    :exe ":cgetbuffer ".a:errorfile
-  else
-    :exe ":cgetfile ".a:errorfile
-  endif
-  " delete the temporary file
-  if a:errorfile =~ 'tmp-make-bg'
-    call delete(a:errorfile)
-  endif
+" Function: lh#btw#build#_copen_bg_complete([cop|cwin])      {{{3
+function! lh#btw#build#_copen_bg_complete(...) abort
   let opt = (a:0>0) ? a:1 : ''
   call call('lh#btw#build#_show_error', a:000)
   echohl WarningMsg
@@ -296,6 +295,40 @@ function! lh#btw#build#_copen_bg(errorfile,...) abort
   if exists(':CompilHintsUpdate')
     :CompilHintsUpdate
   endif
+endfunction
+
+" Function: lh#btw#build#_copen_bg([cop|cwin])      {{{3
+" lh#btw#build#_show_error overload that does an unconditional opening of the
+" qf window
+function! lh#btw#build#_copen_bg(...) abort
+  let qf_position = lh#option#get('BTW_qf_position', '', 'g')
+
+  if a:0 == 1 && a:1 =~ '^\%(cw\%[window]\|copen\)$'
+    let open_qf = a:1
+  else
+    let open_qf = 'copen'
+  endif
+  let winid = lh#window#getid()
+
+  cclose
+  " cd . is used to avoid absolutepaths in the quickfix window
+  cd .
+  exe qf_position . ' ' . open_qf
+
+  setlocal nowrap
+
+  " if we moved to a different window, then it means we had some errors.
+  " resize the window to have the right number of lines
+  let nl = lh#btw#build#_get_qf_size()
+  exe nl.' wincmd _'
+
+  " Apply syntax hooks
+  let syn = lh#option#get('BTW_qf_syntax', '', 'gb')
+  if strlen(syn)
+    silent exe 'runtime compiler/BTW/syntax/'.syn.'.vim'
+  endif
+  call lh#btw#filters#_apply_quick_fix_hooks('syntax')
+  call lh#window#gotoid(winid)
 endfunction
 
 " # Execute        {{{2

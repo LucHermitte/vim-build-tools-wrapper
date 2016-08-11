@@ -1,9 +1,9 @@
 *BuildToolsWrapper.txt* Projects building plugin
-                        For Vim version 7.x.    Last change: 14th Jan 2016
+                        For Vim version 7.x.    Last change: 10th Aug 2016
 
 
                 BuildToolsWrapper Plugin MANUAL   By Luc Hermitte
-                        version 0.5.4            <hermitte {at} free {dot} fr>
+                        version 0.7.0            <hermitte {at} free {dot} fr>
 
 
 ------------------------------------------------------------------------------
@@ -210,12 +210,43 @@ BTW also serves to ease the compilation of projects and execute programs built.
 The different possible operations are:
 
                                                         *:Make*
-Building a program~
+Building a program...~
 The command |:Make| accepts an optional target. The default target is determined
 according to the heuristic described in |BTW-project-target|.
 
 By default, |:Make| (with no argument) is binded to <F7>. This can be overrided
 with the option |[bg]:BTW_key_make|.
+
+                                                        *:Make-background*
+...in background...~
+The compilation will be done in background if *g:BTW_make_in_background* is
+set to 1. This option is best set in |.vimrc|, and best changed with
+*:ToggleMakeBG* , or the related |menu| under `Project`.
+
+...with jobs~
+If a sufficient version of Vim is detected (at least v7.4-1980), the
+compilation will be done thanks to the new +|job| feature.  By default, the
+quickfix window will scroll automatically to show last errors -- given a
+recent enough version of Vim (v7.4.1997) that implements |:cbottom|. To stop
+the scrolling, jump to the |quickfix-window|, and execute |:Copen| to
+reactivate it.
+You can also set the option *[bg]:BTW_autoscroll_background_compilation*
+to 0 to completly disable this autoscrolling feature.
+
+The background compilation (based on |+job|) can be stopped at any time thanks
+to *:StopBGCompilation*
+
+...or with perl~
+With older versions of Vim, perl will be required to run `make` into the
+background.
+
+                                                        *:Make-multijobs*
+...with multiple jobs~
+The compilation can be done with multiple jobs thanks to
+*g:BTW_make_multijobs* option. Set it to the number of jobs you wish to use.
+This feature makes sense only with `make` executables that provide the `-j`
+option.
+The option value can be toggled with *:ToggleMakeMJ* or the related |menu|.
 
                                                         *:Execute*
 Executing a program~
@@ -320,7 +351,7 @@ TODO list~
 - Support for folding
 - Full detailled example tuned with local_vimrc
 - Filter-plugins for: STLFit, Doxygen
-- Improve and document *QFImport* , *BTW_Compilation_dir* , "import:"
+- Improve and document *QFImport* , *BTW_compilation_dir* , "import:"
 
 ------------------------------------------------------------------------------
  © Luc Hermitte, 2004-2016, <http://github.com/LucHermitte/vim-build-tools-wrapper>, CC by SA 3.0 {{{1
