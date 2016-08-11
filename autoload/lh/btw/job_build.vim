@@ -14,7 +14,8 @@ let s:k_version = '070'
 "
 "------------------------------------------------------------------------
 " TODO:
-" - abort compilation (GUI button compile/stop)
+" - Have a airline/BTW compatible statusline for the background compilation
+"   qfwindow
 " }}}1
 "=============================================================================
 
@@ -56,15 +57,23 @@ endfunction
 " - g:lh#btw#auto_cbottom
 
 "------------------------------------------------------------------------
-" ## Exported functions {{{1
-" Function: lh#btw#job_build#execute(cmd) {{{3
+" ## API functions {{{1
+" Function: lh#btw#job_build#execute(cmd) {{{2
 function! lh#btw#job_build#execute(cmd) abort
+  if lh#btw#job_build#is_running()
+    let choice = CONFIRM("A background compilation is under way. Do you want to\n-> ", ["&Wait for the current compilation to finish", "&Stop the current compilation and start a new one"])
+    if choice == 2
+      let s:must_replace_comp = a:cmd
+      call lh#btw#job_build#_stop()
+    endif
+    return
+  endif
   let s:job = s:init(a:cmd)
 endfunction
 
-" Function: lh#btw#job_build#_stop() {{{3
+" Function: lh#btw#job_build#_stop() {{{2
 function! lh#btw#job_build#_stop() abort
-  if !exists('s:job')
+  if !lh#btw#job_build#is_running()
     throw "No undergoing background compilation."
   endif
   let st = job_stop(s:job)
@@ -73,24 +82,36 @@ function! lh#btw#job_build#_stop() abort
   endif
 endfunction
 
+" Function: lh#btw#job_build#is_running() {{{3
+function! lh#btw#job_build#is_running() abort
+  return exists('s:job')
+endfunction
 
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
 
 " # Compilation {{{2
 " TODO: hide function name
-function! CloseCB(channel)
+function! CloseCB(channel) abort
   " call s:Verbose("Background compilation with `%1' %2", s:cmd, job_status(a:channel))
-  call s:Verbose("Background compilation with `%1'", s:cmd)
-  while ch_status(a:channel) == 'buffered'
-    call CallbackCB(a:channel, ch_read(a:channel))
-  endwhile
-  unlet s:job
-  call lh#btw#build#_copen_bg_complete()
-  redraw
+  try
+    call s:Verbose("Background compilation with `%1'", s:cmd)
+    while ch_status(a:channel) == 'buffered'
+      call CallbackCB(a:channel, ch_read(a:channel))
+    endwhile
+  finally
+    unlet s:job
+  endtry
+  if ! exists('s:must_replace_comp')
+    call lh#btw#build#_copen_bg_complete()
+    redraw
+  else
+    call lh#btw#job_build#execute(s:must_replace_comp)
+    unlet s:must_replace_comp
+  endif
 endfunction
 
-function! CallbackCB(channel, msg)
+function! CallbackCB(channel, msg) abort
   caddexpr a:msg
   if exists(':cbottom') && g:lh#btw#auto_cbottom
     let qf = getqflist()
