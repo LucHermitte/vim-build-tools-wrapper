@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      10th May 2016
-" Last Update:  11th Aug 2016
+" Last Update:  12th Aug 2016
 "------------------------------------------------------------------------
 " Description:
 "       Background compilation with latest job_start() API
@@ -14,11 +14,8 @@ let s:k_version = '070'
 "
 "------------------------------------------------------------------------
 " TODO:
-" - Have a airline/BTW compatible statusline for the background compilation
-"   qfwindow
 " }}}1
 "=============================================================================
-
 let s:cpo_save=&cpo
 set cpo&vim
 "------------------------------------------------------------------------
@@ -55,6 +52,8 @@ endfunction
 " - s:job
 " - s:cmd
 " - g:lh#btw#auto_cbottom
+
+let s:has_qf_properties = has("patch-7.4.2200")
 
 "------------------------------------------------------------------------
 " ## API functions {{{1
@@ -142,6 +141,8 @@ function! s:init(cmd) abort
   " Filling qflist is required because of lh#btw#build#_show_error() in caller
   " function
   call setqflist([{'text': "Background compilation with `".(a:cmd)."` started"}])
+  call setqflist([], 'r',
+        \ {'title': lh#btw#build_mode(). ' compilation of ' . lh#btw#project_name()})
   let s:job = job_start(['sh', '-c', a:cmd],
         \ {
         \   'close_cb': ('CloseCB')

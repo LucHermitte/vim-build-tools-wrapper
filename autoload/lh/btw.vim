@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw.vim                               {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.5.0
-let s:k_version = 050
+" Version:      0.7.0
+let s:k_version = 070
 " Created:      14th Mar 2014
-" Last Update:  09th Jul 2015
+" Last Update:  12th Aug 2016
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -18,6 +18,7 @@ let s:k_version = 050
 
 let s:cpo_save=&cpo
 set cpo&vim
+let s:has_qf_properties = has("patch-7.4.2200")
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
@@ -379,7 +380,15 @@ function! lh#btw#_save_last_buffer_data() abort
   let qf0.nr = - idx
   let qf0.text = 'BTW: '. lh#btw#build_mode(). ' compilation of ' . lh#btw#project_name()
   call insert(qf, qf0)
+  if s:has_qf_properties
+    let title = getqflist({'title':1})
+  endif
+  " This line messes with the current qfwindow title
+  " -> force it back with patch 7.4-2200
   call setqflist(qf, 'r')
+  if s:has_qf_properties
+    call setqflist([], 'r', title)
+  endif
 endfunction
 
 "}}}1
