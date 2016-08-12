@@ -335,6 +335,17 @@ function! lh#btw#build#_copen_bg(...) abort
   call lh#window#gotoid(winid)
 endfunction
 
+" Function: lh#btw#build#_get_metrics() {{{3
+function! lh#btw#build#_get_metrics() abort
+  let qf = getqflist()
+  let recognized = filter(qf, 'get(v:val, "valid", 1)')
+  " TODO: support other locales
+  let errors   = filter(copy(recognized), 'v:val.type == "E" || v:val.text =~ "\\v^ *(error|erreur)"')
+  let warnings = filter(copy(recognized), 'v:val.type == "W" || v:val.text =~ "\\v^ *(warning|attention)"')
+  let res = { 'all': len(qf), 'errors': len(errors), 'warnings': len(warnings) }
+  return res
+endfunction
+
 " # Execute        {{{2
 " Function: lh#btw#build#_execute()                   {{{3
 function! lh#btw#build#_execute()

@@ -88,6 +88,11 @@ function! airline#extensions#btw#apply(...) abort
   " Then we just append this extenion to it, optionally using separators.
   let fmt    = lh#option#get('airline#extensions#btw#format_section', s:spc.g:airline_left_alt_sep.s:spc.'%s')
   let w:airline_section_{section} .= printf(fmt, '%{airline#extensions#btw#build_mode()}')
+  if &ft ==  'qf'
+    let metrics = lh#btw#build#_get_metrics()
+    let w:airline_section_error   = metrics.errors
+    let w:airline_section_warning = metrics.warnings
+  endif
 endfunction
 
 " Function: airline#extensions#btw#build_mode() {{{3
