@@ -68,6 +68,7 @@ function! lh#btw#job_build#execute(cmd) abort
     return
   endif
   let s:job = s:init(a:cmd)
+  call s:Verbose('Job started: %1 -- %2', s:job, job_info(s:job))
 endfunction
 
 " Function: lh#btw#job_build#_stop() {{{2
@@ -98,8 +99,9 @@ function! CloseCB(channel) abort
     while ch_status(a:channel) == 'buffered'
       call CallbackCB(a:channel, ch_read(a:channel))
     endwhile
-    call setqflist([{'text': "Background compilation with `".(s:cmd)."` finished"}], 'a')
+    call setqflist([{'text': "Background compilation with `".(s:cmd)."` finished with exitval ".job_info(s:job).exitval}], 'a')
   finally
+    call s:Verbose('Job finished %1 -- %2', s:job, job_info(s:job))
     unlet s:job
   endtry
   if ! exists('s:must_replace_comp')
