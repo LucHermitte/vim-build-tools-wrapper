@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  10th Aug 2016
+" Last Update:  25th Aug 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -175,6 +175,8 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
 
   try
     if bg && s:has_jobs
+      let args = expand(args)
+      call s:Verbose('rpl $* w/ %1', args)
       let cmd = substitute(&makeprg, '\$\*', args, 'g')
       " makeprg escapes pipes, we need to unescape them for job_start
       let cmd = substitute(cmd, '\\|', '|', 'g')
