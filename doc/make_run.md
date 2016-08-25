@@ -16,7 +16,14 @@ Several options can permit to tune the behaviour of BTW.
 | `:Config`                        | `<M-F7>`               | `g:BTW_key_config`            |
 
 #### Notes:
-  * <sup>1</sup> Requires Vim 7.4-1980 compiled with +job feature.
+  * <sup>1</sup> Requires Vim 7.4-1980 compiled with +job feature. Tested on:  
+    |                   | Linux              | Cygwin + gvim64<sup>2</sup> | Cygwin + cyg-vim | Mingw + gvim64 | VC10 + gvim 64                  | 
+    |:------------------|:-------------------|:----------------------------|:-----------------|:---------------|:--------------------------------|
+    |Mono-file project  | :question:         | :heavy_check_mark:          | :question:       | :question:     | :heavy_check_mark: <sup>3</sup> |
+    |Out-of-source build| :heavy_check_mark: | :question:                  | :question:       | :question:     | :question:                      |
+  * <sup>2</sup> My `&shell` options are configured through my very old [system-tool plugin](https://github.com/LucHermitte/vim-system-tools). More investigations are required for other configurations.
+  * <sup>3</sup> Tested with [gvim64](https://bintray.com/veegee/generic/vim_x64) launched from _VS2015 CLI for native x64_ console, and `:BTW set cl`, and `:Make %`. However, please note Cygwin is installed and in the $PATH of my windows machine.
+    
 
 ## Behaviour
 ### Compilation
