@@ -16,7 +16,8 @@ Several options can permit to tune the behaviour of BTW.
 | `:Config`                        | `<M-F7>`               | `g:BTW_key_config`            |
 
 #### Notes:
-  * <sup>1</sup> Requires Vim 7.4-1980 compiled with +job feature. Tested on:  
+  * <sup>1</sup> Requires Vim 7.4-1980 compiled with +job feature. Tested on:
+  
     |                   | Linux              | Cygwin + gvim64<sup>2</sup> | Cygwin + cyg-vim | Mingw + gvim64 | VC10 + gvim 64                  | 
     |:------------------|:-------------------|:----------------------------|:-----------------|:---------------|:--------------------------------|
     |Mono-file project  | :question:         | :heavy_check_mark:          | :question:       | :question:     | :heavy_check_mark: <sup>3</sup> |
