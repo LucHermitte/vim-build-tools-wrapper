@@ -72,7 +72,14 @@ endfunction
 " Function: airline#extensions#btw#apply(...) {{{3
 " This function will be invoked just prior to the statusline getting modified.
 function! airline#extensions#btw#apply(...) abort
-  " First we check this is a compiled file with a compilation mode & al
+  " First, in case this is a qf window, add metrics.
+  if &ft ==  'qf'
+    let metrics = lh#btw#build#_get_metrics()
+    let w:airline_section_error   = metrics.errors
+    let w:airline_section_warning = metrics.warnings
+  endif
+
+  " Then, we check this is a compiled file with a compilation mode & al
   if !exists('b:BTW_project_config')
     return
   endif
@@ -88,11 +95,6 @@ function! airline#extensions#btw#apply(...) abort
   " Then we just append this extenion to it, optionally using separators.
   let fmt    = lh#option#get('airline#extensions#btw#format_section', s:spc.g:airline_left_alt_sep.s:spc.'%s')
   let w:airline_section_{section} .= printf(fmt, '%{airline#extensions#btw#build_mode()}')
-  if &ft ==  'qf'
-    let metrics = lh#btw#build#_get_metrics()
-    let w:airline_section_error   = metrics.errors
-    let w:airline_section_warning = metrics.warnings
-  endif
 endfunction
 
 " Function: airline#extensions#btw#build_mode() {{{3
