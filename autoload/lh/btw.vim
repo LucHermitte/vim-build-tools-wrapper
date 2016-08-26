@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 070
 " Created:      14th Mar 2014
-" Last Update:  12th Aug 2016
+" Last Update:  26th Aug 2016
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -66,9 +66,10 @@ function! lh#btw#build_mode(...) abort
   endif
 endfunction
 
-" Function: lh#btw#project_name() {{{3
-function! lh#btw#project_name() abort
-  let project_config = lh#option#get('BTW_project_config')
+" Function: lh#btw#project_name([bufid]) {{{3
+function! lh#btw#project_name(...) abort
+  let bufid = a:0 > 0 ? a:1 : bufnr('%')
+  let project_config = lh#option#getbufglobvar(bufid, 'BTW_project_config')
   " 1- Information set in b:project_config._.name ?
   if lh#option#is_set(project_config)
     let config = get(project_config, '_', {})
@@ -76,18 +77,18 @@ function! lh#btw#project_name() abort
     return name
   else
     " 2- Information set in b:BTW_project_name ?
-    let name = lh#option#get('BTW_project_name')
-    if lh#option#is_set(name) | return name | endif
-    " 3- Information available in repo name ?
+    let name = lh#option#getbufglobvar(bufid, 'BTW_project_name')
+    if lh#option#is_set(name)          | return name | endif
+    " 3- Is this a qf window ?
+    if getbufvar(bufid, '&ft') == 'qf' | return lh#btw#project_name(g:lh#btw#_last_buffer) | endif
+    " 4- Information available in repo name ?
     "    TODO: we should decode subdirectories
-    let url = lh#vcs#get_url(expand('%:p:h'))
-    if lh#option#is_set(url)
+    let url = lh#vcs#get_url(fnamemodify(bufname(bufid), ':p:h'))
+    if lh#option#is_set(url) && !empty(url)
       return matchstr(url, '.*/\zs.*')
     endif
     " N- Return default!
-    if &ft == 'qf'                 | cclose | return lh#btw#project_name()
-    else                           | return '%<'
-    endif
+    return fnamemodify(bufname(bufid), ':r')
   endif
 endfunction
 
