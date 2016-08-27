@@ -33,8 +33,7 @@ Several options can permit to tune the behaviour of BTW.
 | Build Target                                                                                    | `(bg):BTW_project_target`                 | (project name, or `'all'` if empty) | `local_vimrc`    |
 
 #### Notes:
-  * <sup>1</sup> Requires Vim 7.4-1980 compiled with +job feature.
-  Tested on:
+  * <sup>1</sup> Requires Vim 7.4-1980 compiled with +job feature. Tested on:
   
     |                   | Linux              | Cygwin + gvim64<sup>2</sup> | Cygwin + cyg-vim | Mingw + gvim64<sup>4</sup> | VC10 + gvim 64<sup>4</sup>      | 
     |:------------------|:-------------------|:----------------------------|:-----------------|:---------------------------|:--------------------------------|
