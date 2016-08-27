@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      10th May 2016
-" Last Update:  12th Aug 2016
+" Last Update:  27th Aug 2016
 "------------------------------------------------------------------------
 " Description:
 "       Background compilation with latest job_start() API
@@ -67,7 +67,12 @@ function! lh#btw#job_build#execute(cmd) abort
     endif
     return
   endif
-  let s:job = s:init(a:cmd)
+  let job = s:init(a:cmd)
+  if job_info(job).status == 'fail'
+    call setqflist([{'text': "Background compilation with `".(s:cmd)."` failed"}], 'a')
+    throw "Starting `".a:cmd."` failed!"
+  endif
+  let s:job = job
   call s:Verbose('Job started: %1 -- %2', s:job, job_info(s:job))
 endfunction
 
@@ -145,12 +150,17 @@ function! s:init(cmd) abort
   call setqflist([{'text': "Background compilation with `".(a:cmd)."` started"}])
   call setqflist([], 'r',
         \ {'title': lh#btw#build_mode(). ' compilation of ' . lh#btw#project_name()})
-  let s:job = job_start(['sh', '-c', a:cmd],
+  if lh#os#OnDOSWindows() && &shell =~ 'cmd'
+    let cmd = &shell . ' /C '.a:cmd
+  else
+    let cmd = ['sh', '-c', a:cmd]
+  endif
+  let job = job_start(cmd,
         \ {
         \   'close_cb': ('CloseCB')
         \ , 'callback': ('CallbackCB')
         \ })
-  return s:job
+  return job
 endfunction
 
 "------------------------------------------------------------------------
