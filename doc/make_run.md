@@ -23,8 +23,8 @@ Several options can permit to tune the behaviour of BTW.
 
 |   Role                                                                                          |   Option name                             |   Values (default)      |   Best set in/changed with   |
 |:------------------------------------------------------------------------------------------------|:------------------------------------------|:------------------------|:-----------------------------|
-| Shall the compilation happen in background?                                                     | `g:BTW_make_in_background`                | 1/(0)                   | `.vimrc`/`:ToggleMakeBG`     |
-| Shall the background compilation autoscroll the qf-window to display last message?<sup>1</sup>  | `g:BTW_autoscroll_background_compilation` | 1/(0)                   | `.vimrc`/`:ToggleAutoScrollBG` |
+| Shall the compilation happen in background? <sup>1</sup>                                        | `g:BTW_make_in_background`                | 1/(0)                   | `.vimrc`/`:ToggleMakeBG`     |
+| Shall the background compilation autoscroll the qf-window to display last message?<sup>2</sup>  | `g:BTW_autoscroll_background_compilation` | 1/(0)                   | `.vimrc`/`:ToggleAutoScrollBG` |
 | Shall the compilation use all available cores?                                                  | `g:BTW_make_multijobs`                    | _n_/(0)                 | `.vimrc`/`:ToggleMakeMJ`     |
 | Directory where the compilation shall be done                                                   | `(bg):BTW_compilation_dir`                | path ('')               | `local_vimrc` / [BTW CMake submodule](doc/cmake.md) |
 | Shall we update BTW tools chain every time we compile?                                          | `(bg):BTW_use_prio`                       | `''`/(`'update'`)       | `local_vimrc`                |
@@ -33,15 +33,18 @@ Several options can permit to tune the behaviour of BTW.
 | Build Target                                                                                    | `(bg):BTW_project_target`                 | (project name, or `'all'` if empty) | `local_vimrc`    |
 
 #### Notes:
-  * <sup>1</sup> Requires Vim 7.4-1980 compiled with +job feature. Tested on:
+  * <sup>1</sup> Requires perl or Vim 7.4-1980 compiled with +job feature. The
+    old perl way works on *nix systems. The new +job way has been tested
+    successfully on:
   
-    |                   | Linux              | Cygwin + gvim64<sup>2</sup> | Cygwin + cyg-vim | Mingw + gvim64<sup>4</sup> | VC10 + gvim 64<sup>4</sup>      | 
+    |                   | Linux              | Cygwin + gvim64<sup>3</sup> | Cygwin + cyg-vim | Mingw + gvim64<sup>5</sup> | VC10 + gvim 64<sup>5</sup>      | 
     |:------------------|:-------------------|:----------------------------|:-----------------|:---------------------------|:--------------------------------|
-    |Mono-file project  | :heavy_check_mark: | :heavy_check_mark:          | :question:       | :question:                 | :heavy_check_mark: <sup>3</sup> |
+    |Mono-file project  | :heavy_check_mark: | :heavy_check_mark:          | :question:       | :question:                 | :heavy_check_mark: <sup>4</sup> |
     |Out-of-source build| :heavy_check_mark: | :question:                  | :question:       | :question:                 | :question:                      |
-  * <sup>2</sup> My `&shell` options are configured through my very old [system-tool plugin](https://github.com/LucHermitte/vim-system-tools). More investigations are required for other configurations.
-  * <sup>3</sup> Tested with [gvim64](https://bintray.com/veegee/generic/vim_x64) launched from _VS2015 CLI for native x64_ console, and `:BTW set cl`, and `:Make %`.
-  * <sup>4</sup> Without any Cygwin binaries in the $PATH.
+  * <sup>2</sup> Requires Vim 7.4-1980 compiled with +job feature.
+  * <sup>3</sup> My `&shell` options are configured through my very old [system-tool plugin](https://github.com/LucHermitte/vim-system-tools). More investigations are required for other configurations.
+  * <sup>4</sup> Tested with [gvim64](https://bintray.com/veegee/generic/vim_x64) launched from _VS2015 CLI for native x64_ console, and `:BTW set cl`, and `:Make %`.
+  * <sup>5</sup> Without any Cygwin binaries in the $PATH.
     
 
 ### Configuration
