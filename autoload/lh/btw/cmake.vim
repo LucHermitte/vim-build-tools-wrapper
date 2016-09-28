@@ -103,13 +103,13 @@ endif
 function! lh#btw#cmake#def_options(config, options) abort
   let s:config[a:config._project] = a:config " in case it is required to access other config stuff
   " Set default values
-  call lh#let#if_undef('g:'.a:config._project.'.compilation.mode',      string('Release'))
-  call lh#let#if_undef('g:'.a:config._project.'.paths._clic',           string('.clic/index.db'))
+  call lh#let#if_undef('g:'.a:config._project.'.compilation.mode',      'Release')
+  call lh#let#if_undef('g:'.a:config._project.'.paths._clic',           '.clic/index.db')
   call lh#let#if_undef('g:'.a:config._project.'.paths.clic',            function(s:getSNR('GetClic')))
-  call lh#let#if_undef('g:'.a:config._project.'.tests.verbosity',       string(''))
-  call lh#let#if_undef('g:'.a:config._project.'.tests.checking_memory', string('no'))
-  call lh#let#if_undef('g:'.a:config._project.'.tests.test_regex',      string(''))
-  call lh#let#if_undef('g:'.a:config._project.'.tests.active_list',     string([]))
+  call lh#let#if_undef('g:'.a:config._project.'.tests.verbosity',       '')
+  call lh#let#if_undef('g:'.a:config._project.'.tests.checking_memory', 'no')
+  call lh#let#if_undef('g:'.a:config._project.'.tests.test_regex',      '')
+  call lh#let#if_undef('g:'.a:config._project.'.tests.active_list',     [])
 
   " Add all selected options to menu
   for option in a:options
@@ -169,7 +169,7 @@ function! lh#btw#cmake#auto_detect_compil_modes(menu_def) abort
   endif
 
   for sub in subs
-    call lh#let#if_undef('g:'.a:menu_def._project.'.build.'.fnamemodify(sub, ':t'), string(lh#path#strip_start(sub, project_root)))
+    call lh#let#if_undef('g:'.a:menu_def._project.'.build.'.fnamemodify(sub, ':t'), lh#path#strip_start(sub, project_root))
   endfor
 
   " And finally, prepare everything
