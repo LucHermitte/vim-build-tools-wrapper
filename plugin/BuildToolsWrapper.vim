@@ -406,11 +406,7 @@ let s:k_options = ['compilation_dir', 'project_config', 'project_name',
 function! BTWComplete(ArgLead, CmdLine, CursorPos)
   let tmp = substitute(a:CmdLine, '\s*\S*', 'Z', 'g')
   let pos = strlen(tmp)
-  if 0
-    call confirm( "AL = ". a:ArgLead."\nCL = ". a:CmdLine."\nCP = ".a:CursorPos
-          \ . "\ntmp = ".tmp."\npos = ".pos
-          \, '&Ok', 1)
-  endif
+  call s:Verbose('complete(lead="%1", cmdline="%2", cursorpos=%3) -- tmp=%4, pos=%5', a:ArgLead, a:CmdLine, a:CursorPos, tmp, pos)
 
   if     2 == pos
     " First argument: a command
