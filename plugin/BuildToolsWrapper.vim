@@ -240,6 +240,7 @@ let s:k_version = 0700
 "       * Fix incorrect mapping definition
 " v0.7.0: 11th Aug 2016
 "       * Add toggle menu/command from autoscroll bg compilation
+"       * Use new logging framework in some places
 "
 " TODO:                                    {{{2
 "       * &magic
@@ -298,7 +299,7 @@ let s:key_re_config  = lh#option#get('BTW_key_re_config', '<M-F8>')
 " ## Commands and mappings                           {{{1
 
 " # Multi-purposes command                 {{{2
-command! -nargs=+ -complete=custom,BTWComplete BTW :call lh#btw#chain#_BTW(<f-args>)
+command! -nargs=+ -complete=custom,lh#btw#chain#_BTW_complete BTW :call lh#btw#chain#_BTW(<f-args>)
 
 " # Quickfix import variables commands     {{{2
 command! -nargs=1 -complete=var QFImport      :call lh#btw#qf_add_var_to_import(<f-args>)
@@ -391,61 +392,6 @@ endif
 " ## Commands and mappings }}}1
 "------------------------------------------------------------------------
 " ## Internals                                       {{{1
-
-" # Build Chain:                           {{{2
-" Constants                                                    {{{3
-let s:commands="set\nsetlocal\nsetoption\nsetoptionlocal\nadd\naddlocal\nremove\nremovelocal\nrebuild\necho\ndebug\nreloadPlugin\nnew_project\n?\nhelp"
-let s:functions="ToolsChain()\nHasFilterGuessScope(\nHasFilter(\nFindFilter("
-let s:functions=s:functions. "\nProjectName()\nTargetRule()\nExecutable()"
-let s:variables="commands\nfunctions\nvariables"
-let s:k_new_prj = ['c', 'cpp', 'cmake', 'name=', 'config=', 'src_dir=']
-let s:k_options = ['compilation_dir', 'project_config', 'project_name',
-      \ 'run_parameters', 'project_executable', 'project_target', 'project']
-
-" BTWComplete(ArgLead, CmdLine, CursorPos):      Auto-complete {{{3
-function! BTWComplete(ArgLead, CmdLine, CursorPos)
-  let tmp = substitute(a:CmdLine, '\s*\S*', 'Z', 'g')
-  let pos = strlen(tmp)
-  call s:Verbose('complete(lead="%1", cmdline="%2", cursorpos=%3) -- tmp=%4, pos=%5', a:ArgLead, a:CmdLine, a:CursorPos, tmp, pos)
-
-  if     2 == pos
-    " First argument: a command
-    return s:commands
-  elseif 3 == pos
-    " Second argument: first arg of the command
-    if     -1 != match(a:CmdLine, '^BTW\s\+\%(echo\|debug\)')
-      return s:functions . "\n" . s:variables
-    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(help\|?\)')
-    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(set\|add\)\%(local\)\=\>')
-      " Adds a filter
-      " let files =         globpath(&rtp, 'compiler/BT-*')
-      " let files = files . globpath(&rtp, 'compiler/BT_*')
-      " let files = files . globpath(&rtp, 'compiler/BT/*')
-      let files = lh#btw#chain#_find_filter('*')
-      let files = substitute(files,
-            \ '\(^\|\n\).\{-}compiler[\\/]BTW[-_\\/]\(.\{-}\)\.vim\>\ze\%(\n\|$\)',
-            \ '\1\2', 'g')
-      return files
-    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(setoption\)\%(local\)\=\>')
-      return join(s:k_options, "\n")
-    elseif -1 != match(a:CmdLine, '^BTW\s\+remove\%(local\)\=')
-      " Removes a filter
-      return join(lh#btw#chain#_filters_list(), "\n")
-    elseif -1 != match(a:CmdLine, '^BTW\s\+\<new\%[_project]\>')
-      return "c\ncpp\ncmake\ndoxygen\nname=\nconfig=\nsrc_dir="
-    endif
-  elseif 4 <= pos
-    let p = matchend(a:CmdLine, '^BTW\s\+\<new\%[_project]\>')
-    if -1 != p
-      let already_there = split(a:CmdLine[p : ])
-      " let g:already_there = already_there
-      return join(filter(copy(s:k_new_prj), 'match(already_there, "\\<".v:val."\\>")==-1'), "\n")
-    endif
-  endif
-  " finally: unknown
-  echoerr 'BTW: unespected parameter ``'. a:ArgLead ."''"
-  return ''
-endfunction
 
 " # Menus (options)                        {{{2
 " Function: s:ToggleMakeInBG()                                 {{{3

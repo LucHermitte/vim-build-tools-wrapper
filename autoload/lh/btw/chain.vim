@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/chain.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.5.0.
-let s:k_version = '050'
+" Version:      0.7.0.
+let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  09th Jul 2015
+" Last Update:  04th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -22,21 +22,23 @@ function! lh#btw#chain#version()
 endfunction
 
 " # Debug   {{{2
-if !exists('s:verbose')
-  let s:verbose = 0
-endif
+let s:verbose = get(s:, 'verbose', 0)
 function! lh#btw#chain#verbose(...)
   if a:0 > 0 | let s:verbose = a:1 | endif
   return s:verbose
 endfunction
 
-function! s:Verbose(expr)
+function! s:Log(expr, ...)
+  call call('lh#log#this',[a:expr]+a:000)
+endfunction
+
+function! s:Verbose(expr, ...)
   if s:verbose
-    echomsg a:expr
+    call call('s:Log',[a:expr]+a:000)
   endif
 endfunction
 
-function! lh#btw#chain#debug(expr)
+function! lh#btw#chain#debug(expr) abort
   return eval(a:expr)
 endfunction
 
@@ -360,6 +362,61 @@ endfunction
 " Usage(): {{{3
 function! s:Usage()
   echo "Build Tools Wrapper: USAGE"
+endfunction
+
+" # Command completion                   {{{2
+" Constants                                                    {{{3
+let s:commands="set\nsetlocal\nsetoption\nsetoptionlocal\nadd\naddlocal\nremove\nremovelocal\nrebuild\necho\ndebug\nreloadPlugin\nnew_project\n?\nhelp"
+let s:functions="ToolsChain()\nHasFilterGuessScope(\nHasFilter(\nFindFilter("
+let s:functions=s:functions. "\nProjectName()\nTargetRule()\nExecutable()"
+let s:variables="commands\nfunctions\nvariables"
+let s:k_new_prj = ['c', 'cpp', 'cmake', 'name=', 'config=', 'src_dir=']
+let s:k_options = ['compilation_dir', 'project_config', 'project_name',
+      \ 'run_parameters', 'project_executable', 'project_target', 'project']
+
+" lh#btw#chain#_BTW_complete(ArgLead, CmdLine, CursorPos):      Auto-complete {{{3
+function! lh#btw#chain#_BTW_complete(ArgLead, CmdLine, CursorPos)
+  let tmp = substitute(a:CmdLine, '\s*\S*', 'Z', 'g')
+  let pos = strlen(tmp)
+  call s:Verbose('complete(lead="%1", cmdline="%2", cursorpos=%3) -- tmp=%4, pos=%5', a:ArgLead, a:CmdLine, a:CursorPos, tmp, pos)
+
+  if     2 == pos
+    " First argument: a command
+    return s:commands
+  elseif 3 == pos
+    " Second argument: first arg of the command
+    if     -1 != match(a:CmdLine, '^BTW\s\+\%(echo\|debug\)')
+      return s:functions . "\n" . s:variables
+    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(help\|?\)')
+    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(set\|add\)\%(local\)\=\>')
+      " Adds a filter
+      " let files =         globpath(&rtp, 'compiler/BT-*')
+      " let files = files . globpath(&rtp, 'compiler/BT_*')
+      " let files = files . globpath(&rtp, 'compiler/BT/*')
+      let files = lh#btw#chain#_find_filter('*')
+      let files = substitute(files,
+            \ '\(^\|\n\).\{-}compiler[\\/]BTW[-_\\/]\(.\{-}\)\.vim\>\ze\%(\n\|$\)',
+            \ '\1\2', 'g')
+      return files
+    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(setoption\)\%(local\)\=\>')
+      return join(s:k_options, "\n")
+    elseif -1 != match(a:CmdLine, '^BTW\s\+remove\%(local\)\=')
+      " Removes a filter
+      return join(lh#btw#chain#_filters_list(), "\n")
+    elseif -1 != match(a:CmdLine, '^BTW\s\+\<new\%[_project]\>')
+      return "c\ncpp\ncmake\ndoxygen\nname=\nconfig=\nsrc_dir="
+    endif
+  elseif 4 <= pos
+    let p = matchend(a:CmdLine, '^BTW\s\+\<new\%[_project]\>')
+    if -1 != p
+      let already_there = split(a:CmdLine[p : ])
+      " let g:already_there = already_there
+      return join(filter(copy(s:k_new_prj), 'match(already_there, "\\<".v:val."\\>")==-1'), "\n")
+    endif
+  endif
+  " finally: unknown
+  echoerr 'BTW: unespected parameter ``'. a:ArgLead ."''"
+  return ''
 endfunction
 
 " # Miscelleanous:                       {{{2
