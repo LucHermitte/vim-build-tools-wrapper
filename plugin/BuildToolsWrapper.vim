@@ -238,9 +238,10 @@ let s:k_version = 0700
 "       * Fix "No maping found" on plain vim (!= gvim)
 " v0.6.0: 20th Jun 2016
 "       * Fix incorrect mapping definition
-" v0.7.0: 11th Aug 2016
+" v0.7.0: 11th Aug 2016 - 11th Oct 2016
 "       * Add toggle menu/command from autoscroll bg compilation
 "       * Use new logging framework in some places
+"       * Background compilation based on lh#async
 "
 " TODO:                                    {{{2
 "       * &magic
@@ -266,6 +267,7 @@ let s:k_version = 0700
 "         way  to say that a particular |location-list| is shared between
 "         several windows from a same project.
 "       * executable() filters should be able to accept arguments
+"       * Chain successful compilation with program execution
 " }}}1
 "=============================================================================
 
@@ -319,7 +321,6 @@ command! -nargs=0 ToggleMakeBG          :call s:ToggleMakeInBG()
 
 let s:has_jobs = exists('*job_start') && has("patch-7.4.1980")
 if s:has_jobs
-  command! -nargs=0 StopBGCompilation     :call lh#btw#job_build#_stop()
   if exists(':cbottom')
     command! -nargs=0 ToggleAutoScrollBG    :call s:ToggleAutoScrollInBG()
   endif

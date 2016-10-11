@@ -59,54 +59,35 @@ let s:has_qf_properties = has("patch-7.4.2200")
 " ## API functions {{{1
 " Function: lh#btw#job_build#execute(cmd) {{{2
 function! lh#btw#job_build#execute(cmd) abort
-  if lh#btw#job_build#is_running()
-    let choice = CONFIRM("A background compilation is under way. Do you want to\n-> ", ["&Wait for the current compilation to finish", "&Stop the current compilation and start a new one"])
-    if choice == 2
-      let s:must_replace_comp = a:cmd
-      call lh#btw#job_build#_stop()
-    endif
-    return
-  endif
-  let job = s:init(a:cmd)
-  if job_info(job).status == 'fail'
-    call setqflist([{'text': "Background compilation with `".(s:cmd)."` failed"}], 'a')
-    throw "Starting `".a:cmd."` failed!"
-  endif
-  let s:job = job
-  call s:Verbose('Job started: %1 -- %2', s:job, job_info(s:job))
-endfunction
-
-" Function: lh#btw#job_build#_stop() {{{2
-function! lh#btw#job_build#_stop() abort
-  if !lh#btw#job_build#is_running()
-    throw "No undergoing background compilation."
-  endif
-  let st = job_stop(s:job)
-  if st == 0
-    throw "Cannot stop the background compilation"
-  endif
-endfunction
-
-" Function: lh#btw#job_build#is_running() {{{3
-function! lh#btw#job_build#is_running() abort
-  return exists('s:job')
+  " if lh#btw#job_build#is_running()
+    " let choice = CONFIRM("A background compilation is under way. Do you want to\n-> ", ["&Wait for the current compilation to finish", "&Stop the current compilation and start a new one"])
+    " if choice == 2
+      " let s:must_replace_comp = a:cmd
+      " call lh#btw#job_build#_stop()
+    " endif
+    " return
+  " endif
+  call s:init(a:cmd)
+  return
 endfunction
 
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
 
 " # Compilation {{{2
-" TODO: hide function name
-function! CloseCB(channel) abort
+function! s:closeCB(channel, job_info) abort
+  echomsg string(a:000)
   " call s:Verbose("Background compilation with `%1' %2", s:cmd, job_status(a:channel))
   try
+    let stamp = reltime()
     call s:Verbose("Background compilation with `%1' finished", s:cmd)
     while ch_status(a:channel) == 'buffered'
-      call CallbackCB(a:channel, ch_read(a:channel))
+      call s:callbackCB(a:channel, ch_read(a:channel))
     endwhile
-    call setqflist([{'text': "Background compilation with `".(s:cmd)."` finished with exitval ".job_info(s:job).exitval}], 'a')
+    let time = reltimefloat(reltime(s:job.start_time, stamp))
+    call setqflist([{'text': "Background compilation with `".(s:cmd)."` finished in ".string(time)."s with exitval ".a:job_info.exitval}], 'a')
   finally
-    call s:Verbose('Job finished %1 -- %2', s:job, job_info(s:job))
+    call s:Verbose('Job finished %1 -- %2', s:job, a:job_info)
     unlet s:job
   endtry
   if ! exists('s:must_replace_comp')
@@ -118,7 +99,7 @@ function! CloseCB(channel) abort
   endif
 endfunction
 
-function! CallbackCB(channel, msg) abort
+function! s:callbackCB(channel, msg) abort
   caddexpr a:msg
   if exists(':cbottom') && g:lh#btw#auto_cbottom
     let qf = getqflist()
@@ -128,6 +109,24 @@ function! CallbackCB(channel, msg) abort
       let g:lh#btw#auto_cbottom = 0
     endif
   endif
+endfunction
+
+function! s:start_fail_cb() dict abort
+  call setqflist([{'text': "Background compilation with `".(self.cmd)."` finished with exitval ".job_info(self.job).exitval}], 'a')
+endfunction
+
+function! s:before_start_cb() dict abort
+  if exists(':cbottom')
+    let g:lh#btw#auto_cbottom = lh#btw#option#_auto_scroll_in_bg()
+  endif
+  call s:Verbose("Background compilation with `%1' started", self.cmd)
+  " Filling qflist is required because of lh#btw#build#_show_error() in caller
+  " function
+  call setqflist([{'text': "Background compilation with `".(self.cmd)."` started"}])
+  call setqflist([], 'r',
+        \ {'title': self.build_mode. ' compilation of ' . self.project_name})
+  let self.start_time = reltime()
+  let s:job = self
 endfunction
 
 if exists(':cbottom')
@@ -141,26 +140,19 @@ endif
 " Function: s:init(cmd) {{{3
 function! s:init(cmd) abort
   let s:cmd = a:cmd
-  if exists(':cbottom')
-    let g:lh#btw#auto_cbottom = lh#btw#option#_auto_scroll_in_bg()
-  endif
-  call s:Verbose("Background compilation with `%1' started", a:cmd)
-  " Filling qflist is required because of lh#btw#build#_show_error() in caller
-  " function
-  call setqflist([{'text': "Background compilation with `".(a:cmd)."` started"}])
-  call setqflist([], 'r',
-        \ {'title': lh#btw#build_mode(). ' compilation of ' . lh#btw#project_name()})
-  if lh#os#OnDOSWindows() && &shell =~ 'cmd'
-    let cmd = &shell . ' /C '.a:cmd
-  else
-    let cmd = ['sh', '-c', a:cmd]
-  endif
-  let job = job_start(cmd,
-        \ {
-        \   'close_cb': ('CloseCB')
-        \ , 'callback': ('CallbackCB')
-        \ })
-  return job
+  let mode = lh#btw#build_mode()
+  let job =
+        \ { 'txt'            : 'Build '.lh#btw#project_name() . (empty(mode) ? '' : ' ('.mode.')')
+        \ , 'cmd'            : a:cmd
+        \ , 'close_cb'       : function('s:closeCB')
+        \ , 'callback'       : function('s:callbackCB')
+        \ , 'start_fail_cb'  : function('s:start_fail_cb')
+        \ , 'before_start_cb': function('s:before_start_cb')
+        \ , 'build_mode'     : mode
+        \ , 'project_name'   : lh#btw#project_name()
+        \ }
+  call lh#async#queue(job)
+  " Cannot return anything yet
 endfunction
 
 "------------------------------------------------------------------------
