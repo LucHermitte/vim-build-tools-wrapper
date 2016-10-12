@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      10th May 2016
-" Last Update:  27th Aug 2016
+" Last Update:  12th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Background compilation with latest job_start() API

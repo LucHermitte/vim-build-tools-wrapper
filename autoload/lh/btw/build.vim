@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  25th Aug 2016
+" Last Update:  12th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -146,7 +146,7 @@ let s:k_multijobs_options = {
       \}
 let s:has_jobs = exists('*job_start') && has("patch-7.4.1980")
 function! s:DoRunAndCaptureOutput(program, ...) abort
-  let bg = has('clientserver') && lh#btw#option#_make_in_bg()
+  let bg = (has('clientserver') || s:has_jobs) && lh#btw#option#_make_in_bg()
   let cleanup = lh#on#exit()
         \.restore('&makeprg')
   if bg
@@ -162,7 +162,7 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
             \ . run_in
             \ . ' "' . (a:program) . '"'
     endif
-  else
+  else " synchronous building
     let &makeprg = a:program
   endif
   let args = join(a:000, ' ')
@@ -185,7 +185,8 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
       let cmd = ':!start '.substitute(&makeprg, '\$\*', args, 'g')
       exe cmd
     else
-      exe 'make! '. args
+      " lh#os#make will inject p:$ENV on-the-fly, if needed.
+      call lh#os#make(args, '!')
     endif
   catch /.*/
     if lh#btw#filters#verbose() > 0

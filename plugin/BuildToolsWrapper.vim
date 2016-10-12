@@ -6,7 +6,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      28th Nov 2004
-" Last Update:  11th Aug 2016
+" Last Update:  12th Oct 2016
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -242,6 +242,7 @@ let s:k_version = 0700
 "       * Add toggle menu/command from autoscroll bg compilation
 "       * Use new logging framework in some places
 "       * Background compilation based on lh#async
+"       * Take p:$ENV into account to compile programs
 "
 " TODO:                                    {{{2
 "       * &magic
