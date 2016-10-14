@@ -75,7 +75,12 @@ endfunction
 " ## Internal functions {{{1
 
 " # Compilation {{{2
-function! s:closeCB(channel, job_info) abort
+function! s:job_description(job) abort " {{{3
+  let what = a:job.project_name . (!empty(a:job.build_mode) ? ' ('.a:job.build_mode.')' : '')
+  return what
+endfunction
+
+function! s:closeCB(channel, job_info) abort " {{{3
   echomsg string(a:000)
   " call s:Verbose("Background compilation with `%1' %2", s:cmd, job_status(a:channel))
   try
@@ -88,10 +93,11 @@ function! s:closeCB(channel, job_info) abort
     call setqflist([{'text': "Background compilation with `".(s:cmd)."` finished in ".string(time)."s with exitval ".a:job_info.exitval}], 'a')
   finally
     call s:Verbose('Job finished %1 -- %2', s:job, a:job_info)
+    let what = s:job_description(s:job)
     unlet s:job
   endtry
   if ! exists('s:must_replace_comp')
-    call lh#btw#build#_copen_bg_complete()
+    call lh#btw#build#_copen_bg_complete(what, a:job_info)
     redraw
   else
     call lh#btw#job_build#execute(s:must_replace_comp)
@@ -99,7 +105,7 @@ function! s:closeCB(channel, job_info) abort
   endif
 endfunction
 
-function! s:callbackCB(channel, msg) abort
+function! s:callbackCB(channel, msg) abort " {{{3
   caddexpr a:msg
   if exists(':cbottom') && g:lh#btw#auto_cbottom
     let qf = getqflist()
@@ -111,17 +117,19 @@ function! s:callbackCB(channel, msg) abort
   endif
 endfunction
 
-function! s:start_fail_cb() dict abort
+function! s:start_fail_cb() dict abort " {{{3
   call setqflist([{'text': "Background compilation with `".(self.cmd)."` finished with exitval ".job_info(self.job).exitval}], 'a')
 endfunction
 
-function! s:before_start_cb() dict abort
+function! s:before_start_cb() dict abort " {{{3
   if exists(':cbottom')
     let g:lh#btw#auto_cbottom = lh#btw#option#_auto_scroll_in_bg()
   endif
   call s:Verbose("Background compilation with `%1' started", self.cmd)
   " Filling qflist is required because of lh#btw#build#_show_error() in caller
   " function
+  let what = s:job_description(self)
+  echomsg "Compilation of ".what." started."
   call setqflist([{'text': "Background compilation with `".(self.cmd)."` started"}])
   call setqflist([], 'r',
         \ {'title': self.build_mode. ' compilation of ' . self.project_name})
@@ -129,7 +137,7 @@ function! s:before_start_cb() dict abort
   let s:job = self
 endfunction
 
-if exists(':cbottom')
+if exists(':cbottom') " {{{3
   let g:lh#btw#auto_cbottom = 0
   augroup BTW_stop_cbottom
     au!

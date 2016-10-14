@@ -291,15 +291,16 @@ function! lh#btw#build#_show_error(...) abort
   endif
 endfunction
 
-" Function: lh#btw#build#_copen_bg_complete([cop|cwin])      {{{3
-function! lh#btw#build#_copen_bg_complete(...) abort
+" Function: lh#btw#build#_copen_bg_complete(what, job_info, [cop|cwin])      {{{3
+function! lh#btw#build#_copen_bg_complete(what, job_info, ...) abort
   let opt = (a:0>0) ? a:1 : ''
   if get(g:, 'lh#btw#auto_cbottom', 1)
     call call('lh#btw#build#_show_error', a:000)
   endif
-  echohl WarningMsg
-  echo "Build complete!"
-  echohl None
+  let msg
+        \ = a:what
+        \ . (a:job_info.exitval == 0 ? " successfully built" : " build failed (w/ exitval:".(a:job_info.exitval).")")
+  call lh#common#warning_msg("Build complete: ".msg."!")
   if exists(':CompilHintsUpdate')
     :CompilHintsUpdate
   endif
