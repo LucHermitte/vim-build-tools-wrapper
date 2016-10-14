@@ -150,7 +150,7 @@ endfunction
 function! lh#btw#option#_has_project_config() abort
   return     exists('b:BTW_project_config')
         \ || exists('b:BTW.project_config')
-        \ || lh#project#exists('BTW.project_config')
+        \ || lh#project#exists('p:BTW.project_config')
 endfunction
 
 
