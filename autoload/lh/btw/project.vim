@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/project.vim                       {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.5.3.
-let s:k_version = 053
+" Version:      0.7.0.
+let s:k_version = 070
 " Created:      15th Jan 2015
-" Last Update:  30th Oct 2015
+" Last Update:  14th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions to generate new project config files from templates.
@@ -24,24 +24,25 @@ function! lh#btw#project#version()
 endfunction
 
 " # Debug   {{{2
-if !exists('s:verbose')
-  let s:verbose = 0
-endif
+let s:verbose = get(s:, 'verbose', 0)
 function! lh#btw#project#verbose(...)
   if a:0 > 0 | let s:verbose = a:1 | endif
   return s:verbose
 endfunction
 
-function! s:Verbose(expr)
+function! s:Log(expr, ...)
+  call call('lh#log#this',[a:expr]+a:000)
+endfunction
+
+function! s:Verbose(expr, ...)
   if s:verbose
-    echomsg a:expr
+    call call('s:Log',[a:expr]+a:000)
   endif
 endfunction
 
-function! lh#btw#project#debug(expr)
+function! lh#btw#project#debug(expr) abort
   return eval(a:expr)
 endfunction
-
 
 "------------------------------------------------------------------------
 " ## Exported functions {{{1
@@ -145,7 +146,7 @@ finally
 endtry
 endfunction
 
-
+" }}}1
 "------------------------------------------------------------------------
 let &cpo=s:cpo_save
 "=============================================================================

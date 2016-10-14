@@ -2,10 +2,10 @@
 " File:         autoload/lh/btw/cmake.vim                         {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.6.0
-let s:k_version = 0600
+" Version:      0.7.0
+let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  17th Jun 2016
+" Last Update:  14th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -30,8 +30,7 @@ let s:k_version = 0600
 "
 "------------------------------------------------------------------------
 " Installation:
-"       Requires Vim7+, lh-vim-lib 3.1.9+
-" History:      «history»
+"       Requires Vim7+, lh-vim-lib 4.0.0
 " TODO:
 "       * Simplify the definition of the "_project" sub-dictionary as it
 "       requires many options.
@@ -51,19 +50,23 @@ function! lh#btw#cmake#version()
 endfunction
 
 " # Debug   {{{2
-let s:verbose = 0
+let s:verbose = get(s:, 'verbose', 0)
 function! lh#btw#cmake#verbose(...)
   if a:0 > 0 | let s:verbose = a:1 | endif
   return s:verbose
 endfunction
 
-function! s:Verbose(expr)
+function! s:Log(expr, ...)
+  call call('lh#log#this',[a:expr]+a:000)
+endfunction
+
+function! s:Verbose(expr, ...)
   if s:verbose
-    echomsg a:expr
+    call call('s:Log',[a:expr]+a:000)
   endif
 endfunction
 
-function! lh#btw#cmake#debug(expr)
+function! lh#btw#cmake#debug(expr) abort
   return eval(a:expr)
 endfunction
 

@@ -3,10 +3,10 @@
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:	0.5.3
-let s:k_version = 0530
+" Version:	0.7.0
+let s:k_version = 0700
 " Created:      06th Sep 2012
-" Last Update:  30th Oct 2015
+" Last Update:  14th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       API to help define project options
@@ -16,6 +16,8 @@ let s:k_version = 0530
 "       Drop this file into {rtp}/autoload/lh/btw
 "       Requires Vim7+, lh-vim 3.1.6
 " History:
+"       v0.7.0
+"       * Use new logging framework
 "       v0.5.3
 "       * Updated to new lh-vim-lib functions that create new splits, ignoring E36
 "       v0.2.14:
@@ -81,22 +83,25 @@ function! lh#btw#project_options#version()
 endfunction
 
 " # Debug   {{{2
-let s:verbose = 0
+let s:verbose = get(s:, 'verbose', 0)
 function! lh#btw#project_options#verbose(...)
   if a:0 > 0 | let s:verbose = a:1 | endif
   return s:verbose
 endfunction
 
-function! s:Verbose(expr)
+function! s:Log(expr, ...)
+  call call('lh#log#this',[a:expr]+a:000)
+endfunction
+
+function! s:Verbose(expr, ...)
   if s:verbose
-    echomsg a:expr
+    call call('s:Log',[a:expr]+a:000)
   endif
 endfunction
 
-function! lh#btw#project_options#debug(expr)
+function! lh#btw#project_options#debug(expr) abort
   return eval(a:expr)
 endfunction
-
 
 "------------------------------------------------------------------------
 " ## Globals            {{{1
