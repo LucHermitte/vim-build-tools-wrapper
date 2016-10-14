@@ -11,7 +11,7 @@ that displays the current project name and compilation mode. This information
 will also be displayed for the quickfix window.
 
 # Installation
-  * Requirements: Vim 7.+, [lh-vim-lib](http://github.com/LucHermitte/lh-vim-lib) (v4.0.0), [lh-dev](http://github.com/LucHermitte/lh-dev) (v1.3.5), [SearchInRuntime](http://github.com/LucHermitte/SearchInRuntime).
+  * Requirements: Vim 7.+, [lh-vim-lib](http://github.com/LucHermitte/lh-vim-lib) (v4.0.0), [lh-dev](http://github.com/LucHermitte/lh-dev) (v1.3.5).
   * With [vim-addon-manager](https://github.com/MarcWeber/vim-addon-manager), install build-tools-wrapper (this is the preferred method because of the dependencies)
 ```vim
 ActivateAddons build-tools-wrapper
@@ -24,21 +24,19 @@ flavor 'LucHermitte/vim-build-tools-wrapper'
   * or you can clone the git repositories (expecting I haven't forgotten anything):
 ```vim
 git clone git@github.com:LucHermitte/lh-vim-lib.git
-git clone git@github.com:LucHermitte/SearchInRuntime.git
 git clone git@github.com:LucHermitte/vim-build-tools-wrapper.git
 " lh-dev is required by airline extension for BTW
 git clone git@github.com:LucHermitte/lh-dev.git
-" lh-dev requires lh-tags, which won't be used bt BTW
+" lh-dev requires lh-tags, which won't be used by BTW
 git clone git@github.com:LucHermitte/lh-tags.git
 ```
   * or with Vundle/NeoBundle (expecting I haven't forgotten anything):
 ```vim
 Bundle 'LucHermitte/lh-vim-lib'
-Bundle 'LucHermitte/SearchInRuntime'
 Bundle 'LucHermitte/vim-build-tools-wrapper'
 " lh-dev is required by airline extension for BTW
 Bundle 'LucHermitte/lh-dev'
-" lh-dev requires lh-tags, which won't be used bt BTW
+" lh-dev requires lh-tags, which won't be used by BTW
 Bundle 'LucHermitte/lh-tags'
 ```
 

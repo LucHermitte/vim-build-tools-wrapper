@@ -345,7 +345,6 @@ A few other scripts of mine will be useful with BTW.
   like mappings, functions, ...) that will be local to the files in the
   sub-directories of the one where there are _vimrc_local.vim files.
   (local_vimrc is a plugin that enables local .vimrc's named _vimrc_local.vim)
-- |searchInRuntime|
 - |lh-compil-hint|
 
 

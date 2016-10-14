@@ -6,8 +6,7 @@
   "repository" : {"type": "git", "url": "git@github.com:LucHermitte/vim-build-tools-wrapper.git"},
   "dependencies" : {
       "lh-vim-lib" : {"type" : "git", "url" : "git@github.com:LucHermitte/lh-vim-lib.git"},
-      "lh-dev" : {"type" : "git", "url" : "git@github.com:LucHermitte/lh-dev.git"},
-      "search-in-runtime" : {"type": "git", "url": "git@github.com:LucHermitte/SearchInRuntime.git"}
+      "lh-dev" : {"type" : "git", "url" : "git@github.com:LucHermitte/lh-dev.git"}
   },
   "description" : "Projects building plugin"
 }
