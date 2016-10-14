@@ -130,9 +130,8 @@ function! s:FetchRunInBackground() abort
   if     exists('*globpath')
     let s:run_in_background = globpath(&rtp, 'compiler/BTW/'.rib_progname.'.pl')
   else
-    call lh#common#error_msg( "Build Tools Wrapper:\n  This plugin requires either a version of Vim that defines |globpath()| or the script searchInRuntime.vim.\n"
-          \."  Please upgrade your version of vim, or install searchInRuntime.vim\n"
-          \."  Check on <https://github.com/LucHermitte/SearchInRuntime> or <http://vim.sf.net/> script #229")
+    call lh#common#error_msg( "Build Tools Wrapper:\n  This plugin requires either a version of Vim that defines |globpath()|\n"
+          \."  Please upgrade your version of vim\n"
     finish
   endif
 
