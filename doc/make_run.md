@@ -113,8 +113,35 @@ The best way to define this option is from a project oriented plugin like [local
 
 # Execute
 
-Just hit `<C-F5>` to execute the current program. You may have to change the keybinded if you are using vim in console instead of gvim or macvim.
+Just hit `<C-F5>` to execute the current program. You may have to change the key bound if you are using vim in console instead of gvim or macvim.
 
 In the case of the multi-files project, or a project having tests managed through CTest, you'll have to set `(bpg):BTW.executable`.
 
 If `(bpg):BTW.executable` contains `{ 'type': 'make' }`, the execution is redirected to the quickfix window. Same thing with `{ 'type': 'ctest' }`, but this time the result is filtered on-the-fly to correct the noise introduced by CTest (regarding `&errorformat`)
+
+# Demo
+You'll see in this little demo, an example of use of BTW on two CMake based
+projects simultaneously opened in Vim 8 (7.4-2342 actually).
+
+The compilation of both projects is launched in background. The job queue (from
+[lh-vim-lib](http://github.com/LucHermitte/lh-vim-lib)) is then opened to
+follow what is done in background and what will be done shortly after.
+
+The explicit update (in background) of tags for all files in
+[ITK project](http://www.itk.org) is also requested (thanks to
+[lh-tags](http://github.com/LucHermitte/lh-tags) v2.0.3).
+
+And we see ITK compilation fails because `cmake` has never been run for the
+_reldeb_ compilation mode (_ReleaseWithDebugInfo_). A problem is detected and the
+next jobs are not executed automatically. The job queue is paused (I also could
+have ignored the error, etc.).
+
+Then I change the current compilation mode to _sanitize_ (some kind of
+_ReleaseWithDebugInfo_ mode but compiled with clang++ with two sanitizations
+activated). This time `cmake` has been executed in the associated directory. I
+register the compilation on ITK in this mode.
+
+The queue is still paused. I _unpause_ the job queue through the `:Jobs` console.
+Eventually I see ITK is still not compiling, but this is another issue.
+
+![background compilation demo](screencast-BTW.gif "Demo of background compilation of 2 dictinct projects with different compilation modes")
