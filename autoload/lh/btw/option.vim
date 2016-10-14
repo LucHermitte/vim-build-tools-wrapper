@@ -16,16 +16,16 @@ let s:k_version = '070'
 " - (bpg):BTW_project_executable            -> (bpg):BTW.executable
 " - (bpg):BTW_project_config                -> (bpg):BTW.project_config
 "   (bpg):BTW_project_build_mode            -> (bpg):BTW.project_config
-" - (bpg):BTW_make_in_background_in         -> (bpg):BTW.make_in_background_in
 " - g:BTW_autoscroll_background_compilation -> g:BTW.autoscroll_background_compilation
 " - g:BTW_GotoError                         -> g:BTW.goto_error
-"   g:BTW_make_in_background                -> g:BTW.make_in_background
-"   (bpg):BTW_make_in_background_in         -> (bpg):BTW.make_in_background_in
-"   (bpg):BTW_use_prio                      -> (bpg):BTW.use_prio
-"   g:BTW_qf_position                       -> g:BTW.qf_position
-"   g:BTW_QF_size                           -> g:BTW.qf_size
-"   (gpb):BTW_qf_syntax                     -> (gpb):BTW.qf_syntax
-"   (bpg):BTW_run_parameters                -> (bpg):BTW.run_parameters
+" - g:BTW_make_in_background                -> g:BTW.make_in_background
+" - g:BTW_make_multijobs                    -> g:BTW.make_multijobs
+" - (bpg):BTW_make_in_background_in         -> (bpg):BTW.make_in_background_in
+" - (bpg):BTW_use_prio                      -> (bpg):BTW.use_prio
+" - g:BTW_qf_position                       -> g:BTW.qf_position
+" - g:BTW_QF_size                           -> g:BTW.qf_size
+" - (gpb):BTW_qf_syntax                     -> (gpb):BTW.qf_syntax
+" - (bpg):BTW_run_parameters                -> (bpg):BTW.run_parameters
 " - (bpg):BTW_project_name                  -> (bpg):BTW.name
 " }}}1
 "=============================================================================
@@ -168,7 +168,9 @@ endfunction
 
 " Function: lh#btw#option#_qf_size() {{{3
 function! lh#btw#option#_qf_size() abort
-  let nl = 15 > &winfixheight ? 15 : &winfixheight
+  " Default: 1/4 of total screen size
+  let mx = min([15, &lines / 4])
+  let nl = mx > &winfixheight ? mx : &winfixheight
   let nl = s:get_explicit_names('qf_size', 'QF_size', nl, 'g')
   return nl
 endfunction

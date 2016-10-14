@@ -326,7 +326,7 @@ Several options permit to tune how the |quickfix-window| is handled by |:Make|,
 Typical values match the commands: |:vert|, |:lefta|, |:abo|, ...
 
 *g:BTW.qf_size* defines the maximum heigth of the |quickfix-window|. The default
-value is 15.
+value is 1/4 of vim screen/window ('lines').
 Note: the corresponding code has been stolen from |LaTeX-Suite|.
 
 *g:BTW.goto_error* defines whether |:Make| will automatically jump to the
