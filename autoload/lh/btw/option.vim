@@ -26,7 +26,7 @@ let s:k_version = '070'
 " - g:BTW_QF_size                           -> g:BTW.qf_size
 " - (gpb):BTW_qf_syntax                     -> (gpb):BTW.qf_syntax
 " - (bpg):BTW_run_parameters                -> (bpg):BTW.run_parameters
-" - (bpg):BTW_project_name                  -> (bpg):BTW.name
+" - (bpg):BTW_project_name                  -> (bpg):BTW.project_name
 " }}}1
 "=============================================================================
 

@@ -367,6 +367,7 @@ Here is the translation table:
  *(bpg):BTW_project_executable*            -> |(bpg):BTW.executable|
  *(bpg):BTW_project_config*                -> |(bpg):BTW.project_config|
  *(bpg):BTW_project_build_mode*            -> |(bpg):BTW.project_config|
+ *(bpg):BTW_compilation_dir*               -> |(bpg):BTW.compilation_dir|
  *g:BTW_autoscroll_background_compilation* -> |g:BTW.autoscroll_background_compilation|
  *g:BTW_GotoError*                         -> |g:BTW.goto_error|
  *g:BTW_make_in_background*                -> |g:BTW.make_in_background|
@@ -377,7 +378,7 @@ Here is the translation table:
  *g:BTW_QF_size*                           -> |g:BTW.qf_size|
  *(gpb):BTW_qf_syntax*                     -> |(gpb):BTW.qf_syntax|
  *(bpg):BTW_run_parameters*                -> |(bpg):BTW.run_parameters|
- *(bpg):BTW_project_name*                  -> |(bpg):BTW.name|
+ *(bpg):BTW_project_name*                  -> |(bpg):BTW.project_name|
  *(bg):BTW_key_make*                       -> |g:BTW.key.make|
  *(bg):BTW_key_execute*                    -> |g:BTW.key.execute|
  *(bg):BTW_key_config*                     -> |g:BTW.key.config|
@@ -394,7 +395,7 @@ TODO list~
 - Support for folding
 - Full detailled example tuned with local_vimrc
 - Filter-plugins for: STLFit, Doxygen
-- Improve and document *QFImport* , *BTW_compilation_dir* , "import:"
+- Improve and document *QFImport* , |BTW.compilation_dir| , "import:"
 
 ------------------------------------------------------------------------------
  © Luc Hermitte, 2004-2016, <http://github.com/LucHermitte/vim-build-tools-wrapper>, CC by SA 3.0 {{{1
