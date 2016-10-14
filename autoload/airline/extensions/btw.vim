@@ -80,7 +80,7 @@ function! airline#extensions#btw#apply(...) abort
   endif
 
   " Then, we check this is a compiled file with a compilation mode & al
-  if !exists('b:BTW_project_config')
+  if !lh#btw#option#_has_project_config()
     return
   endif
 

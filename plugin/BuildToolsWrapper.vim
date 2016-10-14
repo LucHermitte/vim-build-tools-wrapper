@@ -292,10 +292,10 @@ let g:loaded_BuildToolsWrapper = s:k_version
 runtime plugin/compil-hints.vim
 
 " Global options                                     {{{1
-let s:key_make       = lh#option#get('BTW_key_make'     , '<F7>')
-let s:key_execute    = lh#option#get('BTW_key_execute'  , '<C-F5>')
-let s:key_config     = lh#option#get('BTW_key_config'   , '<M-F7>')
-let s:key_re_config  = lh#option#get('BTW_key_re_config', '<M-F8>')
+let s:key_make       = lh#option#get('BTW.key.make'     , '<F7>', 'g')
+let s:key_execute    = lh#option#get('BTW.key.execute'  , '<C-F5>', 'g')
+let s:key_config     = lh#option#get('BTW.key.config'   , '<M-F7>', 'g')
+let s:key_re_config  = lh#option#get('BTW.key.re_config', '<M-F8>', 'g')
 
 " Options }}}1
 "------------------------------------------------------------------------
@@ -399,7 +399,9 @@ endif
 " Function: s:ToggleMakeInBG()                                 {{{3
 function! s:ToggleMakeInBG() abort
   let value = lh#btw#option#_make_in_bg()
-  let g:BTW_make_in_background = 1 - value
+  let g:BTW.make_in_background = 1 - value
+  call lh#common#warning_msg ("Compilation configured to run in "
+        \ . (value ? "foreground" : "background"))
 
   call s:MenuMakeBG()
 endfunction
@@ -407,7 +409,9 @@ endfunction
 " Function: s:ToggleAutoScrollInBG()                                 {{{3
 function! s:ToggleAutoScrollInBG() abort
   let value = lh#btw#option#_auto_scroll_in_bg()
-  let g:BTW_autoscroll_background_compilation = 1 - value
+  let g:BTW.autoscroll_background_compilation = 1 - value
+  call lh#common#warning_msg ("Autoscrolling in qf window when compiling in background has been "
+        \ . (value ? "deactivated" : "activated"))
 
   call s:MenuAutoScrollBG()
 endfunction
@@ -416,9 +420,9 @@ endfunction
 let s:k_cpu_number = lh#os#cpu_number()
 function! s:ToggleMakeMJ() abort
   let value = lh#btw#option#_make_mj()
-  let g:BTW_make_multijobs = (value==0) ? s:k_cpu_number : 0
-  echo "Compling on " .
-        \ ((g:BTW_make_multijobs>1) ? (g:BTW_make_multijobs . " cpus") : "1 cpu")
+  let g:BTW.make_multijobs = (value==0) ? s:k_cpu_number : 0
+  call lh#common#warning_msg("Compling on " .
+        \ ((g:BTW.make_multijobs>1) ? (g:BTW.make_multijobs . " cpus") : "1 cpu"))
 
   call s:MenuMakeMJ()
 endfunction

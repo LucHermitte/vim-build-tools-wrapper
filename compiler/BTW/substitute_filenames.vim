@@ -30,7 +30,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " Main {{{1
 function! BTW_Substitute_Filenames() abort
-  let list = lh#dev#option#get('BTW_substitute_names', &ft, [])
+  let list = lh#dev#option#get('BTW.substitute_names', &ft, [])
   if !empty(list)
     call s:Transform(list, 1)
   endif

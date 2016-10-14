@@ -1,5 +1,5 @@
 *BuildToolsWrapper.txt* Projects building plugin
-                        For Vim version 7.x.    Last change: 10th Aug 2016
+                        For Vim version 7.x.    Last change: 14th Oct 2016
 
 
                 BuildToolsWrapper Plugin MANUAL   By Luc Hermitte
@@ -198,7 +198,7 @@ for two (optional) settings:
 
 Note: there are a few variables you will see from Vim. However, do not
 manipulate them directly. They are actually internal variables you must ignore.
--> [bg]:BTW_filters_list, [bg]:BTW_build_tool
+-> `[bg]:BTW_filters_list`, `[bg]:BTW_build_tool`
 
 
 ------------------------------------------------------------------------------
@@ -215,11 +215,11 @@ The command |:Make| accepts an optional target. The default target is determined
 according to the heuristic described in |BTW-project-target|.
 
 By default, |:Make| (with no argument) is binded to <F7>. This can be overrided
-with the option |[bg]:BTW_key_make|.
+with the option |g:BTW.key.make|.
 
                                                         *:Make-background*
 ...in background...~
-The compilation will be done in background if *g:BTW_make_in_background* is
+The compilation will be done in background if *g:BTW.make_in_background* is
 set to 1. This option is best set in |.vimrc|, and best changed with
 *:ToggleMakeBG* , or the related |menu| under `Project`.
 
@@ -230,11 +230,11 @@ quickfix window will scroll automatically to show last errors -- given a
 recent enough version of Vim (v7.4.1997) that implements |:cbottom|. To stop
 the scrolling, jump to the |quickfix-window|, and execute |:Copen| to
 reactivate it.
-You can also set the option *[bg]:BTW_autoscroll_background_compilation*
+You can also set the option *g:BTW.autoscroll_background_compilation*
 to 0 to completly disable this autoscrolling feature.
 
 The background compilation (based on |+job|) can be stopped at any time thanks
-to *:StopBGCompilation*
+to |:StopBGExecution|
 
 ...or with perl~
 With older versions of Vim, perl will be required to run `make` into the
@@ -243,7 +243,7 @@ background.
                                                         *:Make-multijobs*
 ...with multiple jobs~
 The compilation can be done with multiple jobs thanks to
-*g:BTW_make_multijobs* option. Set it to the number of jobs you wish to use.
+*g:BTW.make_multijobs* option. Set it to the number of jobs you wish to use.
 This feature makes sense only with `make` executables that provide the `-j`
 option.
 The option value can be toggled with *:ToggleMakeMJ* or the related |menu|.
@@ -254,10 +254,10 @@ The command |:Execute| accepts no arguments. The default program to execute is
 determined according to the heuristic described in |BTW-project-executable|.
 
 Arguments to the program can be specified with the option
-|g:BTW_run_parameters|.
+|(bpg):BTW.run_parameters|.
 
 By default, |:Execute| (with no argument) is binded to <C-F5> This can be
-overrided with the option |[bg]:BTW_key_execute|.
+overrided with the option |[bpg]:BTW.key_execute|.
 
                                                         *BTW-Build-Configure*
 Configuration of the build process~
@@ -265,22 +265,29 @@ A little helper is provided for when we can rely on gmake to automatically
 compile programs made of only one translation unit (.c, .cpp, ...). Typically
 small test programs, and not real projects.
 
-Currently, it is mainly useful to those who have installed my plugin
-|let-modeline.vim|. Indeed, *:AddLetModeline* adds a new let-modeline for
-various environment variables like $CFLAGS, $CXXFLAGS, $LDFLAGS, $LDLIBS,
-|[bg]:BTW_project|, ... The let-modeline will be added at the bottom of the
-edited file.
+Depending on |(bpg):BTW.project_config|  `.how` field, *:Config* will:
+- `"modeline"` -> Help to add a |let-modeline| for various environment
+                variables like `$CFLAGS`, `$CXXFLAGS`, `$LDFLAGS`, `$LDLIBS`,
+                |(bpg):BTW.project|, ... The let-modeline will be added at the
+                bottom of the edited file.
+                Pointless if you haven't installed my |let-modeline.vim|
+                plugin.
+- `"makefile"` -> Jump to the `Makefile` associated to the `.wd` key.
+- `"ccmake"`   -> execute `ccmake {.how.arg}` (or `cmake-gui {.how.arg}`)
+                from `(bpg):BTW.project_config.wd` directory.
 
-However, at this time it also has a very limited support of Makefiles and A-A-P
-recipes: |:AddLetModeline| will try to locate Makefile or main.aap and propose
-to edit them.
+Depending on |(bpg):BTW.project_config|  `.how` field, *:ReConfig* will:
+- `"modeline"` -> reload the |let-modeline| with |:FirstModeline|;
+- `"makefile"` -> do nothing (for now?);
+- `"ccmake"`   -> execute `cmake .` from the right directory;
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                                                         *BTW-keybindings*
 
-*[bg]:BTW_key_make*    (def. <F7>)   keybinding associated to |:Make|.
-*[bg]:BTW_key_execute* (def. <C-F5>) keybinding associated to |:Execute|.
-*[bg]:BTW_key_cofing*  (def. <M-F7>) keybinding associated to |:AddLetModeline|.
+*g:BTW.key.make*       (def. <F7>)   keybinding associated to |:Make|.
+*g:BTW.key.execute*    (def. <C-F5>) keybinding associated to |:Execute|.
+*g:BTW.key.config*     (def. <M-F7>) keybinding associated to |:Config|.
+*g:BTW.key.re_config*  (def. <M-F8>) keybinding associated to |:ReConfig|.
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Heuristics~
@@ -288,14 +295,14 @@ Heuristics~
                                                         *BTW-project-target*
 Target heuristics~
 The target used by |:Make| is chosen according to the following rule.
-- First |:Make| tries to use the option *[bg]:BTW_project_target*
+- First |:Make| tries to use the option *(bpg):BTW.target*
 - If not set, it tries to use the target from the heuristics |BTW-project-name|.
 - If nothing is returned, "all" is assumed.
 
                                                         *BTW-project-executable*
 Executable heuristics~
 The executable used by |:Execute| is chosen according to the following rule.
-- |:Execute| tries to use the option *[bg]:BTW_project_executable*
+- |:Execute| tries to use the option *(bpg):BTW.executable*
 - If not set, it tries to use the name from the heuristics |BTW-project-name|,
   to which it may add ".exe" if vim is runned under Windows. (MsDos is not taken
   into account)
@@ -304,7 +311,7 @@ The executable used by |:Execute| is chosen according to the following rule.
 
                                                         *BTW-project-name*
 Project name heuristics~
-The name of the project is defined by *[bg]:BTW_project* , if set. If not, it
+The name of the project is defined by *(bpg):BTW.project* , if set. If not, it
 uses the name of the file in the current buffer (|%<|), or the name of the file
 from alternate buffer (|#<|) if we are in the |quickfix-window|.
 
@@ -315,31 +322,67 @@ Options for the Quickfix window~
 Several options permit to tune how the |quickfix-window| is handled by |:Make|,
 |:Cwin| and |:Copen|.
 
-*g:BTW_qf_position* defines where the |quickfix-window| will be opened.
+*g:BTW.qf_position* defines where the |quickfix-window| will be opened.
 Typical values match the commands: |:vert|, |:lefta|, |:abo|, ...
 
-*g:BTW_QF_size* defines the maximum heigth of the |quickfix-window|. The default
+*g:BTW.qf_size* defines the maximum heigth of the |quickfix-window|. The default
 value is 15.
 Note: the corresponding code has been stolen from |LaTeX-Suite|.
 
-*g:BTW_GotoError* defines whether |:Make| will automatically jump to the first
-error. The default value is true (1).
+*g:BTW.goto_error* defines whether |:Make| will automatically jump to the
+first error. The default value is true (1).
 
 
 ------------------------------------------------------------------------------
                                                         *BTW-requirements*
 External requirements~
 
-BTW depends on the following plugins, with which it is "shipped":
-- |system_utils|
-- |lh-vim-lib|
-- |searchInRuntime|
+BTW depends on the following plugins:
+- |lh-vim-lib| v4.0.0
 
 A few other scripts of mine will be useful with BTW.
 - |local_vimrc| is a plugin that permits to define options (and any other things
   like mappings, functions, ...) that will be local to the files in the
   sub-directories of the one where there are _vimrc_local.vim files.
   (local_vimrc is a plugin that enables local .vimrc's named _vimrc_local.vim)
+- |searchInRuntime|
+- |lh-compil-hint|
+
+
+------------------------------------------------------------------------------
+                                                        *BTW-deprecated-options*
+
+In Version 0.7.0, option naming policy has changed. Old variable names are
+still supported for the moment.
+
+The idea is to store options in the |dictionaries| *g:BTW.* , *p:BTW.* (a
+|p:|roject variable) and *b:BTW.* instead of the multiple `g:BTW_xxx` and
+`b:BTW_xxx` variables.
+
+Here is the translation table:
+ Old Name                                -> New name
+ -----------------------------------------------------------------------------------
+ *(bpg):BTW_project*                       -> |(bpg):BTW.project|
+ *(bpg):BTW_project_target*                -> |(bpg):BTW.target|
+ *(bpg):BTW_project_executable*            -> |(bpg):BTW.executable|
+ *(bpg):BTW_project_config*                -> |(bpg):BTW.project_config|
+ *(bpg):BTW_project_build_mode*            -> |(bpg):BTW.project_config|
+ *g:BTW_autoscroll_background_compilation* -> |g:BTW.autoscroll_background_compilation|
+ *g:BTW_GotoError*                         -> |g:BTW.goto_error|
+ *g:BTW_make_in_background*                -> |g:BTW.make_in_background|
+ *g:BTW_make_multijobs*                    -> |g:BTW.make_multijobs|
+ *(bpg):BTW_make_in_background_in*         -> |(bpg):BTW.make_in_background_in|
+ *(bpg):BTW_use_prio*                      -> |(bpg):BTW.use_prio|
+ *g:BTW_qf_position*                       -> |g:BTW.qf_position|
+ *g:BTW_QF_size*                           -> |g:BTW.qf_size|
+ *(gpb):BTW_qf_syntax*                     -> |(gpb):BTW.qf_syntax|
+ *(bpg):BTW_run_parameters*                -> |(bpg):BTW.run_parameters|
+ *(bpg):BTW_project_name*                  -> |(bpg):BTW.name|
+ *(bg):BTW_key_make*                       -> |g:BTW.key.make|
+ *(bg):BTW_key_execute*                    -> |g:BTW.key.execute|
+ *(bg):BTW_key_config*                     -> |g:BTW.key.config|
+ *(bg):BTW_key_re_config*                  -> |g:BTW.key.re_config|
+
 
 ------------------------------------------------------------------------------
                                                         *BTW-future*

@@ -26,7 +26,7 @@ function! BTW_Shorten_Filenames() abort
   " been decoded and replaced by a bufnr.
   " At best, we can conceal
   syn match qfFileName /^[^|]*/  nextgroup=qfSeparator contains=qfShortenFile
-  let list = lh#dev#option#get('BTW_shorten_names', &ft, [])
+  let list = lh#dev#option#get('BTW.shorten_names', &ft, [])
   for pat in list
     if type(pat)==type([])
       let expr  = pat[0]

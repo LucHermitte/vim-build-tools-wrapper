@@ -229,7 +229,7 @@ function! lh#btw#chain#_reconstruct() abort
   endif
   call s:AdjustEFM(prog, efm)
 
-  let dir = lh#option#get('BTW_compilation_dir', '')
+  let dir = lh#btw#option#_compilation_dir()
   if !empty(dir)
     let makeprg = '(cd '.shellescape(dir).' && ' . makeprg . ')'
   endif

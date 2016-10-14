@@ -50,16 +50,16 @@ endfunction
 "------------------------------------------------------------------------
 " ## Exported functions {{{1
 
-" Function: lh#btw#compilation_dir() {{{3
-function! lh#btw#compilation_dir()
-  return lh#option#get('BTW_compilation_dir', '.')
+" Function: lh#btw#compilation_dir([bufid]) {{{3
+function! lh#btw#compilation_dir(...)
+  return call('lh#btw#option#_compilation_dir', a:000)
 endfunction
 
 " Function: lh#btw#build_mode([default]) {{{3
 function! lh#btw#build_mode(...) abort
   let default = a:0 == 0 ? '' : a:1
-  let project_config = lh#option#get('BTW_project_config')
-  if lh#option#is_set(project_config)
+  if lh#btw#option#_has_project_config()
+    let project_config = lh#btw#option#_project_config()
     let config = get(project_config, '_', {})
     let mode   = get(get(config, 'compilation', {}), 'mode', default)
     return mode
@@ -72,7 +72,7 @@ endfunction
 " Function: lh#btw#project_name([bufid]) {{{3
 function! lh#btw#project_name(...) abort
   let bufid = a:0 > 0 ? a:1 : bufnr('%')
-  let project_config = lh#option#getbufglobvar(bufid, 'BTW_project_config')
+  let project_config = lh#btw#option#_project_config(bufid) " use from_buf version to detect undefined
   " 1- Information set in b:project_config._.name ?
   if lh#option#is_set(project_config)
     let config = get(project_config, '_', {})
@@ -80,7 +80,7 @@ function! lh#btw#project_name(...) abort
     return name
   else
     " 2- Information set in b:BTW_project_name ?
-    let name = lh#option#getbufglobvar(bufid, 'BTW_project_name')
+    let name = lh#btw#option#_project_name(bufid)
     if lh#option#is_set(name)          | return name | endif
     " 3- Is this a qf window ?
     if getbufvar(bufid, '&ft') == 'qf' | return lh#btw#project_name(g:lh#btw#_last_buffer) | endif
@@ -112,7 +112,7 @@ function! lh#btw#_evaluate(expr)
     if lh#ref#is_bound(a:expr)
       return a:expr.resolve()
     else
-    let res = lh#function#execute(a:expr)
+      let res = lh#function#execute(a:expr)
     endif
   elseif type(a:expr) == type('')
     let res = a:expr

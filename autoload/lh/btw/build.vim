@@ -44,9 +44,6 @@ endfunction
 
 
 "------------------------------------------------------------------------
-" ## Exported functions {{{1
-
-"------------------------------------------------------------------------
 " ## Internal functions {{{1
 
 " # Options        {{{2
@@ -58,8 +55,11 @@ endfunction
 " - with a _vimrc_local file
 " - with a let-modeline
 " @todo deprecate this in favour of lh#btw#project_name()
+" @deprecated (bg):BTW_project, use (bpg):BTW.project
 function! s:ProjectName() abort
-  if     exists('b:BTW_project') | return b:BTW_project
+  let res = lh#option#get('BTW.project')
+  if     lh#option#is_set(res)   | return res
+  elseif exists('b:BTW_project') | return b:BTW_project
   elseif exists('g:BTW_project') | return g:BTW_project
   elseif &ft == 'qf'             | cclose | return s:ProjectName()
   elseif lh#ft#is_script()       | return '%'
@@ -68,16 +68,21 @@ function! s:ProjectName() abort
 endfunction
 
 " Function: s:TargetRule()                            {{{3
+" @deprecated (bg):BTW_project_target, use (bpg):BTW.target
 function! s:TargetRule() abort
   " TODO: find a better name
   " TODO: try to detect available rules in Makefile/main.aap/...,
   " and cache them
+  " TODO: cclose is not the best way to quit the qf window -> memorize the
+  " buffer from which it was compiled last
   if &ft == 'qf' | cclose | return s:TargetRule() | endif
-  if     exists('b:BTW_project_target') | return b:BTW_project_target
+  let res = lh#option#get('BTW.target')
+  if     lh#option#is_set(res)          | return res
+  elseif exists('b:BTW_project_target') | return b:BTW_project_target
   elseif exists('g:BTW_project_target') | return g:BTW_project_target
   else
     let res = s:ProjectName()
-    if !strlen(res)
+    if empty(res)
       res = 'all' " just a guess
     endif
     return res
@@ -85,7 +90,8 @@ function! s:TargetRule() abort
 endfunction
 
 " Function: s:Executable()                            {{{3
-let s:ext = (has('win32')||has('win64')||has('win16')) ? '.exe' : ''
+" @deprecated (bg):BTW_project_executable, use (bpg):BTW.executable
+let s:ext = lh#os#OnDOSWindows() ? '.exe' : ''
 function! s:Executable() abort
   " TODO: find a better name
   " TODO: try to detect available rules in Makefile/main.aap/...,
@@ -93,7 +99,9 @@ function! s:Executable() abort
   " TODO: cclose is not the best way to quit the qf window -> memorize the
   " buffer from which it was compiled last
   if &ft == 'qf' | cclose | return s:Executable() | endif
-  if     exists('b:BTW_project_executable') | return b:BTW_project_executable
+  let res = lh#option#get('BTW.executable')
+  if     lh#option#is_set(res)              | return res
+  elseif exists('b:BTW_project_executable') | return b:BTW_project_executable
   elseif exists('g:BTW_project_executable') | return g:BTW_project_executable
   else
     let res = s:ProjectName()
@@ -114,6 +122,7 @@ if exists('s:run_in_background')
 endif
 
 function! s:FetchRunInBackground() abort
+  " This is a the old background compilation function for vim version < 8
   let rib_progname = lh#os#OnDOSWindows()
         \ ? 'run_and_recontact_vim'
         \ : 'run_in_background'
@@ -151,7 +160,7 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
         \.restore('&makeprg')
   if bg
     if !s:has_jobs " case handled latter
-      let run_in = lh#option#get("BTW_make_in_background_in", '')
+      let run_in = lh#btw#option#_make_in_bg_in()
       if strlen(run_in)
         " Typically xterm -e
         let run_in = ' --program="'.run_in.'"'
@@ -215,6 +224,7 @@ endfunction
 " Function: lh#btw#build#_compile([target])           {{{3
 function! lh#btw#build#_compile(...) abort
   update
+  call lh#btw#option#_check_deprecated_options()
   if a:0 > 0 && strlen(a:1)
     let rule = a:1
   else
@@ -222,7 +232,7 @@ function! lh#btw#build#_compile(...) abort
   endif
   " else ... pouvoir avoir s:TargetRule() . a:1 ; si <bang> ?!
 
-  if lh#option#get('BTW_use_prio', 'update') == 'update'
+  if lh#btw#option#_use_prio() == 'update'
     call lh#btw#chain#_reconstruct()
   endif
   let bg = s:DoRunAndCaptureOutput(&makeprg, rule)
@@ -234,16 +244,9 @@ function! lh#btw#build#_compile(...) abort
   endif
 endfunction
 
-" Function: lh#btw#build#_get_qf_size() {{{3
-function! lh#btw#build#_get_qf_size() abort
-  let nl = 15 > &winfixheight ? 15 : &winfixheight
-  let nl = lh#option#get('BTW_QF_size', nl, 'g')
-  return nl
-endfunction
-
 " Function: lh#btw#build#_show_error([cop|cwin])      {{{3
 function! lh#btw#build#_show_error(...) abort
-  let qf_position = lh#option#get('BTW_qf_position', '', 'g')
+  let qf_position = lh#btw#option#_qf_position()
 
   if a:0 == 1 && a:1 =~ '^\%(cw\%[window]\|copen\)$'
     let open_qf = a:1
@@ -267,18 +270,18 @@ function! lh#btw#build#_show_error(...) abort
   " if we moved to a different window, then it means we had some errors.
   if winnum != winnr()
     " resize the window to just fit in with the number of lines.
-    let nl = lh#btw#build#_get_qf_size()
+    let nl = lh#btw#option#_qf_size()
     let nl = line('$') < nl ? line('$') : nl
     exe nl.' wincmd _'
 
     " Apply syntax hooks
-    let syn = lh#option#get('BTW_qf_syntax', '', 'gb')
+    let syn = lh#btw#option#_qf_syntax()
     if !empty(syn)
       silent exe 'runtime compiler/BTW/syntax/'.syn.'.vim'
     endif
     call lh#btw#filters#_apply_quick_fix_hooks('syntax')
   endif
-  if lh#option#get('BTW_GotoError', 1, 'g') != 1
+  if lh#btw#option#_goto_error()
     call lh#window#gotoid(winid)
   endif
   " When calling :Copen, restore automatic scroll of qf window
@@ -306,7 +309,7 @@ endfunction
 " lh#btw#build#_show_error overload that does an unconditional opening of the
 " qf window
 function! lh#btw#build#_copen_bg(...) abort
-  let qf_position = lh#option#get('BTW_qf_position', '', 'g')
+  let qf_position = lh#btw#option#_qf_position()
 
   if a:0 == 1 && a:1 =~ '^\%(cw\%[window]\|copen\)$'
     let open_qf = a:1
@@ -325,12 +328,12 @@ function! lh#btw#build#_copen_bg(...) abort
   call assert_notequal(winid, lh#window#getid()) " a call to setqflist() should move us to the qfwindow
   call assert_equal(&ft, 'qf')
   " resize the window to have the right number of lines
-  let nl = lh#btw#build#_get_qf_size()
+  let nl = lh#btw#option#_qf_size()
   exe nl.' wincmd _'
   let w:quickfix_title = lh#btw#build_mode(). ' compilation of ' . lh#btw#project_name()
 
   " Apply syntax hooks
-  let syn = lh#option#get('BTW_qf_syntax', '', 'gb')
+  let syn = lh#btw#option#_qf_syntax()
   if !empty(syn)
     silent exe 'runtime compiler/BTW/syntax/'.syn.'.vim'
   endif
@@ -383,19 +386,20 @@ function! lh#btw#build#_execute()
       call lh#common#error_msg( "BTW: unexpected type (".(path.type).") for the command to run")
     endif
   else " normal case: string = command to execute
-    if (SystemDetected() == 'unix') && (path[0]!='/') && (path!~'[a-zA-Z]:[/\\]') && (path!~'cd')
+    if (lh#os#system_detected() == 'unix') && (path[0]!='/') && (path!~'[a-zA-Z]:[/\\]') && (path!~'cd')
       " todo, check executable(split(path)[0])
       let path = './' . path
     endif
-    call s:Verbose(':!'.lh#path#fix(path) . ' ' .lh#option#get('BTW_run_parameters',''))
-    exe ':!'.lh#path#fix(path) . ' ' .lh#option#get('BTW_run_parameters','')
+    let cmd = lh#path#fix(path) . ' ' .lh#btw#option#_run_parameters()
+    call s:Verbose(':!%1', cmd)
+    exe ':!'.cmd
   endif
 endfunction
 
 " # Config         {{{2
 " Function: lh#btw#build#_config()                    {{{3
 function! lh#btw#build#_config() abort
-  let how = lh#option#get('BTW_project_config', {'type': 'modeline'} )
+  let how = lh#btw#option#_project_config()
   if     how.type == 'modeline'
     call lh#btw#build#_add_let_modeline()
   elseif how.type == 'makefile'
@@ -424,7 +428,7 @@ endfunction
 
 " Function: lh#btw#build#_re_config()                 {{{3
 function! lh#btw#build#_re_config() abort
-  let how = lh#option#get('BTW_project_config', {'type': 'modeline'} )
+  let how = lh#btw#option#_project_config()
   if     how.type == 'modeline'
     if exists(':FirstModeLine')
       :FirstModeLine
@@ -436,7 +440,7 @@ function! lh#btw#build#_re_config() abort
     " call lh#buffer#jump(wd.'/'.file)
     return
   elseif how.type == 'ccmake'
-    let wd = lh#btw#_evaluate(how.wd)
+    debug let wd = lh#btw#_evaluate(how.wd)
     if lh#os#OnDOSWindows()
       " - the first ":!start" runs a windows command
       " - "cmd /c" is used to define the second "start" command (see "start /?")
@@ -447,10 +451,11 @@ function! lh#btw#build#_re_config() abort
     else
       " let's suppose no spaces are used
       " let prg = 'xterm -e "cd '.wd.' && cmake ."'
+      call s:Verbose('Reconfigure with: cd %1 && cmake .', wd)
       let prg = 'cd '.wd.' && cmake .'
     endif
-    " let g:prg = prg
     call s:Verbose(":!".prg)
+    " TODO: Asynch execution through &makeprg!
     exe ':!'.prg
   endif
 endfunction
@@ -468,12 +473,18 @@ function! lh#btw#build#_add_let_modeline() abort
     " let make_files = "\nEdit &Makefile"
   endif
 
+  let opts = ''
+  if &ft == 'cpp'
+    let opts .= "\nC&XXFLAGS\nC&PPFLAGS"
+  elseif &ft == 'c'
+    let opts .= "\n&CFLAGS\nC&PPFLAGS"
+  endif
   let which = WHICH('COMBO', 'Which option must be set ?',
         \ "Abort"
         \ . make_files
-        \ . "\n$&CFLAGS\n$C&PPFLAGS\n$C&XXFLAGS"
+        \ . opts
         \ . "\n$L&DFLAGS\n$LD&LIBS"
-        \ . "\n&g:BTW_project\n&b:BTW_project"
+        \ . "\n".lh#marker#txt('bpg').":&BTW_project"
         \ )
   if which =~ 'Abort\|^$'
     " Nothing to do
@@ -483,8 +494,8 @@ function! lh#btw#build#_add_let_modeline() abort
     below split
     let s = search('Vim:\s*let\s\+.*'.which.'\s*=\zs')
     if s <= 0
-      let l = '// Vim: let '.which."='".Marker_Txt(which)."'"
-      silent $put=l
+      let l = '// Vim: let '.which."='".lh#marker#txt('option')."'"
+      call append('$', l)
     endif
   endif
 endfunction
