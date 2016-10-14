@@ -109,7 +109,11 @@ endfunction
 " Function: lh#btw#_evaluate(expr) {{{3
 function! lh#btw#_evaluate(expr)
   if type(a:expr) == type({})
+    if lh#ref#is_bound(a:expr)
+      return a:expr.resolve()
+    else
     let res = lh#function#execute(a:expr)
+    endif
   elseif type(a:expr) == type('')
     let res = a:expr
   else
