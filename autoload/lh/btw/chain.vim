@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  04th Oct 2016
+" Last Update:  14th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -230,6 +230,7 @@ function! lh#btw#chain#_reconstruct() abort
   call s:AdjustEFM(prog, efm)
 
   let dir = lh#btw#option#_compilation_dir()
+  let need_pipefail = 0
   if !empty(dir)
     let makeprg = '(cd '.shellescape(dir).' && ' . makeprg . ')'
   endif
@@ -245,8 +246,14 @@ function! lh#btw#chain#_reconstruct() abort
       " Faire dans BTW-{filter}.vim
       " let prg = substitute(expand('<sfile>:p:h'), ' ', '\\ ', 'g')
       let makeprg .= ' 2>&1 \| '.prg
+      let need_pipefail = 1
     endif
   endfor
+  if &shell =~ 'bash' && need_pipefail
+    " TODO support other UNIX flavors
+    " see http://stackoverflow.com/questions/1221833/bash-pipe-output-and-capture-exit-status
+    let makeprg = 'set -o pipefail ; ' . makeprg
+  endif
 
   let islocal = exists('b:BTW_build_tool') || exists('b:BTW_filters_list')
   let local = islocal ? 'l:' : ''
