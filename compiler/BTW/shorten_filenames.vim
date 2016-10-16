@@ -2,10 +2,10 @@
 " File:         compiler/BTW/shorten_filenames.vim                {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.5.5.
-let s:k_version = 055
+" Version:      0.7.0.
+let s:k_version = 070
 " Created:      22nd Mar 2015
-" Last Update:  22nd Apr 2016
+" Last Update:  16th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       BTW filter to shorter filenames (with conceal feature)
@@ -26,7 +26,7 @@ function! BTW_Shorten_Filenames() abort
   " been decoded and replaced by a bufnr.
   " At best, we can conceal
   syn match qfFileName /^[^|]*/  nextgroup=qfSeparator contains=qfShortenFile
-  let list = lh#dev#option#get('BTW.shorten_names', &ft, [])
+  let list = lh#ft#option#get('BTW.shorten_names', &ft, [])
   for pat in list
     if type(pat)==type([])
       let expr  = pat[0]
