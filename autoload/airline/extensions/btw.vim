@@ -2,10 +2,10 @@
 " File:         autoload/airline/extensions/btw.vim               {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} gmail {dot} com>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.2.
-let s:k_version = '042'
+" Version:      0.7.0
+let s:k_version = '070'
 " Created:      09th Apr 2015
-" Last Update:  10th Apr 2015
+" Last Update:  16th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Airline extension for BuildToolsWrapper
@@ -85,7 +85,7 @@ function! airline#extensions#btw#apply(...) abort
   endif
 
   " Get the section to use according to the current filetype
-  let section = lh#dev#option#get_postfixed('airline#extensions#btw#section', &ft, 'b', 'g')
+  let section = lh#ft#option#get_postfixed('airline#extensions#btw#section', &ft, 'b', 'g')
 
   " Let's say we want to append to section_{section}, first we check if there's
   " already a window-local override, and if not, create it off of the global

@@ -3,9 +3,9 @@
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Licence:      GPLv3
-" Version:	0.4.3
+" Version:	0.7.0
 " Created:      14th Mar 2014
-" Last Update:  13th Apr 2015
+" Last Update:  16th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       BTW filter to replace expressions on the fly
@@ -30,7 +30,7 @@ set cpo&vim
 "------------------------------------------------------------------------
 " Main {{{1
 function! BTW_Substitute_Filenames() abort
-  let list = lh#dev#option#get('BTW.substitute_names', &ft, [])
+  let list = lh#ft#option#get('BTW.substitute_names', &ft, [])
   if !empty(list)
     call s:Transform(list, 1)
   endif
