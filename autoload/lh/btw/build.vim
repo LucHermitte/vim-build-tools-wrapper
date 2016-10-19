@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  12th Oct 2016
+" Last Update:  19th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -131,7 +131,7 @@ function! s:FetchRunInBackground() abort
     let s:run_in_background = globpath(&rtp, 'compiler/BTW/'.rib_progname.'.pl')
   else
     call lh#common#error_msg( "Build Tools Wrapper:\n  This plugin requires either a version of Vim that defines |globpath()|\n"
-          \."  Please upgrade your version of vim\n"
+          \."  Please upgrade your version of vim\n")
     finish
   endif
 

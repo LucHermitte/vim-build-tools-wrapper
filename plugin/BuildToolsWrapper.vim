@@ -262,7 +262,6 @@ let s:k_version = 0700
 "             let g:BTW_adjust_efm_foo = g:BTW_adjust_efm_bar
 "       * if '$*' is already present in the filter_program, then don't append
 "         it.
-"       * Test run_in_background.pl with VimDetect.pm
 "       * Is there a real need for ?:LMake?, ?:LOpen? ? I'm not sure that
 "         commands like :lmake (et al.) are that useful as long as there is no
 "         way  to say that a particular |location-list| is shared between
