@@ -58,9 +58,13 @@ endfunction
 " Function: lh#btw#build_mode([default]) {{{3
 function! lh#btw#build_mode(...) abort
   let default = a:0 == 0 ? '' : a:1
-  if lh#btw#option#_has_project_config()
+  let mode = lh#option#get('BTW.build.mode.current')
+  if lh#option#is_set(mode)
+    return mode
+  elseif lh#btw#option#_has_project_config()
     let project_config = lh#btw#option#_project_config()
     let config = get(project_config, '_', {})
+    unlet mode
     let mode   = get(get(config, 'compilation', {}), 'mode', default)
     return mode
   else
@@ -75,24 +79,34 @@ function! lh#btw#project_name(...) abort
   let project_config = lh#btw#option#_project_config(bufid) " use from_buf version to detect undefined
   " 1- Information set in b:project_config._.name ?
   if lh#option#is_set(project_config)
-    let config = get(project_config, '_', {})
-    let name   = get(config, 'name', '')
-    return name
-  else
-    " 2- Information set in b:BTW_project_name ?
-    let name = lh#btw#option#_project_name(bufid)
-    if lh#option#is_set(name)          | return name | endif
-    " 3- Is this a qf window ?
-    if getbufvar(bufid, '&ft') == 'qf' | return lh#btw#project_name(g:lh#btw#_last_buffer) | endif
-    " 4- Information available in repo name ?
-    "    TODO: we should decode subdirectories
-    let url = lh#vcs#get_url(fnamemodify(bufname(bufid), ':p:h'))
-    if lh#option#is_set(url) && !empty(url)
-      return matchstr(url, '.*/\zs.*')
+    let config = get(project_config, '_', lh#option#unset())
+    if lh#option#is_set(config)
+      " Old API
+      let name   = get(config, 'name', '')
+      return name
     endif
-    " N- Return default!
-    return fnamemodify(bufname(bufid), ':r')
   endif
+  " 2- Information set in b:BTW.project_name ?
+  let name = lh#btw#option#_project_name(bufid)
+  if lh#option#is_set(name)          | return name | endif
+  " 3- Is this a qf window ?
+  if getbufvar(bufid, '&ft') == 'qf' | return lh#btw#project_name(g:lh#btw#_last_buffer) | endif
+  " 4- Information in lh#project
+  if lh#project#is_in_a_project()
+    let name = lh#project#crt().name
+    if !empty(name)
+      return name
+    endif
+  endif
+  " 5- Information available in repo name ?
+  "    TODO: we should decode subdirectories
+  let url = lh#vcs#get_url(fnamemodify(bufname(bufid), ':p:h'))
+  if lh#option#is_set(url) && !empty(url)
+    return matchstr(url, '.*/\zs.*')
+  endif
+  " N- Return default!
+  return fnamemodify(bufname(bufid), ':r')
+endif
 endfunction
 
 "------------------------------------------------------------------------

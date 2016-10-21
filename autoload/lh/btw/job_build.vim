@@ -59,14 +59,6 @@ let s:has_qf_properties = has("patch-7.4.2200")
 " ## API functions {{{1
 " Function: lh#btw#job_build#execute(cmd) {{{2
 function! lh#btw#job_build#execute(cmd) abort
-  " if lh#btw#job_build#is_running()
-    " let choice = CONFIRM("A background compilation is under way. Do you want to\n-> ", ["&Wait for the current compilation to finish", "&Stop the current compilation and start a new one"])
-    " if choice == 2
-      " let s:must_replace_comp = a:cmd
-      " call lh#btw#job_build#_stop()
-    " endif
-    " return
-  " endif
   call s:init(a:cmd)
   return
 endfunction
@@ -147,17 +139,18 @@ endif
 
 " Function: s:init(cmd) {{{3
 function! s:init(cmd) abort
-  let s:cmd = a:cmd
-  let mode = lh#btw#build_mode()
+  let s:cmd    = a:cmd
+  let mode     = lh#btw#build_mode()
+  let prj_name = lh#btw#project_name()
   let job =
-        \ { 'txt'            : 'Build '.lh#btw#project_name() . (empty(mode) ? '' : ' ('.mode.')')
+        \ { 'txt'            : 'Build '.prj_name . (empty(mode) ? '' : ' ('.mode.')')
         \ , 'cmd'            : a:cmd
         \ , 'close_cb'       : function('s:closeCB')
         \ , 'callback'       : function('s:callbackCB')
         \ , 'start_fail_cb'  : function('s:start_fail_cb')
         \ , 'before_start_cb': function('s:before_start_cb')
         \ , 'build_mode'     : mode
-        \ , 'project_name'   : lh#btw#project_name()
+        \ , 'project_name'   : prj_name
         \ }
   call lh#async#queue(job)
   " Cannot return anything yet

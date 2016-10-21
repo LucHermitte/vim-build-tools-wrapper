@@ -117,7 +117,18 @@ endif
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
 " # s:Hook() dict {{{2
+" TODO: we should open every buffer when all the variables that we are
+" manipulating are p:variables.
 function! s:Hook() dict abort
+  " Two cases:
+  " 1- The project is under a lhvl-project -> no need to loop
+  if lh#option#get('BTW.is_using_project', 0)
+    call s:Update2(self)
+    " TODO: check whether we need to set _previous key in all related buffers
+    return
+  endif
+
+  " 2- The project isn't
   " First check whether the data has already been updated for the buffer
   " considered
   let bid = bufnr('%')
@@ -139,7 +150,12 @@ function! s:Hook() dict abort
     " disable syntax highlighting
     " =>
     " We delay the settings of b:variables for not loaded buffers.
-    for b in lh#buffer#list('bufloaded')
+    if lh#project#is_in_a_project()
+      let buffer_list = lh#project#crt().buffers
+    else
+      let buffer_list = lh#buffer#list('bufloaded')
+    endif
+    for b in buffer_list
       exe 'b '.b
       call s:Update(self)
     endfor
@@ -154,7 +170,8 @@ endfunction
 function! s:Update(dict) abort
   try
     let p = expand('%:p')
-    if !empty(p) && lh#path#is_in(p, a:dict._root)
+    let must_update = !empty(p) && lh#path#is_in(p, a:dict._root)
+    if must_update
       if s:verbose
         debug call a:dict.do_update()
       else
@@ -166,6 +183,29 @@ function! s:Update(dict) abort
   catch /.*/
     let g:exception_data = a:dict
     echoerr "Buffer ".bufnr('%').": Cannot update project option ".string(a:dict).': '.v:exception.' at '.v:throwpoint
+  endtry
+endfunction
+
+" # s:Update2(dict) {{{2
+function! s:Update2(dict) abort
+  try
+    let p = expand('%:p')
+    let must_update = !empty(p) && lh#path#is_in(p, a:dict._root)
+    if must_update
+      if s:verbose
+        debug call a:dict.do_update()
+      else
+        call a:dict.do_update()
+      endif
+    endif
+  catch /.*/
+    let g:exception_data = a:dict
+    let g:exception_msg = v:exception
+    let g:exception_throwpoint = v:throwpoint
+    " echoerr "Buffer ".bufnr('%').": Cannot update project option ".lh#object#to_string(a:dict).': '.v:exception.' at '.v:throwpoint
+    echo "Buffer ".bufnr('%').": Cannot update project option ".lh#object#to_string(a:dict)
+    echo "while:\n".join(map(lh#exception#callstack(v:throwpoint), '" - ". v:val.script .":". v:val.pos .":". v:val.fname'), "\n")
+    throw 'because: '.v:exception
   endtry
 endfunction
 

@@ -86,14 +86,19 @@ endfunction
 "                       // where build directories are stored. Meant to be used with `auto_detect_compil_modes`.
 "     - _build          // Internal, points to the compilation dir used
 "                       // to set b:BTW_compilation_dir
+"                       TODO: merge into p:BTW.compilation_dir
 "     - _clic           // Subpath where clang indexer DB is stored from _build
 "                       // defaults to ".clic/index.bd"
+"                       TODO: move to paths._clic
 "     - clic()          // Returns _build + _clic (by default)
+"                       TODO: move to paths.clic()
 "   - build
 "     - Debug
 "     - Release
+"                       TODO: move to build.mode.list
 "   - compilation (optional)
 "     - mode            'Debug' from ['Debug', 'Release'] " matches the subdirs from build/
+"                       TODO: move to build.mode.current
 "   - tests (all optional)
 "     - verbosity       ''   from ['', '-V', '-VV']
 "     - checking_memory 'no' from ['no', 'yes']
@@ -103,6 +108,7 @@ endfunction
 if !exists('s:config')
   let s:config = {}
 endif
+" @deprecated, use lh#btw#cmake#define_options
 function! lh#btw#cmake#def_options(config, options) abort
   let s:config[a:config._project] = a:config " in case it is required to access other config stuff
   " Set default values
@@ -135,18 +141,53 @@ function! lh#btw#cmake#def_options(config, options) abort
   endfor
 endfunction
 
+" Function: lh#btw#cmake#define_options(options) {{{2
+" @since v0.8.0, deprecate lh#btw#cmake#def_options
+" This time, we use p:variables!
+function! lh#btw#cmake#define_options(options) abort
+  if !lh#project#is_in_a_project()
+    throw "lh#btw#cmake#define_options() cannot be used outside projects!"
+  endif
+  " Set default values
+  if 0
+    " TODO: don't do it if modes autodetection is required
+    call lh#let#if_undef('p:BTW.build.mode.current',      'Release')
+  endif
+  call lh#let#to('p:BTW.is_using_project', 1)
+  call lh#let#if_undef('p:BTW.paths._clic',           '.clic/index.db')
+  call lh#let#if_undef('p:BTW.paths.clic',            function(s:getSNR('GetClic')))
+  call lh#let#if_undef('p:BTW.tests.verbosity',       '')
+  call lh#let#if_undef('p:BTW.tests.checking_memory', 'no')
+  call lh#let#if_undef('p:BTW.tests.test_regex',      '')
+  call lh#let#if_undef('p:BTW.tests.active_list',     [])
+
+  " Add all selected options to menu
+  for option in a:options
+    " save the menu in order to make hooks and other stuff accessible
+    let menu_def = lh#let#if_undef('p:BTW.'.option, {})
+    let menu_def.menu = copy(lh#option#get('menu'))
+    let menu_def.project = lh#project#crt()
+
+    " execute the action to initialize everything
+    call lh#btw#cmake#{option}(menu_def)
+  endfor
+endfunction
+
 " Function: lh#btw#cmake#auto_detect_compil_modes(menu_def) {{{2
 " This function will automaticall fill _config.build dict, AND execute
 " def_toggable_compil_mode
-function! lh#btw#cmake#auto_detect_compil_modes(menu_def) abort
-  let a:menu_def.project = function(s:getSNR('project'))
+function! lh#btw#cmake#auto_detect_compil_modes(...) abort
+  let menu_def = a:1
+  let menu_def.project = function(s:getSNR('project'))
+  let project = menu_def.project()
+  let paths = project.paths
   " It may be a list of directories actually...
   " but relative to `project`
-  let build_root = get(a:menu_def.project().paths, 'build_root_dir', lh#option#unset())
+  let build_root = get(paths, 'build_root_dir', lh#option#unset())
   if lh#option#is_unset(build_root)
-    throw "Please set `g:".a:menu_def._project.".path.build_root_dir` in order to autodetect compilation modes"
+    throw "Please set `g:".menu_def._project.".paths.build_root_dir` in order to autodetect compilation modes"
   endif
-  let project_root = a:menu_def.project().paths.project
+  let project_root = project.paths.project
 
   let subs = lh#path#glob_as_list(project_root.'/'.build_root, '*')
   call filter(subs, 'isdirectory(v:val)')
@@ -172,11 +213,59 @@ function! lh#btw#cmake#auto_detect_compil_modes(menu_def) abort
   endif
 
   for sub in subs
-    call lh#let#if_undef('g:'.a:menu_def._project.'.build.'.fnamemodify(sub, ':t'), lh#path#strip_start(sub, project_root))
+    call lh#let#if_undef('g:'.menu_def._project.'.build.'.fnamemodify(sub, ':t'), lh#path#strip_start(sub, project_root))
   endfor
 
   " And finally, prepare everything
-  call lh#btw#cmake#def_toggable_compil_mode(a:menu_def)
+  call call('lh#btw#cmake#def_toggable_compil_mode', a:000)
+endfunction
+
+" Function: lh#btw#cmake#auto_detect_compil_modes2(menu_def) {{{2
+" This function will automaticall fill p:BTW.build.mode.list dict, AND execute
+" def_toggable_compil_mode
+function! lh#btw#cmake#auto_detect_compil_modes2(menu_def) abort
+  " It may be a list of directories actually...
+  " but relative to `project`
+  let build_root = lh#option#get('paths.build_root_dir', lh#option#unset(), 'p')
+  if lh#option#is_unset(build_root)
+    throw "Please set `p:paths.build_root_dir` in order to autodetect compilation modes."
+  endif
+  " Path to which every build diretory is relative
+  let project_root = a:menu_def.project.get('paths.project')
+  if lh#option#is_unset(project_root)
+    throw "Please set `p:paths.project` to project root directory (that contains sources and build directories)"
+  endif
+  let build_root_path = project_root.'/'.build_root
+
+  let subs = lh#path#glob_as_list(build_root_path, '*')
+  call filter(subs, 'isdirectory(v:val)')
+  if empty(subs)
+    throw "No subdirectories found in `".build_root."`: cannot deduce compilations modes"
+  endif
+
+  " Check directories without Makefiles
+  let without_makefile = filter(copy(subs), '! filereadable(v:val."/Makefile")')
+  " Check directories without CMakeLists
+  let without_cmakecache = filter(copy(subs), '! filereadable(v:val."/CMakeCache.txt")')
+
+  let msg = ''
+  if !empty(without_makefile)
+    let msg .= "\nThe following build directories have no Makefile: ".join(without_makefile, ', ')
+  endif
+  if !empty(without_cmakecache)
+    let msg .= "\nThe following build directories have no CMakeCache.txt file ".join(without_cmakecache, ', ')
+  endif
+  if !empty(msg)
+    let msg = "Warning:" . msg
+    call lh#common#echomsg_multilines(msg)
+  endif
+
+  for sub in subs
+    call lh#let#if_undef('p:BTW.build.mode.list.'.fnamemodify(sub, ':t'), lh#path#strip_start(sub, project_root))
+  endfor
+
+  " And finally, prepare everything
+  call lh#btw#cmake#def_toggable_compil_mode2(a:menu_def)
 endfunction
 
 " Function: lh#btw#cmake#def_toggable_compil_mode(menu_def) {{{2
@@ -212,6 +301,35 @@ function! lh#btw#cmake#def_toggable_compil_mode(menu_def) abort
   call lh#btw#project_options#add_toggle_option(a:menu_def)
 endfunction
 
+" Function: lh#btw#cmake#def_toggable_compil_mode2(menu_def) {{{2
+" {menu_def} shall contain:
+" - menu.priority and menu.name
+" - _project settings
+function! lh#btw#cmake#def_toggable_compil_mode2(menu_def) abort
+  " Automatically set variables for lh#btw#project_options#add_toggle_option,
+  " and lh#menu#def_toggle_item
+  let menu_def = lh#let#if_undef('p:BTW._menu.compil_mode', lh#object#make_top_type({}))
+  let menu_def.values         = keys(lh#option#get('BTW.build.mode.list'))
+  " "variable" is a variable name, hence _project being a string
+  let menu_def.variable       = 'p:BTW.build.mode.current'
+  let menu_def._root          = lh#option#get('paths.sources')
+  if ! has_key(menu_def, 'menu')
+    call extend(menu_def, a:menu_def, 'keep')
+    let menu_def.menu.priority .= '20'
+    let menu_def.menu.name     .= 'M&ode'
+  endif
+  " Default (polymorphic) functions for determining the current project
+  " executable, and the current compilation directory
+  let menu_def.set_project_executable = function(s:getSNR('SetProjectExecutable'))
+  let menu_def.update_compil_dir      = function(s:getSNR('UpdateCompilDir'))
+  function! menu_def.do_update() dict abort
+    call self.update_compil_dir()
+    BTW rebuild
+    call self.set_project_executable()
+  endfunction
+  call lh#btw#project_options#add_toggle_option(menu_def)
+endfunction
+
 " Function: lh#btw#cmake#def_toggable_ctest_verbosity(menu_def) {{{2
 " {menu_def} shall contain:
 " - menu.priority and menu.name
@@ -229,7 +347,7 @@ function! lh#btw#cmake#def_toggable_ctest_verbosity(menu_def) abort
   if !exists(actual_variable_name)
     let a:menu_def.idx_crt_value = 0
   endif
-  let a:menu_def._root         = a:menu_def.project().paths.trunk
+  " let a:menu_def._root         = a:menu_def.project().paths.trunk
   let a:menu_def.menu.priority .= '30.10'
   let a:menu_def.menu.name     .= 'C&Test.&Verbosity'
   " Default (polymorphic) functions for determining the current project
@@ -241,6 +359,35 @@ function! lh#btw#cmake#def_toggable_ctest_verbosity(menu_def) abort
     call self.set_ctest_argument()
   endfunction
   call lh#btw#project_options#add_toggle_option(a:menu_def)
+endfunction
+
+" Function: lh#btw#cmake#def_toggable_ctest_verbosity2(menu_def) {{{2
+" {menu_def} shall contain:
+" - menu.priority and menu.name
+" - _project settings
+function! lh#btw#cmake#def_toggable_ctest_verbosity2(menu_def) abort
+  " Automatically set variables for lh#btw#project_options#add_toggle_option,
+  " and lh#menu#def_toggle_item
+  let menu_def = lh#let#if_undef('p:BTW._menu.ctest.verbosity', lh#object#make_top_type({}))
+
+  let menu_def.values        = ['', '-V', '-VV']
+  " "variable" is a variable name, hence _project being a string
+  let menu_def.variable      = 'p:BTW.tests.verbosity'
+  let menu_def._root         = lh#option#get('paths.sources')
+  if ! has_key(menu_def, 'menu')
+    call extend(menu_def, a:menu_def, 'keep')
+    let menu_def.menu.priority .= '30.10'
+    let menu_def.menu.name     .= 'C&Test.&Verbosity'
+  endif
+  " Default (polymorphic) functions for determining the current project
+  " executable, and the current compilation directory
+  if !has_key(menu_def, 'set_ctest_argument')
+    let menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument2'))
+  endif
+  function! menu_def.do_update() dict abort
+    call self.set_ctest_argument()
+  endfunction
+  call lh#btw#project_options#add_toggle_option(menu_def)
 endfunction
 
 " Function: lh#btw#cmake#def_ctest_targets(menu_def) {{{2
@@ -270,6 +417,35 @@ function! lh#btw#cmake#def_ctest_targets(menu_def) abort
   call lh#btw#project_options#add_string_option(a:menu_def)
 endfunction
 
+" Function: lh#btw#cmake#def_ctest_targets2(menu_def) {{{2
+" {menu_def} shall contain:
+" - menu.priority and menu.name
+" - _project settings
+function! lh#btw#cmake#def_ctest_targets2(menu_def) abort
+  " Automatically set variables for lh#btw#project_options#add_toggle_option,
+  " and lh#menu#def_toggle_item
+  let menu_def = lh#let#if_undef('p:BTW._menu.ctest.target', lh#object#make_top_type({}))
+  let menu_def.values        = ''
+  " "variable" is a variable name, hence _project being a string
+  " LetIfUndef p:BTW.tests.test_regex = ''
+  let menu_def.variable      = 'p:BTW.tests.test_regex'
+  let menu_def._root         = lh#option#get('paths.sources')
+  if ! has_key(menu_def, 'menu')
+    call extend(menu_def, a:menu_def, 'keep')
+    let menu_def.menu.priority .= '30.20'
+    let menu_def.menu.name     .= 'C&Test.&Target Test(s)'
+  endif
+  " Default (polymorphic) functions for determining the current project
+  " executable, and the current compilation directory
+  if !has_key(menu_def, 'set_ctest_argument')
+    let menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument2'))
+  endif
+  function! menu_def.do_update() dict abort
+    call self.set_ctest_argument()
+  endfunction
+  call lh#btw#project_options#add_string_option(menu_def)
+endfunction
+
 " Function: lh#btw#cmake#def_toggable_ctest_checkmem(menu_def) {{{2
 " {menu_def} shall contain:
 " - menu.priority and menu.name
@@ -296,6 +472,37 @@ function! lh#btw#cmake#def_toggable_ctest_checkmem(menu_def) abort
     call self.set_ctest_argument()
   endfunction
   call lh#btw#project_options#add_toggle_option(a:menu_def)
+endfunction
+
+" Function: lh#btw#cmake#def_toggable_ctest_checkmem2(menu_def) {{{2
+" {menu_def} shall contain:
+" - menu.priority and menu.name
+" - _project settings
+function! lh#btw#cmake#def_toggable_ctest_checkmem2(menu_def) abort
+  " Automatically set variables for lh#btw#project_options#add_toggle_option,
+  " and lh#menu#def_toggle_item
+  let menu_def = lh#let#if_undef('p:BTW._menu.ctest.checkmem', lh#object#make_top_type({}))
+  " let menu_def.idx_crt_value = 0
+  let menu_def.values        = ['no', 'yes']
+  " "variable" is a variable name, hence _project being a string
+  let menu_def.variable      = 'p:BTW.tests.checking_memory'
+  " TODO: This is not just 'p:' & all, but a very specific variable in the
+  " project scope
+  let menu_def._root         = lh#option#get('paths.sources')
+  if ! has_key(menu_def, 'menu')
+    call extend(menu_def, a:menu_def, 'keep')
+    let menu_def.menu.priority .= '30.30'
+    let menu_def.menu.name     .= 'C&Test.Check &Memory'
+  endif
+  " Default (polymorphic) functions for determining the current project
+  " executable, and the current compilation directory
+  if !has_key(menu_def, 'set_ctest_argument')
+    let menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument2'))
+  endif
+  function! menu_def.do_update() dict abort
+    call self.set_ctest_argument()
+  endfunction
+  call lh#btw#project_options#add_toggle_option(menu_def)
 endfunction
 
 " Function: lh#btw#cmake#update_list(menu_def) {{{2
@@ -428,11 +635,24 @@ endfunction
 
 " # s:UpdateCompilDir() dict {{{2
 function! s:UpdateCompilDir() dict
+  call s:Verbose("Updating compil dir in buffer %1 (%2) -- prj: %2",bufnr('%'), bufname('%'), get(lh#project#crt(), 'name', '(none)'))
   " "let self.project().paths = value" is refused by viml interpreter => hence
   " the auxiliary reference
-  let paths = self.project().paths
-  let paths._build = paths.project.'/'.self.project().build[self.project().compilation.mode]
-  call lh#let#to('P:BTW.compilation_dir', paths._build)
+  if has_key(self, 'project') && (type(self.project) == type(function('has')))
+    let paths = self.project().paths
+    let dir = paths.project.'/'.self.project().build[self.project().compilation.mode]
+    let paths._build = dir
+  else
+    let compil_mode = self.project.get('BTW.build.mode.current') " variable
+    call s:Verbose("New compil_mode: %1", compil_mode)
+    call assert_true(lh#option#is_set(compil_mode))
+    let project_dir = self.project.get('paths.project')
+    let compil_subpath = self.project.get('BTW.build.mode.list.'.compil_mode)
+    call s:Verbose("Set compilation dir to %1/%2", project_dir, compil_subpath)
+    let dir = project_dir.'/'.compil_subpath
+    " call lh#let#to('p:paths._build', dir)
+  endif
+  call project.set('p:BTW.compilation_dir', dir)
   " echoerr "Compiling ".expand('%')." in ".lh#btw#option#_compilation_dir()
   if has_key(self, '_update_compil_dir_hook')
     " Can be used to update things like LD_LIBRARY_PATH, ...
@@ -463,6 +683,7 @@ function! s:IndicesListToCTestIArgument(list)
   return res
 endfunction
 
+" # s:SetCTestArgument() dict {{{2
 function! s:SetCTestArgument() dict
   " -R have precedence over arguments to -I ; like with ctest
   LetIfUndef P:BTW.executable.type 'ctest'
@@ -478,6 +699,24 @@ function! s:SetCTestArgument() dict
         \  : ''
   call lh#let#to('P:BTW.executable.rule', rule)
   call s:Verbose('%1: P:BTW.project_executable.rule <- %2', expand('%'), rule)
+endfunction
+
+" # s:SetCTestArgument2() dict {{{2
+function! s:SetCTestArgument2() dict
+  " -R have precedence over arguments to -I ; like with ctest
+  LetIfUndef p:BTW.executable.type 'ctest'
+  let test_regex  = self.project.get('BTW.tests.test_regex')
+  let which       = self.project.get('BTW.tests.active_list')
+  let checkmem    = self.project.get('BTW.tests.checking_memory')
+  " call confirm('regex type: '.type(test_regex) . "\nwhich type: ".type(which), '&Ok', 1)
+  let rule = self.project.get('BTW.tests.verbosity')
+        \ . (checkmem=='yes' ? (' -D ExperimentalMemCheck') : (''))
+  let rule
+        \ .= (! empty(test_regex)) ? (' -R '.test_regex)
+        \  : (! empty(which))      ? s:IndicesListToCTestIArgument(which)
+        \  : ''
+  call project.set('p:BTW.executable.rule', rule)
+  call s:Verbose('%1: p:BTW.executable.rule <- %2', expand('%'), rule)
 endfunction
 
 " Function: lh#btw#cmake#_gen_clang_complete() {{{2
