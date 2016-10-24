@@ -105,14 +105,8 @@ endfunction
 
 "------------------------------------------------------------------------
 " ## Globals            {{{1
-if !exists('s:indices')
-  let s:indices = {}
-endif
-
-if !exists('s:menus')
-  let s:menus = {}
-endif
-
+let s:indices = get(s:, 'indices', {})
+let s:menus   = get(s:, 'menus',   {})
 
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
@@ -221,14 +215,14 @@ endfunction
 " ## Exported functions {{{1
 " Function: lh#btw#project_options#add_toggle_option(menu) {{{2
 function! lh#btw#project_options#add_toggle_option(menu) abort
-  if has_key(s:menus, a:menu.variable)
+  if has_key(s:menus, a:menu.menu.name)
     " need to merge new info (i.e. everything but idx_crt_value)
-    let menu = s:menus[a:menu.variable]
+    let menu = s:menus[a:menu.menu.name]
     let menu.values = a:menu.values
     let menu.menu = a:menu.menu
   else
-    let s:menus[a:menu.variable] = a:menu
-    let menu = s:menus[a:menu.variable]
+    let s:menus[a:menu.menu.name] = a:menu
+    let menu = s:menus[a:menu.menu.name]
     let menu.hook = function(s:getSNR('Hook'))
   endif
   call lh#menu#def_toggle_item(menu)
@@ -238,14 +232,14 @@ endfunction
 
 " Function: lh#btw#project_options#add_string_option(menu) {{{2
 function! lh#btw#project_options#add_string_option(menu) abort
-  if has_key(s:menus, a:menu.variable)
+  if has_key(s:menus, a:menu.menu.name)
     " need to merge new info (i.e. everything but idx_crt_value)
-    let menu = s:menus[a:menu.variable]
+    let menu = s:menus[a:menu.menu.name]
     let menu.values = a:menu.values
     let menu.menu = a:menu.menu
   else
-    let s:menus[a:menu.variable] = a:menu
-    let menu = s:menus[a:menu.variable]
+    let s:menus[a:menu.menu.name] = a:menu
+    let menu = s:menus[a:menu.menu.name]
     let menu.hook = function(s:getSNR('Hook'))
   endif
   call lh#menu#def_string_item(menu)

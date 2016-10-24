@@ -308,10 +308,12 @@ endfunction
 function! lh#btw#cmake#def_toggable_compil_mode2(menu_def) abort
   " Automatically set variables for lh#btw#project_options#add_toggle_option,
   " and lh#menu#def_toggle_item
+  call assert_true(has_key(a:menu_def, 'project'))
   let menu_def = lh#let#if_undef('p:BTW._menu.compil_mode', lh#object#make_top_type({}))
   let menu_def.values         = keys(lh#option#get('BTW.build.mode.list'))
   " "variable" is a variable name, hence _project being a string
-  let menu_def.variable       = 'p:BTW.build.mode.current'
+  let menu_def.variable       = lh#ref#bind(a:menu_def.project.variables, 'BTW.build.mode.current')
+        \.print_with_fmt('p('.(a:menu_def.project.name).'):%{1.key}')
   let menu_def._root          = lh#option#get('paths.sources')
   if ! has_key(menu_def, 'menu')
     call extend(menu_def, a:menu_def, 'keep')
@@ -372,7 +374,7 @@ function! lh#btw#cmake#def_toggable_ctest_verbosity2(menu_def) abort
 
   let menu_def.values        = ['', '-V', '-VV']
   " "variable" is a variable name, hence _project being a string
-  let menu_def.variable      = 'p:BTW.tests.verbosity'
+  let menu_def.variable      = lh#ref#bind(a:menu_def.project.variables, 'BTW.tests.verbosity')
   let menu_def._root         = lh#option#get('paths.sources')
   if ! has_key(menu_def, 'menu')
     call extend(menu_def, a:menu_def, 'keep')
@@ -428,7 +430,7 @@ function! lh#btw#cmake#def_ctest_targets2(menu_def) abort
   let menu_def.values        = ''
   " "variable" is a variable name, hence _project being a string
   " LetIfUndef p:BTW.tests.test_regex = ''
-  let menu_def.variable      = 'p:BTW.tests.test_regex'
+  let menu_def.variable      = lh#ref#bind(a:menu_def.project.variables, 'BTW.tests.test_regex')
   let menu_def._root         = lh#option#get('paths.sources')
   if ! has_key(menu_def, 'menu')
     call extend(menu_def, a:menu_def, 'keep')
@@ -485,7 +487,7 @@ function! lh#btw#cmake#def_toggable_ctest_checkmem2(menu_def) abort
   " let menu_def.idx_crt_value = 0
   let menu_def.values        = ['no', 'yes']
   " "variable" is a variable name, hence _project being a string
-  let menu_def.variable      = 'p:BTW.tests.checking_memory'
+  let menu_def.variable      = lh#ref#bind(a:menu_def.project.variables, 'BTW.tests.checking_memory')
   " TODO: This is not just 'p:' & all, but a very specific variable in the
   " project scope
   let menu_def._root         = lh#option#get('paths.sources')
@@ -635,7 +637,7 @@ endfunction
 
 " # s:UpdateCompilDir() dict {{{2
 function! s:UpdateCompilDir() dict
-  call s:Verbose("Updating compil dir in buffer %1 (%2) -- prj: %2",bufnr('%'), bufname('%'), get(lh#project#crt(), 'name', '(none)'))
+  call s:Verbose("Updating compil dir in buffer %1 (%2) -- prj: %2",bufnr('%'), bufname('%'), get(self.project, 'name', '(none)'))
   " "let self.project().paths = value" is refused by viml interpreter => hence
   " the auxiliary reference
   if has_key(self, 'project') && (type(self.project) == type(function('has')))
@@ -652,7 +654,7 @@ function! s:UpdateCompilDir() dict
     let dir = project_dir.'/'.compil_subpath
     " call lh#let#to('p:paths._build', dir)
   endif
-  call project.set('p:BTW.compilation_dir', dir)
+  call self.project.set('BTW.compilation_dir', dir)
   " echoerr "Compiling ".expand('%')." in ".lh#btw#option#_compilation_dir()
   if has_key(self, '_update_compil_dir_hook')
     " Can be used to update things like LD_LIBRARY_PATH, ...
@@ -715,7 +717,7 @@ function! s:SetCTestArgument2() dict
         \ .= (! empty(test_regex)) ? (' -R '.test_regex)
         \  : (! empty(which))      ? s:IndicesListToCTestIArgument(which)
         \  : ''
-  call project.set('p:BTW.executable.rule', rule)
+  call self.project.set('BTW.executable.rule', rule)
   call s:Verbose('%1: p:BTW.executable.rule <- %2', expand('%'), rule)
 endfunction
 
