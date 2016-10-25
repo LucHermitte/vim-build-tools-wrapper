@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  10th Aug 2016
+" Last Update:  25th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Centralize BTW option retrieval
@@ -82,6 +82,12 @@ function! s:get_from_buf(bufid, name, default, ...) abort " {{{3
   let res = call('lh#option#get_from_buf', [a:bufid, 'BTW.'.a:name, lh#option#unset()] + a:000)
   if lh#option#is_set(res) | return res | endif
   return call('lh#option#get_from_buf', [a:bufid, 'BTW_'.a:name, a:default] + a:000)
+endfunction
+
+function! s:get_explicit_names_from_buf(bufid, new_name, old_name, default, ...) abort " {{{3
+  let res = call('lh#option#get_from_buf', [a:bufid, 'BTW.'.a:new_name, lh#option#unset()] + a:000)
+  if lh#option#is_set(res) | return res | endif
+  return call('lh#option#get_from_buf', [a:bufid, 'BTW_'.a:old_name, a:default] + a:000)
 endfunction
 
 " Function: lh#btw#option#_check_deprecated_options() {{{3
@@ -199,6 +205,68 @@ function! lh#btw#option#_compilation_dir(...) abort
   return a:0 > 0
         \ ? s:get_from_buf(a:1, 'compilation_dir', '.')
         \ : s:get('compilation_dir', '.')
+endfunction
+
+" # Filter        options {{{2
+" Function: lh#btw#option#_build_tool([bufid]) {{{3
+function! lh#btw#option#_build_tool(...) abort
+  return a:0 > 0
+        \ ? s:get_from_buf(a:1, 'build_tool', 'make')
+        \ : s:get('build_tool', 'make')
+endfunction
+
+" Function: lh#btw#option#_filter_program(prog, ...) {{{3
+function! lh#btw#option#_filter_program(prog, ...) abort
+  let Prog = a:0 > 0
+        \ ? s:get_explicit_names_from_buf(a:1, '_filter.program.'.a:prog, 'filter_program_'.a:prog, a:prog)
+        \ : s:get_explicit_names('_filter.program.'.a:prog, 'filter_program_'.a:prog, a:prog)
+  return Prog
+endfunction
+
+" Function: lh#btw#option#_filter_program_empty_default(prog, ...) {{{3
+function! lh#btw#option#_filter_program_empty_default(prog, ...) abort
+  let Prog = a:0 > 0
+        \ ? s:get_explicit_names_from_buf_empty_default(a:1, '_filter.program.'.a:prog, 'filter_program_'.a:prog, '')
+        \ : s:get_explicit_names('_filter.program.'.a:prog, 'filter_program_'.a:prog, '')
+  return Prog
+endfunction
+
+" Function: lh#btw#option#efm(filter) {{{3
+" Used to be: `(bpg):BTW_adjust_efm_{filter}`
+" Becomes   : `(bpg):BTW._filter.efm.use.{filter}`
+" Usually a global option, but more local ones are to be expected
+function! lh#btw#option#efm(filter) abort
+  let res = s:get_explicit_names(
+        \ '_filter.efm.use.'.a:filter,
+        \ 'adjust_efm_'.a:filter,
+        \ ''
+        \ )
+  return res
+endfunction
+
+" Function: lh#btw#option#ignore_efm(filter) {{{3
+" Used to be: `(bpg):BTW_ignore_efm_{filter}`
+" Becomes   : `(bpg):BTW._filter.efm.ignore.{filter}`
+" Usually a global option, but more local ones are to be expected
+function! lh#btw#option#ignore_efm(filter) abort
+  let res = s:get_explicit_names(
+        \ '_filter.efm.ignore.'.a:filter,
+        \ 'ignore_efm_'.a:filter,
+        \ ''
+        \ )
+  return res
+endfunction
+
+" Function: lh#btw#option#_best_place_to_write(varname) {{{3
+function! lh#btw#option#_best_place_to_write(varname) abort
+  if lh#project#is_in_a_project()
+    return 'p:BTW.'.a:varname
+  elseif exists('b:BTW._filter')
+    " We should really avoid this situation w/ p:variables
+    return 'b:BTW.'.a:varname
+  else
+    return 'g:BTW.'.a:varname
+  endif
 endfunction
 
 " }}}1

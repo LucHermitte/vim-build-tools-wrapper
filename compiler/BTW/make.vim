@@ -5,16 +5,16 @@
 " URL: http://hermitte.free.fr/vim/ressources/vimfiles/compiler/BTW/make.vim
 " Version:	0.0.1
 " Created:	01st Dec 2005
-" Last Update:	01st Dec 2005
+" Last Update:	25th Oct 2016
 "------------------------------------------------------------------------
 " Description:	Make filter for Build-Tools-Wrapper -- a Vim plugin
-" 
+"
 "------------------------------------------------------------------------
 " Rationale:
 " - Better 'errorformat'
 "
 "------------------------------------------------------------------------
-" Installation:	
+" Installation:
 "      -2- Install Perl
 "      -1- Install GCC, if not
 "	0- Install Build-Tools-Wrapper.
@@ -29,42 +29,29 @@
 " }}}1
 "=============================================================================
 
-
-"=============================================================================
-" Avoid local reinclusion {{{1
-if exists("b:loaded_make_vim") 
-      \ && !exists('g:force_reload_make_vim')
-  finish 
-endif
-let b:loaded_make_vim = 1
-let s:cpo_save=&cpo
-set cpo&vim
-" Avoid local reinclusion }}}1
-"------------------------------------------------------------------------
-"
 "=============================================================================
 " Avoid global reinclusion {{{1
-if !exists("g:loaded_make_vim") 
+if !exists("g:loaded_make_vim")
       \ || exists('g:force_reload_make_vim')
   let g:loaded_make_vim = 1
+let g:loaded_make_vim = 1
+let s:cpo_save=&cpo
+set cpo&vim
 " Avoid global reinclusion }}}1
 "------------------------------------------------------------------------
 " Functions {{{1
 
 " c- default value for 'efm'           {{{2
-function! s:Reset_efm()
-  if &efm !~ '%D[^,]*Entering directory'
-    let g:BTW_adjust_efm_make =
-          \ 'default efm'
-          \ . ',' .
-          \ "%DEntering directory '%f',%XLeaving directory" 
-  endif
-endfunction
-
-call s:Reset_efm()
+if &efm !~ '%D[^,]*Entering directory'
+  call lh#let#to('p:BTW._filter.efm.use.make',
+        \ 'default efm'
+        \ . ',' .
+        \ "%DEntering directory '%f',%XLeaving directory"
+        \ )
 endif
 
 " Functions }}}1
+endif
 "------------------------------------------------------------------------
 let &cpo=s:cpo_save
 "=============================================================================

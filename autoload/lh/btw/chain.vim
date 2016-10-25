@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  14th Oct 2016
+" Last Update:  25th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -48,102 +48,74 @@ endfunction
 
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
+let s:filter_list_varname = 'BTW._filter.list'
 
 " # Filter list management {{{2
-" lh#btw#chain#_filters_list():                  Helper {{{3
-function! lh#btw#chain#_filters_list() abort
-  return lh#option#get('BTW_filters_list', [])
-
-  " problem: lh#option#get this will ignore empty variables => custom function
-  " (I suspect I wrote the previous comment before I wrote
-  " lh#option#get_non_empty())
-  if     exists('b:BTW_filters_list') | return b:BTW_filters_list
-  elseif exists('g:BTW_filters_list') | return g:BTW_filters_list
-  else                                | return []
-  endif
+" lh#btw#chain#_filters_list(scope):             Helper {{{3
+function! lh#btw#chain#_filters_list(scope) abort
+  return lh#option#get(s:filter_list_varname, [], a:scope)
 endfunction
 
 " AddFilter(scope,filter):                       Exposed/public feature {{{3
+" @pre a:scope =~ '[pg]'
+" but, we may not be within a project context
 function! s:AddFilter(scope, filter) abort
-  let var = a:scope . ':BTW_filters_list'
-  if     !exists(var) || empty({var})
-    let {var} = [a:filter]
-  elseif ! s:HasFilter(a:filter, var)
-    let {var} += [a:filter]
+  if a:scope == 'p'
+    let var = lh#project#_crt_var_name('p:'.s:filter_list_varname)
+  else
+    let var = a:scope . ':'.s:filter_list_varname
+  endif
+  if     !exists(var) || empty(eval(var))
+    call lh#let#to(var, [a:filter])
+  elseif !s:HasFilter(a:filter, var)
+    call lh#let#to(var, eval(var) + [a:filter])
   endif
 endfunction
 
 " RemoveFilter(scope,filter):                    Exposed/public feature {{{3
+" @pre a:scope =~ '[pg]'
+" but, we may not be within a project context (TODO: test this case)
 function! s:RemoveFilter(scope, filter) abort
-  if 'g' == a:scope
-    " Don't try to be smarter than that: we won't remove it from local filter list.
-    if ! s:DoRemoveFilter(a:scope, a:filter)
-      call lh#common#error_msg('BTW: Error no global filter-plugin named "'
-            \ . a:filter . '" to remove')
-    endif
-  elseif ('b' == a:scope)
-    let bnum = bufnr('%')
+  if a:scope != 'p'
+    let var = a:scope . ':'.s:filter_list_varname
+  elseif lh#project#is_in_a_project()
+    let var = lh#project#_crt_var_name('p:'.s:filter_list_varname)
+  else
+    " we need to purge it from every buffer
     let buffers = lh#buffer#list()
     for buffer in buffers
-      let var = getbufvar(buffer, 'BTW_filters_list', [])
-      let idx = match(var, a:filter)
-      if buffer == bnum
-            \ || (idx!=-1 && 1==CONFIRM("Do you want to remove ".string(a:filter)." from ".bufname(buffer)." filter list?", "&Yes\n&No", 1))
-        if -1 == idx
-          call lh#common#error_msg('BTW: Error no global filter-plugin named "'
-                \ . a:filter . '" to remove')
-        else
-          call remove(var, idx)
-          " No need to call setbufvar as getbufvar returns a reference
-        endif
+      let filter_list = getbufvar(buffer, s:filter_list_varname, [])
+      let idx = match(filter_list, a:filter)
+      if -1 != idx
+        call remove(filter_list, idx)
+        " No need to call setbufvar as getbufvar returns a reference
       endif
     endfor
-  endif
-  return
-
-  " Old code that was trying to be too smart
-  let var = a:scope . ':BTW_filters_list'
-
-  if 'g' == a:scope
-    " If global scope: remove it for every buffer
-    let bnum = bufnr('%')
-    exe 'bufdo call s:DoRemoveFilter("b", "'.a:filter.'")'
-    " exe 'bufdo BTW removelocal '.a:filter
-    exe ':buffer '.bnum
-  elseif ('b' == a:scope) && !exists(var)
-        \ && s:HasFilter(a:filter, var)
-        " \ && (match(lh#btw#chain#_filters_list(),a:filter) >= 0)
-    " Defines a local set of filter-plugins from previous the global list
-    let b:BTW_filters_list = g:BTW_filters_list
-    " finally: call DoRemove
-  else
-    call lh#common#error_msg('BTW: Error no such filter-plugin to remove "'
-          \ . a:filter . '"')
-    " s:DoRemove(): kind of "big" no-op
+    return
   endif
 
-  " Do remove it for this scope
-  call s:DoRemoveFilter(a:scope, a:filter)
-endfunction
-
-function! s:DoRemoveFilter(scope,filter) abort
-  let var = a:scope . ':BTW_filters_list'
+  " Don't try to be smarter than that: we won't remove it from local filter list.
   if exists(var)
-    let idx = match({var}, a:filter)
+    let list = eval(var)
+    let idx = match(list, a:filter)
     if -1 != idx
-      call remove({var}, idx)
-      return 1
+      call remove(list, idx)
+      return
     endif
   endif
-  return 0
+  call lh#common#error_msg('BTW: Error no '.(a:scope == 'g' ? 'global' : 'project')
+        \ .' filter-plugin named "' . a:filter . '" to remove')
 endfunction
 
 " HasFilterGuessScope(filter):                   {{{3
 function! s:HasFilterGuessScope(filter) abort
-  if     exists('b:BTW_filters_list')
-    return s:HasFilter(a:filter, 'b:BTW_filters_list')
-  elseif exists('g:BTW_filters_list')
-    return s:HasFilter(a:filter, 'g:BTW_filters_list')
+  if     exists('b:'.s:filter_list_varname)
+    " Case when not whithin a project
+    return s:HasFilter(a:filter, 'b:'.s:filter_list_varname)
+  elseif exists(lh#project#crt_bufvar_name().'.variables.'.s:filter_list_varname)
+    return s:HasFilter(a:filter, lh#project#crt_bufvar_name().'.variables.'.s:filter_list_varname)
+  elseif exists('g:'.s:filter_list_varname)
+    return s:HasFilter(a:filter, 'g:'.s:filter_list_varname)
   else
     return 0
   endif
@@ -152,7 +124,11 @@ endfunction
 " HasFilter(filter, var):                        {{{3
 " @pre exists({a:var})
 function! s:HasFilter(filter, var) abort
-  return -1 != match({a:var}, a:filter)
+  if type(a:var) == type('')
+    return -1 != match(eval(a:var), a:filter)
+  else
+    return -1 != match(a:var, a:filter)
+  endif
 endfunction
 
 " lh#btw#chain#_find_filter(filter):             Helper {{{3
@@ -182,12 +158,12 @@ if !exists('g:BTW_BTW_in_use')
     elseif 'setoption'      == a:command | call s:SetOption('g', a:000)
     elseif 'setoptionlocal' == a:command | call s:SetOption('b', a:000)
     elseif 'add'            == a:command | call s:AddFilter('g', a:1)
-    elseif 'addlocal'       == a:command | call s:AddFilter('b', a:1)
-      " if exists('b:BTW_filters_list') " ?????
+    elseif 'addlocal'       == a:command | call s:AddFilter('p', a:1)
+      " if exists('b:'.s:filter_list_varname) " ?????
         " call s:AddFilter('b', a:1)
       " endif
     elseif 'remove'         == a:command | call s:RemoveFilter('g', a:1)
-    elseif 'removelocal'    == a:command | call s:RemoveFilter('b', a:1)
+    elseif 'removelocal'    == a:command | call s:RemoveFilter('p', a:1)
     elseif 'rebuild'        == a:command " wait for lh#btw#chain#_reconstruct()
     elseif 'echo'           == a:command | exe "echo s:".a:1
     elseif 'debug'          == a:command | exe "debug echo s:".a:1
@@ -219,9 +195,13 @@ endif
 " lh#btw#chain#_reconstruct():                   {{{3
 function! lh#btw#chain#_reconstruct() abort
   let efm = {'value': '', 'post':[] }
-  let prog = lh#option#get('BTW_build_tool', 'make')
+  " First filter has a special status:
+  " - if not set then it's make.
+  " - this is where "$*" is injected
+  " - this is where directory is changed
+  let prog = lh#btw#option#_build_tool()
   call s:LoadFilter(prog)
-  let Makeprg = lh#option#get('BTW_filter_program_'.prog, prog, 'bg')
+  let Makeprg = lh#btw#option#_filter_program(prog)
   if type(Makeprg) == type(function('has'))
     let makeprg = Makeprg('$*')
   else
@@ -235,13 +215,14 @@ function! lh#btw#chain#_reconstruct() abort
     let makeprg = '(cd '.shellescape(dir).' && ' . makeprg . ')'
   endif
 
-  let filters_list = lh#btw#chain#_filters_list()
+  let filters_list = lh#btw#chain#_filters_list('pg')
   for filter in filters_list
     call s:LoadFilter(filter)
     " let efm = efm . ',' . lh#option#get('BTW_adjust_efm_'.filter, '', 'g')
     call s:AdjustEFM(filter, efm)
-    let prg = lh#option#get(s:ToVarName('BTW_filter_program_'.filter), '', 'bg')
 
+    " does the filter implies an external script to run
+    let prg = lh#btw#option#_filter_program_empty_default(s:ToVarName(filter))
     if !empty(prg)
       " Faire dans BTW-{filter}.vim
       " let prg = substitute(expand('<sfile>:p:h'), ' ', '\\ ', 'g')
@@ -255,62 +236,65 @@ function! lh#btw#chain#_reconstruct() abort
     let makeprg = 'set -o pipefail ; ' . makeprg
   endif
 
-  let islocal = exists('b:BTW_build_tool') || exists('b:BTW_filters_list')
-  let local = islocal ? 'l:' : ''
-  let set   = islocal ? 'setlocal ' : 'set '
-
-  " Set makeprog
-  exe 'let &'.local.'makeprg = makeprg'
-  " set does not seems to work
-  "   exe set . 'makeprg="'. makeprg . '"'
-  "   exe set . 'makeprg='. escape(makeprg, '\ ')
-
   " Set errorformat ; strip redundant commas
   let v_efm = substitute(efm.value, ',\+', ',', "g")
   let v_efm = matchstr(v_efm, '^,*\zs.*')
   for P in efm.post
     let v_efm = P(v_efm)
   endfor
-  " default used ... by default
-  if strlen(v_efm)
-    " Add the new formats
-    " exe set . 'efm+="'. efm . '"'
-    " exe set . 'efm+='. escape(efm, '\ ')
-    " exe 'let &'.local.'efm = &'.local."efm . ',' . efm"
-    exe 'let &'.local.'efm = v_efm'
+
+  " and finally set makeprg and efm variables in the right scope
+  let islocal = exists('b:BTW_build_tool') || exists('b:BTW') || exists('b:'.s:filter_list_varname)
+  if lh#project#is_in_a_project()
+    let scope = 'p:'
+  elseif islocal
+    let scope = 'l:'
+  else
+    let scope = ''
   endif
-  " set efm&vim                  " Reset to default value
-  " let &efm = &efm . ',' . efm  " Add the new formats
+  call lh#let#to(scope.'&makeprg', '='.makeprg)
+
+  " default used ... by default
+  if !empty(v_efm)
+    " Add the new formats
+    call lh#let#to(scope.'&efm', '='.v_efm)
+  endif
 endfunction
 
 " DefaultEFM():                                  {{{3
 " @return default value of &efm
 function! s:DefaultEFM(wanted_efm) abort
-  " call Dfunc('s:DefaultEFM('.a:wanted_efm.')')
-  let save_efm = &l:efm
-  if a:wanted_efm == 'default efm'
-    setlocal efm&vim
-  else
-    " if exists("current_compiler")
-      silent! unlet b:current_compiler
-      silent! unlet g:current_compiler
-    " endif
-    " exe 'compiler '.a:wanted_efm
-    exe 'runtime compiler/'.a:wanted_efm.'.vim'
-    if strlen(&makeprg) && !exists('g:BTW_filter_program_'.a:wanted_efm) && !exists('b:BTW_filter_program_'.a:wanted_efm)
-      " @todo use the correct scope -> b:/g:
-      let g:BTW_filter_program_{a:wanted_efm} = &makeprg
+  let cleanup = lh#on#exit()
+        \.restore('&efm')
+  try
+    call s:Verbose('wanted_efm: %1', a:wanted_efm)
+    if a:wanted_efm == 'default efm'
+      setlocal efm&vim
+    else
+      if exists("g:current_compiler")
+        unlet g:current_compiler
+      endif
+      " exe 'compiler '.a:wanted_efm
+      exe 'runtime compiler/'.a:wanted_efm.'.vim'
+      " TODO: check why did I update BTW._filter.program in s:DefaultEFM() ?
+      if !empty(&makeprg) && !empty(lh#btw#option#_filter_program_empty_default(a:wanted_efm))
+        " TODO: do we really need to have this option local to a project?
+        " -> It's likelly we can share it with anything.
+        let varname = lh#btw#option#_best_place_to_write('_filter.program.'.a:wanted_efm)
+        call lh#let#to(varname, &makeprg)
+      endif
     endif
-  endif
-  let efm = &l:efm
-  let &l:efm = save_efm
-  " call Dret('s:DefaultEFM '.efm)
-  return efm
+    let efm = &l:efm
+    return efm
+  finally
+    call cleanup.finalize()
+  endtry
 endfunction
 
 " AdjustEFM(filter, efm):                        {{{3
 function! s:AdjustEFM(filter, efm) abort
-  let filter_efm = lh#option#get('BTW_adjust_efm_'.a:filter, '', 'bg')
+  let filter_efm = lh#btw#option#efm(a:filter)
+  " call assert_true(lh#option#is_set(filter_efm))
   if type(filter_efm) == type({})
     let added = filter_efm.value
     if has_key(filter_efm, 'post')
@@ -319,20 +303,19 @@ function! s:AdjustEFM(filter, efm) abort
   else
     let added = filter_efm
   endif
-  " if added =~ "default efm"
   " TODO: use split and join
-    let added = substitute(added, 'default efm',
-          \ escape(s:DefaultEFM('default efm'), '\'), '')
-  " endif
+  let added = substitute(added, 'default efm',
+        \ escape(s:DefaultEFM('default efm'), '\'), '')
   if added =~ 'import:'
+    " limitation: can import only one filter!
     let compiler_plugin_imported = matchstr(added, 'import: \zs[^,]*')
     let added = substitute(added, 'import: \%([^,]\{-}\ze\%(,\|$\)\)',
           \ escape(s:DefaultEFM(compiler_plugin_imported), '\'), '')
   endif
   let a:efm.value =
-        \   lh#option#get('BTW_ignore_efm_'.a:filter, '', 'bg')
+        \   lh#btw#option#ignore_efm(a:filter)
         \ . a:efm.value
-        \ . (strlen(added) ? ','.added : '')
+        \ . (!empty(added) ? ','.added : '')
 endfunction
 
 " ToVarName(filterName):                         {{{3
@@ -343,19 +326,31 @@ endfunction
 
 " LoadFilter(filter):                            {{{3
 function! s:LoadFilter(filter) abort
-  if     0 != strlen(lh#btw#chain#_find_filter(a:filter))
+  " TODO: do we really need to have "_filter.program.*" option local to a project?
+  " -> It's likelly we can share it with anything.
+  if     !empty(lh#btw#chain#_find_filter(a:filter))
     " First nominal case: there is a BTW-a:filter that will be loaded
+    call s:Verbose('Load BTW filter -> runtime! compiler/BTW-'.a:filter.'.vim compiler/BTW_'.a:filter.'.vim compiler/BTW/'.a:filter.'.vim')
     exe  'runtime! compiler/BTW-'.a:filter.'.vim compiler/BTW_'.a:filter.'.vim compiler/BTW/'.a:filter.'.vim'
-    " echo 'runtime! compiler/BTW-'.a:filter.'.vim compiler/BTW_'.a:filter.'.vim compiler/BTW/'.a:filter.'.vim'
-  elseif 0 != strlen(globpath(&rtp, 'compiler/'.a:filter.'.vim'))
+  elseif !empty(globpath(&rtp, 'compiler/'.a:filter.'.vim'))
     " Second case: there is a compiler plugin named {a:filter}.vim
-    let b:BTW_adjust_efm_{a:filter} = 'import: '.a:filter
-  elseif 0 != strlen(globpath(&rtp, 'compiler/BTW/'.a:filter.'.pl'))
+    call s:Verbose("Load compiler plugin %1.vim", a:filter)
+    let varname = lh#btw#option#_best_place_to_write('_filter.efm.use.'.a:filter)
+    call lh#let#to(varname, 'import: '.a:filter)
+    " let b:BTW_adjust_efm_{a:filter} = 'import: '.a:filter
+  elseif !empty(globpath(&rtp, 'compiler/BTW/'.a:filter.'.pl'))
     " Third case: there is a perl script compiler/BTW/{a:filter}.pl
-    let g:BTW_filter_program_{a:filter} = globpath(&rtp, 'compiler/BTW/'.a:filter.'.vim')
+    let path = globpath(&rtp, 'compiler/BTW/'.a:filter.'.vim')
+    call s:Verbose("Use perl script %1", path)
+    let varname = lh#btw#option#_best_place_to_write('_filter.program.'.a:filter)
+    call lh#let#to(varname, path)
+    " let g:BTW_filter_program_{a:filter} = path
   elseif executable(a:filter)
+    " Fourth case: there is a executable with the same name
     let filter = s:ToVarName(a:filter)
-    let g:BTW_filter_program_{filter} = a:filter
+    let varname = lh#btw#option#_best_place_to_write('_filter.program.'.a:filter)
+    call lh#let#to(varname, a:filter)
+    " let g:BTW_filter_program_{filter} = a:filter
   else
     " There is no such a:filter
   endif
@@ -363,17 +358,32 @@ endfunction
 
 " ToolsChain():                                  Helper {{{3
 function! s:ToolsChain() abort
-  return join([lh#option#get('BTW_build_tool', 'make')] + lh#btw#chain#_filters_list(), ' | ')
+  return join([lh#btw#option#_build_tool()] + lh#btw#chain#_filters_list('pg'), ' | ')
 endfunction
 
 " Usage(): {{{3
 function! s:Usage()
   echo "Build Tools Wrapper: USAGE"
+  echo "  Compilation of current lhvl-project"
+  echo "    :BTW setlocal    <filter> -- sets the filter as the main one for compiling current project"
+  echo "    :BTW addlocal    <filter> -- adds filter for current project compilation"
+  echo "    :BTW removelocal <filter> -- removes filter for current project compilation"
+  echo "    :BTW setoptionlocal"
+  echo "  Compilation outside lhvl-project context"
+  echo "    :BTW set         <filter> -- sets the filter as the main one for compiling outside projects"
+  echo "    :BTW add         <filter> -- adds filter for when compiling outside projects"
+  echo "    :BTW remove      <filter> -- removes filter for when compiling outside projects"
+  echo "    :BTW setoption"
+  echo "  Miscelleanous"
+  echo "    :BTW echo  <expr>         -- Prints various informations (current toolchain, current target, executable...)"
+  echo "    :BTW rebuild              -- Reloads filters used"
+  echo "    :BTW new_project          -- Prepare the local_vimrc configuration for a new project using Build Tools Wrapper"
+  echo "    :BTW reloadPlugin         -- Maintenance function"
 endfunction
 
 " # Command completion                   {{{2
 " Constants                                                    {{{3
-let s:commands="set\nsetlocal\nsetoption\nsetoptionlocal\nadd\naddlocal\nremove\nremovelocal\nrebuild\necho\ndebug\nreloadPlugin\nnew_project\n?\nhelp"
+let s:commands="setlocal\nset\nsetoptionlocal\nsetoption\naddlocal\nadd\nremovelocal\nremove\nrebuild\necho\ndebug\nreloadPlugin\nnew_project\n?\nhelp"
 let s:functions="ToolsChain()\nHasFilterGuessScope(\nHasFilter(\nFindFilter("
 let s:functions=s:functions. "\nProjectName()\nTargetRule()\nExecutable()"
 let s:variables="commands\nfunctions\nvariables"
@@ -382,6 +392,8 @@ let s:k_options = ['compilation_dir', 'project_config', 'project_name',
       \ 'run_parameters', 'project_executable', 'project_target', 'project']
 
 " lh#btw#chain#_BTW_complete(ArgLead, CmdLine, CursorPos):      Auto-complete {{{3
+" TODO: detect within a project to reduce commands choices to "setlocal",
+" "addlocal", "removelocal"
 function! lh#btw#chain#_BTW_complete(ArgLead, CmdLine, CursorPos)
   let tmp = substitute(a:CmdLine, '\s*\S*', 'Z', 'g')
   let pos = strlen(tmp)
@@ -395,11 +407,7 @@ function! lh#btw#chain#_BTW_complete(ArgLead, CmdLine, CursorPos)
     if     -1 != match(a:CmdLine, '^BTW\s\+\%(echo\|debug\)')
       return s:functions . "\n" . s:variables
     elseif -1 != match(a:CmdLine, '^BTW\s\+\%(help\|?\)')
-    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(set\|add\)\%(local\)\=\>')
-      " Adds a filter
-      " let files =         globpath(&rtp, 'compiler/BT-*')
-      " let files = files . globpath(&rtp, 'compiler/BT_*')
-      " let files = files . globpath(&rtp, 'compiler/BT/*')
+    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(set\|add\)\%(local\)\=\>') " Adds a filter
       let files = lh#btw#chain#_find_filter('*')
       let files = substitute(files,
             \ '\(^\|\n\).\{-}compiler[\\/]BTW[-_\\/]\(.\{-}\)\.vim\>\ze\%(\n\|$\)',
@@ -407,9 +415,10 @@ function! lh#btw#chain#_BTW_complete(ArgLead, CmdLine, CursorPos)
       return files
     elseif -1 != match(a:CmdLine, '^BTW\s\+\%(setoption\)\%(local\)\=\>')
       return join(s:k_options, "\n")
-    elseif -1 != match(a:CmdLine, '^BTW\s\+remove\%(local\)\=')
-      " Removes a filter
-      return join(lh#btw#chain#_filters_list(), "\n")
+    elseif -1 != match(a:CmdLine, '^BTW\s\+removelocal') " Removes a local filter
+      return join(lh#btw#chain#_filters_list('p'), "\n")
+    elseif -1 != match(a:CmdLine, '^BTW\s\+remove')      " Removes a global filter
+      return join(lh#btw#chain#_filters_list('g'), "\n")
     elseif -1 != match(a:CmdLine, '^BTW\s\+\<new\%[_project]\>')
       return "c\ncpp\ncmake\ndoxygen\nname=\nconfig=\nsrc_dir="
     endif
