@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  25th Oct 2016
+" Last Update:  26th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -156,7 +156,7 @@ if !exists('g:BTW_BTW_in_use')
       endif
     elseif 'setlocal'       == a:command | let b:BTW_build_tool = a:1
     elseif 'setoption'      == a:command | call s:SetOption('g', a:000)
-    elseif 'setoptionlocal' == a:command | call s:SetOption('b', a:000)
+    elseif 'setoptionlocal' == a:command | call s:SetOption('p', a:000)
     elseif 'add'            == a:command | call s:AddFilter('g', a:1)
     elseif 'addlocal'       == a:command | call s:AddFilter('p', a:1)
       " if exists('b:'.s:filter_list_varname) " ?????
@@ -361,7 +361,7 @@ function! s:ToolsChain() abort
   return join([lh#btw#option#_build_tool()] + lh#btw#chain#_filters_list('pg'), ' | ')
 endfunction
 
-" Usage(): {{{3
+" Usage():                                       {{{3
 function! s:Usage()
   echo "Build Tools Wrapper: USAGE"
   echo "  Compilation of current lhvl-project"
@@ -389,7 +389,8 @@ let s:functions=s:functions. "\nProjectName()\nTargetRule()\nExecutable()"
 let s:variables="commands\nfunctions\nvariables"
 let s:k_new_prj = ['c', 'cpp', 'cmake', 'name=', 'config=', 'src_dir=']
 let s:k_options = ['compilation_dir', 'project_config', 'project_name',
-      \ 'run_parameters', 'project_executable', 'project_target', 'project']
+      \ 'run_parameters', 'executable', 'target', 'project',
+      \ 'autoscroll_background_compilation', 'goto_error' ]
 
 " lh#btw#chain#_BTW_complete(ArgLead, CmdLine, CursorPos):      Auto-complete {{{3
 " TODO: detect within a project to reduce commands choices to "setlocal",
@@ -439,21 +440,21 @@ endfunction
 
 " Function: s:SetOption(scope, opts) {{{3
 function! s:SetOption(scope, opts) abort
-  let a_name = 'BTW_'.a:opts[0]
+  let a_name = 'BTW.'.a:opts[0]
   if len(a:opts) > 1
     let value = a:opts[1]
     if a:scope == 'g'
-      let name = 'b:'.a_name
+      let name = lh#project#_crt_var_name('p:'.a_name)
       if exists(name)
         call lh#common#warning_msg("Warning: ".name." is already set to ".{name})
       endif
     endif
     let name = a:scope.':'.a_name
-    let {name} = value
+    call lh#let#to(name, value)
   else " only display the value
     let value = lh#option#get(a_name)
     if lh#option#is_set(value)
-      echo "Option " . a_name . " is set to ".string(value)
+      echo "Option " . a_name . " is set to ".lh#object#to_string(value)
     else
         call lh#common#warning_msg("Warning: ".a_name." is not set.")
     endif

@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  25th Oct 2016
+" Last Update:  26th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Centralize BTW option retrieval
@@ -197,7 +197,7 @@ endfunction
 function! lh#btw#option#_project_name(...) abort
   return a:0 > 0
         \ ? s:get_from_buf(a:1, 'project_name', lh#option#unset())
-        \ : s:get('project_name')
+        \ : s:get('project_name', lh#option#unset())
 endfunction
 
 " Function: lh#btw#option#_compilation_dir([bufid]) {{{3
