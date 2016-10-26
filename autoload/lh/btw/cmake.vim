@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  14th Oct 2016
+" Last Update:  26th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -644,6 +644,7 @@ function! s:UpdateCompilDir() dict
     let paths = self.project().paths
     let dir = paths.project.'/'.self.project().build[self.project().compilation.mode]
     let paths._build = dir
+    call lh#let#to('b:BTW.compilation_dir', dir)
   else
     let compil_mode = self.project.get('BTW.build.mode.current') " variable
     call s:Verbose("New compil_mode: %1", compil_mode)
@@ -653,8 +654,8 @@ function! s:UpdateCompilDir() dict
     call s:Verbose("Set compilation dir to %1/%2", project_dir, compil_subpath)
     let dir = project_dir.'/'.compil_subpath
     " call lh#let#to('p:paths._build', dir)
+    call self.project.set('BTW.compilation_dir', dir)
   endif
-  call self.project.set('BTW.compilation_dir', dir)
   " echoerr "Compiling ".expand('%')." in ".lh#btw#option#_compilation_dir()
   if has_key(self, '_update_compil_dir_hook')
     " Can be used to update things like LD_LIBRARY_PATH, ...
