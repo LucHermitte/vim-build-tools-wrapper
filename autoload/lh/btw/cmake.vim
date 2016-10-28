@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  26th Oct 2016
+" Last Update:  28th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -326,6 +326,7 @@ function! lh#btw#cmake#def_toggable_compil_mode2(menu_def) abort
   let menu_def.update_compil_dir      = function(s:getSNR('UpdateCompilDir'))
   function! menu_def.do_update() dict abort
     call self.update_compil_dir()
+    " TODO: rebuild in a related buffer!
     BTW rebuild
     call self.set_project_executable()
   endfunction

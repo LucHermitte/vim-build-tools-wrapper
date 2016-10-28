@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  26th Oct 2016
+" Last Update:  28th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -149,6 +149,7 @@ let s:sfile = expand('<sfile>:p')
 " lh#btw#chain#_BTW(command [,filter]):          Main function {{{3
 if !exists('g:BTW_BTW_in_use')
   function! lh#btw#chain#_BTW(command, ...) abort
+    call s:Verbose(':BTW %1', [a:command]+a:000)
     " todo: check a:0 > 1
     if     'set'      == a:command | let g:BTW_build_tool = a:1
       if exists('b:BTW_build_tool')
@@ -193,6 +194,7 @@ if !exists('g:BTW_BTW_in_use')
 endif
 
 " lh#btw#chain#_reconstruct():                   {{{3
+"TODO: Take a project into parameter!!!
 function! lh#btw#chain#_reconstruct() abort
   let efm = {'value': '', 'post':[] }
   " First filter has a special status:
@@ -210,8 +212,9 @@ function! lh#btw#chain#_reconstruct() abort
   call s:AdjustEFM(prog, efm)
 
   let dir = lh#btw#option#_compilation_dir()
+  call s:Verbose('Compiling with %1 in %2 (bid: %3 - %4)', makeprg, dir, bufnr('%'), bufname('%'))
   let need_pipefail = 0
-  if !empty(dir)
+  if !empty(dir) && lh#option#is_set(dir)
     let makeprg = '(cd '.shellescape(dir).' && ' . makeprg . ')'
   endif
 
