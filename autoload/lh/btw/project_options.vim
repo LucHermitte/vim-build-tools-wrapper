@@ -6,7 +6,7 @@
 " Version:	0.7.0
 let s:k_version = 0700
 " Created:      06th Sep 2012
-" Last Update:  14th Oct 2016
+" Last Update:  28th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       API to help define project options
@@ -116,7 +116,9 @@ let s:menus   = get(s:, 'menus',   {})
 function! s:Hook() dict abort
   " Two cases:
   " 1- The project is under a lhvl-project -> no need to loop
-  if lh#option#get('BTW.is_using_project', 0)
+  " We are not necesarily in a buffer related to the hook executed.
+  if has_key(self, 'project') && lh#project#is_a_project(self.project)
+        \ && self.project.get('BTW.is_using_project', 0)
     call s:Update2(self)
     " TODO: check whether we need to set _previous key in all related buffers
     return
@@ -183,15 +185,15 @@ endfunction
 " # s:Update2(dict) {{{2
 function! s:Update2(dict) abort
   try
-    let p = expand('%:p')
-    let must_update = !empty(p) && lh#path#is_in(p, a:dict._root)
-    if must_update
+    " let p = expand('%:p')
+    " let must_update = !empty(p) && lh#path#is_in(p, a:dict._root)
+    " if must_update
       if s:verbose
         debug call a:dict.do_update()
       else
         call a:dict.do_update()
       endif
-    endif
+    " endif
   catch /.*/
     let g:exception_data = a:dict
     let g:exception_msg = v:exception
