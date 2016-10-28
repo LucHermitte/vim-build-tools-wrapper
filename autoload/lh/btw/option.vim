@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  26th Oct 2016
+" Last Update:  28th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       Centralize BTW option retrieval
@@ -96,7 +96,7 @@ let s:has_been_notified = 0
 function! lh#btw#option#_check_deprecated_options() abort
   let g = filter(copy(g:), 'v:key =~ "^BTW_"')
   let b = filter(copy(b:), 'v:key =~ "^BTW_"')
-  if !s:has_been_notified && (empty(g) || empty(b))
+  if !s:has_been_notified && (!empty(g) || !empty(b))
     let s:has_been_notified = 1
     call lh#common#error_msg("It seems you're using old BuildToolsWrappers options. They have been renamed. See :h BTW-deprecated-options")
   endif
