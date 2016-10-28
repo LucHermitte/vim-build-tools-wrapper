@@ -1,11 +1,10 @@
 "=============================================================================
 " File:		compiler/BTW/STLFilt.vim                                           {{{1
 " Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
-"		<URL:http://code.google.com/p/lh-vim/>
-" URL: http://hermitte.free.fr/vim/ressources/vimfiles/compiler/BTW/cygwin.vim
-" Version:	0.1
+"		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
+" Version:	0.7.0
 " Created:	01st Jun 2005
-" Last Update:	01st Jun 2005
+" Last Update:	28th Oct 2016
 "------------------------------------------------------------------------
 " Description:	STLFilt Filter for Build-Tools-Wrapper -- a Vim plugin.
 "
@@ -40,7 +39,7 @@ set cpo&vim
 " let g:BTW_filter_program_STLFilt = 'dmSTLFilt.pl -width:0'
 " let g:BTW_filter_program_STLFilt = 'dmSTLFilt.pl -width:0 -path:l'
 let s:path = findfile('gSTLFilt.pl', substitute($PATH, ':', ',', 'g')) " *nix only
-let g:BTW_filter_program_STLFilt = 'perl '.s:path.' -width:0 -path:l'
+call lh#let#to('g:BTW.filter.program.STLFilt', 'perl '.s:path.' -width:0 -path:l')
 
 " Functions }}}1
 "------------------------------------------------------------------------
