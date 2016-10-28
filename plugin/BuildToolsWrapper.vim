@@ -6,7 +6,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      28th Nov 2004
-" Last Update:  12th Oct 2016
+" Last Update:  28th Oct 2016
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -335,7 +335,10 @@ function! s:MenuMakeBG()
     let C  = value ? 'X' : "\\ "
     let UC = value ? "\\ " : 'X'
     silent! exe "anoremenu 50.100 &Project.&[" . C . escape("] Make in &background", '\ ') . " :ToggleMakeBG<cr>"
-    silent! exe "aunmenu Project.[" . UC . escape ("] Make in background", ' ')
+    if exists('s:old_bg')
+      silent! exe "aunmenu Project.[" . UC . escape ("] Make in background", ' ')
+    endif
+    let s:old_bg = value
   endif
 endfunction
 
@@ -346,7 +349,10 @@ function! s:MenuAutoScrollBG()
     let C  = value ? 'X' : "\\ "
     let UC = value ? "\\ " : 'X'
     silent! exe "anoremenu 50.100 &Project.&[" . C . escape("] AutoScroll in &background", '\ ') . " :ToggleAutoScrollBG<cr>"
-    silent! exe "aunmenu Project.[" . UC . escape ("] AutoScroll in background", ' ')
+    if exists('s:old_ASBG')
+      silent! exe "aunmenu Project.[" . UC . escape ("] AutoScroll in background", ' ')
+    endif
+    let s:old_ASBG = value
   endif
 endfunction
 
