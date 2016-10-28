@@ -219,16 +219,16 @@ endfunction
 " Function: lh#btw#option#_filter_program(prog, ...) {{{3
 function! lh#btw#option#_filter_program(prog, ...) abort
   let Prog = a:0 > 0
-        \ ? s:get_explicit_names_from_buf(a:1, '_filter.program.'.a:prog, 'filter_program_'.a:prog, a:prog)
-        \ : s:get_explicit_names('_filter.program.'.a:prog, 'filter_program_'.a:prog, a:prog)
+        \ ? s:get_explicit_names_from_buf(a:1, 'filter.program.'.a:prog, 'filter_program_'.a:prog, a:prog)
+        \ : s:get_explicit_names('filter.program.'.a:prog, 'filter_program_'.a:prog, a:prog)
   return Prog
 endfunction
 
 " Function: lh#btw#option#_filter_program_empty_default(prog, ...) {{{3
 function! lh#btw#option#_filter_program_empty_default(prog, ...) abort
   let Prog = a:0 > 0
-        \ ? s:get_explicit_names_from_buf_empty_default(a:1, '_filter.program.'.a:prog, 'filter_program_'.a:prog, '')
-        \ : s:get_explicit_names('_filter.program.'.a:prog, 'filter_program_'.a:prog, '')
+        \ ? s:get_explicit_names_from_buf_empty_default(a:1, 'filter.program.'.a:prog, 'filter_program_'.a:prog, '')
+        \ : s:get_explicit_names('filter.program.'.a:prog, 'filter_program_'.a:prog, '')
   return Prog
 endfunction
 
