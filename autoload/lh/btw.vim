@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 070
 " Created:      14th Mar 2014
-" Last Update:  26th Aug 2016
+" Last Update:  28th Oct 2016
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -19,6 +19,8 @@ let s:k_version = 070
 let s:cpo_save=&cpo
 set cpo&vim
 let s:has_qf_properties = has("patch-7.4.2200")
+let s:k_unset = lh#option#unset()
+
 "------------------------------------------------------------------------
 " ## Misc Functions     {{{1
 " # Version {{{2
@@ -79,7 +81,7 @@ function! lh#btw#project_name(...) abort
   let project_config = lh#btw#option#_project_config(bufid) " use from_buf version to detect undefined
   " 1- Information set in b:project_config._.name ?
   if lh#option#is_set(project_config)
-    let config = get(project_config, '_', lh#option#unset())
+    let config = get(project_config, '_', s:k_unset)
     if lh#option#is_set(config)
       " Old API
       let name   = get(config, 'name', '')

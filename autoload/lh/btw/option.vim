@@ -61,9 +61,10 @@ endfunction
 
 "------------------------------------------------------------------------
 " ## Options            {{{1
+let s:k_unset = lh#option#unset()
 " # Deprecated compatibility {{{2
 function! s:get(name, default, ...) abort " {{{3
-  let res = call('lh#option#get', ['BTW.'.a:name, lh#option#unset()] + a:000)
+  let res = call('lh#option#get', ['BTW.'.a:name, s:k_unset] + a:000)
   if lh#option#is_set(res) | return res | endif
   return call('lh#option#get', ['BTW_'.a:name, a:default] + a:000)
 endfunction
@@ -73,19 +74,19 @@ function! s:old(name, default, ...) abort " {{{3
 endfunction
 
 function! s:get_explicit_names(new_name, old_name, default, ...) abort " {{{3
-  let res = call('lh#option#get', ['BTW.'.a:new_name, lh#option#unset()] + a:000)
+  let res = call('lh#option#get', ['BTW.'.a:new_name, s:k_unset] + a:000)
   if lh#option#is_set(res) | return res | endif
   return call('lh#option#get', ['BTW_'.a:old_name, a:default] + a:000)
 endfunction
 
 function! s:get_from_buf(bufid, name, default, ...) abort " {{{3
-  let res = call('lh#option#get_from_buf', [a:bufid, 'BTW.'.a:name, lh#option#unset()] + a:000)
+  let res = call('lh#option#get_from_buf', [a:bufid, 'BTW.'.a:name, s:k_unset] + a:000)
   if lh#option#is_set(res) | return res | endif
   return call('lh#option#get_from_buf', [a:bufid, 'BTW_'.a:name, a:default] + a:000)
 endfunction
 
 function! s:get_explicit_names_from_buf(bufid, new_name, old_name, default, ...) abort " {{{3
-  let res = call('lh#option#get_from_buf', [a:bufid, 'BTW.'.a:new_name, lh#option#unset()] + a:000)
+  let res = call('lh#option#get_from_buf', [a:bufid, 'BTW.'.a:new_name, s:k_unset] + a:000)
   if lh#option#is_set(res) | return res | endif
   return call('lh#option#get_from_buf', [a:bufid, 'BTW_'.a:old_name, a:default] + a:000)
 endfunction
@@ -146,7 +147,7 @@ function! lh#btw#option#_project_config(...) abort
   if a:0 > 0
     " from buf version => no default to detect undefined option
     let bufid = a:1
-    return s:get_from_buf(bufid, 'project_config', lh#option#unset())
+    return s:get_from_buf(bufid, 'project_config', s:k_unset)
   else
     return s:get('project_config', {'type': 'modeline'} )
   endif
@@ -196,8 +197,8 @@ endfunction
 " Function: lh#btw#option#_project_name([bufid]) {{{3
 function! lh#btw#option#_project_name(...) abort
   return a:0 > 0
-        \ ? s:get_from_buf(a:1, 'project_name', lh#option#unset())
-        \ : s:get('project_name', lh#option#unset())
+        \ ? s:get_from_buf(a:1, 'project_name', s:k_unset)
+        \ : s:get('project_name', s:k_unset)
 endfunction
 
 " Function: lh#btw#option#_compilation_dir([bufid]) {{{3
