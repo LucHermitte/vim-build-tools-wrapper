@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  28th Oct 2016
+" Last Update:  02nd Nov 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -193,6 +193,27 @@ if !exists('g:BTW_BTW_in_use')
   endfunction
 endif
 
+" Function: lh#btw#chain#_resolve_makeprg(scope) {{{3
+function! lh#btw#chain#_resolve_makeprg(scope) abort
+  if lh#project#is_a_project(a:scope)
+    let pattern = a:scope.get('BTW._makeprg_pattern')
+    let dir = lh#btw#option#_compilation_dir(a:scope.buffers[0])
+  else
+    let pattern = lh#option#get('BTW._makeprg_pattern')
+    let dir = lh#btw#option#_compilation_dir()
+  endif
+  let dir = shellescape(dir)
+  let opt = {'dir': dir}
+  let makeprg = lh#fmt#printf(pattern, opt)
+  if lh#project#is_a_project(a:scope)
+    if ! get(a:scope, 'abstract', 0)
+      call a:scope.set('&makeprg', '='.makeprg)
+    endif
+  else
+    call lh#let#to(a:scope.'&makeprg', '='.makeprg)
+  endif
+endfunction
+
 " lh#btw#chain#_reconstruct():                   {{{3
 "TODO: Take a project into parameter!!!
 function! lh#btw#chain#_reconstruct() abort
@@ -205,17 +226,18 @@ function! lh#btw#chain#_reconstruct() abort
   call s:LoadFilter(prog)
   let Makeprg = lh#btw#option#_filter_program(prog)
   if type(Makeprg) == type(function('has'))
-    let makeprg = Makeprg('$*')
+    let makeprg_pattern = Makeprg('$*')
   else
-    let makeprg = Makeprg . ' $*'
+    let makeprg_pattern = Makeprg . ' $*'
   endif
   call s:AdjustEFM(prog, efm)
 
   let dir = lh#btw#option#_compilation_dir()
-  call s:Verbose('Compiling with %1 in %2 (bid: %3 - %4)', makeprg, dir, bufnr('%'), bufname('%'))
+  call s:Verbose('Compiling with %1 in %2 (bid: %3 - %4)', makeprg_pattern, dir, bufnr('%'), bufname('%'))
   let need_pipefail = 0
   if !empty(dir) && lh#option#is_set(dir)
-    let makeprg = '(cd '.shellescape(dir).' && ' . makeprg . ')'
+    let makeprg_pattern = '(cd %{1.dir} && ' . makeprg_pattern . ')'
+    " let makeprg = '(cd '.shellescape(dir).' && ' . makeprg . ')'
   endif
 
   let filters_list = lh#btw#chain#_filters_list('pg')
@@ -229,14 +251,14 @@ function! lh#btw#chain#_reconstruct() abort
     if !empty(prg)
       " Faire dans BTW-{filter}.vim
       " let prg = substitute(expand('<sfile>:p:h'), ' ', '\\ ', 'g')
-      let makeprg .= ' 2>&1 \| '.prg
+      let makeprg_pattern .= ' 2>&1 \| '.prg
       let need_pipefail = 1
     endif
   endfor
   if &shell =~ 'bash' && need_pipefail
     " TODO support other UNIX flavors
     " see http://stackoverflow.com/questions/1221833/bash-pipe-output-and-capture-exit-status
-    let makeprg = 'set -o pipefail ; ' . makeprg
+    let makeprg_pattern = 'set -o pipefail ; ' . makeprg_pattern
   endif
 
   " Set errorformat ; strip redundant commas
@@ -249,13 +271,17 @@ function! lh#btw#chain#_reconstruct() abort
   " and finally set makeprg and efm variables in the right scope
   let islocal = exists('b:BTW_build_tool') || exists('b:BTW') || exists('b:'.s:filter_list_varname)
   if lh#project#is_in_a_project()
+    let make_scope = lh#project#crt()
     let scope = 'p:'
   elseif islocal
+    let make_scope = 'l:'
     let scope = 'l:'
   else
+    let make_scope = ''
     let scope = ''
   endif
-  call lh#let#to(scope.'&makeprg', '='.makeprg)
+  call lh#let#to(scope.'BTW._makeprg_pattern', makeprg_pattern)
+  call lh#btw#chain#_resolve_makeprg(make_scope)
 
   " default used ... by default
   if !empty(v_efm)
