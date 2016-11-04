@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  02nd Nov 2016
+" Last Update:  04th Nov 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -210,7 +210,7 @@ function! lh#btw#chain#_resolve_makeprg(scope) abort
       call a:scope.set('&makeprg', '='.makeprg)
     endif
   else
-    call lh#let#to(a:scope.'&makeprg', '='.makeprg)
+    call lh#let#to(a:scope.'&makeprg', makeprg)
   endif
 endfunction
 
@@ -275,10 +275,10 @@ function! lh#btw#chain#_reconstruct() abort
     let scope = 'p:'
   elseif islocal
     let make_scope = 'l:'
-    let scope = 'l:'
+    let scope = 'b:'
   else
     let make_scope = ''
-    let scope = ''
+    let scope = 'g:'
   endif
   call lh#let#to(scope.'BTW._makeprg_pattern', makeprg_pattern)
   call lh#btw#chain#_resolve_makeprg(make_scope)
