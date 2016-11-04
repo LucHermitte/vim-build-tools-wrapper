@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      10th May 2016
-" Last Update:  12th Oct 2016
+" Last Update:  04th Nov 2016
 "------------------------------------------------------------------------
 " Description:
 "       Background compilation with latest job_start() API
@@ -73,7 +73,6 @@ function! s:job_description(job) abort " {{{3
 endfunction
 
 function! s:closeCB(channel, job_info) abort " {{{3
-  echomsg string(a:000)
   " call s:Verbose("Background compilation with `%1' %2", s:cmd, job_status(a:channel))
   try
     let stamp = reltime()
