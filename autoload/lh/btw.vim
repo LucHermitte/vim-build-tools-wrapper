@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 070
 " Created:      14th Mar 2014
-" Last Update:  28th Oct 2016
+" Last Update:  04th Nov 2016
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -170,7 +170,7 @@ endfunction
 
 " Function: s:QuickFixCleanFolds() {{{3
 function! s:QuickFixCleanFolds()
-  " echomsg "Clean QF folds"
+  call s:Verbose('Clean QF folds')
   let s:qf_folds = {}
 endfunction
 
@@ -178,7 +178,7 @@ endfunction
 " Parse CTest output to fix filenames, and extract forlding information
 function! s:FixCTestOutput() abort
   try
-    " echomsg "parse CTest output"
+    call s:Verbose("parse CTest output")
     let qf_changed = 0
     let qflist = getqflist()
     let s:qf_folds = {-1: {}}
@@ -276,8 +276,9 @@ endfunction
 " Some variables need to be imported automatically into quickfix buffer
 " Variables:                         {{{3
 if !exists('s:qf_options_to_import')
-  let s:qf_options_to_import = {}
-  let s:qf_saved_options     = []
+  let s:qf_options_to_import    = {}
+  let s:qf_saved_options        = []
+  let s:qf_always_saved_options = [lh#project#_get_varname()]
 endif
 augroup QFExportVar
   au!
@@ -305,18 +306,19 @@ function! s:QuickFixImport() abort
       silent! unlet value
     endfor
   else
-    " If everyting works fine, this branch of coe should not be executed!
+    " If everyting works fine, this branch of code should not be executed!
     " It could, when not using BTW function to compile.
 
     " First call to :copen, things haven't been serialized yet
     if !exists('g:lh#btw#_last_buffer') | return | endif
     let bid = g:lh#btw#_last_buffer
 
-    if !has_key(s:qf_options_to_import, bid)
-      echomsg "Import: No variable required for buffer ".bid." (".bufname(bid).")"
+    let always_used_options = filter(copy(s:qf_always_saved_options), 'exists("b:".v:val)')
+    if !has_key(s:qf_options_to_import, bid) && empty(always_used_options)
+      call s:Verbose('Import: No variable required for buffer %1 (%2)', bid, bufname(bid))
       return
     endif
-    let variables = keys(s:qf_options_to_import[bid])
+    let variables = keys(get(s:qf_options_to_import, bid, {})) + always_used_options
     call s:Verbose("Importing: ".string(variables))
     for var in variables
       let value = deepcopy(lh#option#getbufvar(bid, var)) " don't want to be updated if the compilation mode changes
@@ -375,11 +377,14 @@ function! lh#btw#_save_last_buffer_data() abort
   let bid = bufnr('%')
   let g:lh#btw#_last_buffer = bid
 
-  if !has_key(s:qf_options_to_import, bid)
-    echomsg "Import: No variable required for buffer ".bid." (".bufname(bid).")"
+  let always_used_options = filter(copy(s:qf_always_saved_options), 'exists("b:".v:val)')
+  let g:qf_always_saved_options = s:qf_always_saved_options
+  let g:always_used_options = always_used_options
+  if !has_key(s:qf_options_to_import, bid) && empty(always_used_options)
+    call s:Verbose('Import: No variable required for buffer %1 (%2)', bid, bufname(bid))
     return
   endif
-  let variables = keys(s:qf_options_to_import[bid])
+  let variables = keys(get(s:qf_options_to_import, bid, {})) + always_used_options
   call s:Verbose("Saving: ".string(variables))
   let data = { 'bid': bid }
   for var in variables
