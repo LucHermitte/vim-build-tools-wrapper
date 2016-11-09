@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = 070
 " Created:      15th Jan 2015
-" Last Update:  14th Oct 2016
+" Last Update:  09th Nov 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions to generate new project config files from templates.
@@ -138,7 +138,7 @@ try
     endif
   endfor
 
-  let args.project_kind = eval('extend('.join(map(kind, '{(v:val): 1}'), ',').')')
+  let args.project_kind = eval('{'.join(map(copy(kind), 'string(v:val).": 1"'), ',').'}')
 
   return  args
 finally
