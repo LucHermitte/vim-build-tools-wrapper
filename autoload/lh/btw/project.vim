@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = 070
 " Created:      15th Jan 2015
-" Last Update:  09th Nov 2016
+" Last Update:  15th Nov 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions to generate new project config files from templates.
@@ -56,6 +56,7 @@ function! lh#btw#project#new(...) abort
   let extension_for_configurable_files = ''
 
   let args = call('lh#btw#project#_analyse_params', a:000)
+  call s:Verbose("BTW new_project(%1)", args)
   if has_key(args, '_prj_config')
     if args._prj_config !~ '^g:'
       let args._prj_config = 'g:'.args._prj_config
@@ -116,6 +117,7 @@ try
   let ctx = ''
   for opt in a:000
     if ctx == 'kind'
+      call s:Verbose('kind += split(%1, ",")', opt)
       let kind += split(opt, ',')
       let ctx  = ''
     elseif !empty(ctx)
@@ -126,7 +128,8 @@ try
       let lm = len(match)
       let lo = len(opt)
       if lm == 0
-        let kind += [opt]
+        call s:Verbose('kind += split(%1, ",")', opt)
+        let kind += split(opt, ',')
       elseif lo==lm || (lo - lm == 1 && opt[lm] =~ '[:=]')
         let ctx = match
       elseif lo > lm + 1
