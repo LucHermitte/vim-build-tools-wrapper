@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  02nd Nov 2016
+" Last Update:  17th Nov 2016
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -239,8 +239,11 @@ function! lh#btw#cmake#auto_detect_compil_modes2(menu_def) abort
 
   let subs = lh#path#glob_as_list(build_root_path, '*')
   call filter(subs, 'isdirectory(v:val)')
+  let g:subs = subs
   if empty(subs)
-    throw "No subdirectories found in `".build_root."`: cannot deduce compilations modes"
+    call lh#common#warning_msg("No build directories detected in `".build_root."`.\nCompilation won't be possible for now.")
+    return
+    " throw "No subdirectories found in `".build_root."`: cannot deduce compilations modes"
   endif
 
   " Check directories without Makefiles
