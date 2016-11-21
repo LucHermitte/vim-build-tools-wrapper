@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  04th Nov 2016
+" Last Update:  21st Nov 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -196,10 +196,10 @@ endif
 " Function: lh#btw#chain#_resolve_makeprg(scope) {{{3
 function! lh#btw#chain#_resolve_makeprg(scope) abort
   if lh#project#is_a_project(a:scope)
-    let pattern = a:scope.get('BTW._makeprg_pattern')
+    let pattern = a:scope.get('BTW._makeprg_pattern', &makeprg)
     let dir = lh#btw#option#_compilation_dir(a:scope.buffers[0])
   else
-    let pattern = lh#option#get('BTW._makeprg_pattern')
+    let pattern = lh#option#get('BTW._makeprg_pattern', &makeprg)
     let dir = lh#btw#option#_compilation_dir()
   endif
   let dir = shellescape(dir)
