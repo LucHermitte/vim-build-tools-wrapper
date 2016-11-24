@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  19th Oct 2016
+" Last Update:  24th Nov 2016
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -155,27 +155,24 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
   let bg = (has('clientserver') || s:has_jobs) && lh#btw#option#_make_in_bg()
   let cleanup = lh#on#exit()
         \.restore('&makeprg')
-  if bg
-    if !s:has_jobs " case handled latter
-      let run_in = lh#btw#option#_make_in_bg_in()
-      if strlen(run_in)
-        " Typically xterm -e
-        let run_in = ' --program="'.run_in.'"'
-      endif
-      let &makeprg = s:RunInBackground()
-            \ . ' --vim=' . v:progname
-            \ . ' --servername=' . v:servername
-            \ . run_in
-            \ . ' "' . (a:program) . '"'
+  let program = a:program
+  if bg && !s:has_jobs
+    let run_in = lh#btw#option#_make_in_bg_in()
+    if strlen(run_in)
+      " Typically xterm -e
+      let run_in = ' --program="'.run_in.'"'
     endif
-  else " synchronous building
-    let &makeprg = a:program
+    let program = s:RunInBackground()
+          \ . ' --vim=' . v:progname
+          \ . ' --servername=' . v:servername
+          \ . run_in
+          \ . ' "' . program . '"'
   endif
   let args = join(a:000, ' ')
   let nb_jobs = lh#btw#option#_make_mj()
-  " if has_key(s:k_multijobs_options, a:program) && type(nb_jobs) == type(0) && nb_jobs > 0
+  " if has_key(s:k_multijobs_options, program) && type(nb_jobs) == type(0) && nb_jobs > 0
   if type(nb_jobs) == type(0) && nb_jobs > 0
-    " let args .= ' '. s:k_multijobs_options[a:program] .nb_jobs
+    " let args .= ' '. s:k_multijobs_options[program] .nb_jobs
     let args .= ' -j' .nb_jobs
   endif
 
@@ -183,12 +180,12 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
     if bg && s:has_jobs
       let args = expand(args)
       call s:Verbose('rpl $* w/ %1', args)
-      let cmd = substitute(&makeprg, '\$\*', args, 'g')
+      let cmd = substitute(program, '\$\*', args, 'g')
       " makeprg escapes pipes, we need to unescape them for job_start
       let cmd = substitute(cmd, '\\|', '|', 'g')
       call lh#btw#job_build#execute(cmd)
     elseif lh#os#OnDOSWindows() && bg
-      let cmd = ':!start '.substitute(&makeprg, '\$\*', args, 'g')
+      let cmd = ':!start '.substitute(program, '\$\*', args, 'g')
       exe cmd
     else
       " lh#os#make will inject p:$ENV on-the-fly, if needed.
