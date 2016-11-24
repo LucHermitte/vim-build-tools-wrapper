@@ -282,7 +282,7 @@ if !exists('s:qf_options_to_import')
 endif
 augroup QFExportVar
   au!
-  au BufWipeout * call s:QuickFixRemoveExports(expand('<afile>'))
+  au BufWipeout * call s:QuickFixRemoveExports(expand('<abuf>'))
 augroup END
 
 " Function: s:QuickFixImport()       {{{3
@@ -344,10 +344,10 @@ function! s:QuickFixImport() abort
   let w:quickfix_title = lh#btw#build_mode(). ' compilation of ' . lh#btw#project_name()
 endfunction
 
-" Function: s:QuickFixRemoveExports(fname) {{{3
-function! s:QuickFixRemoveExports(fname)
-  if empty(a:fname) | return | endif
-  let bid = bufnr(a:fname)
+" Function: s:QuickFixRemoveExports(bid) {{{3
+function! s:QuickFixRemoveExports(bid)
+  if empty(bufname(a:bid)) | return | endif
+  let bid = a:bid
   call s:Verbose("Removing exported variables for buffer ".bid)
   silent! unlet s:qf_options_to_import[bid]
 endfunction
