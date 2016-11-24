@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 070
 " Created:      14th Mar 2014
-" Last Update:  04th Nov 2016
+" Last Update:  24th Nov 2016
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -313,7 +313,8 @@ function! s:QuickFixImport() abort
     if !exists('g:lh#btw#_last_buffer') | return | endif
     let bid = g:lh#btw#_last_buffer
 
-    let always_used_options = filter(copy(s:qf_always_saved_options), 'exists("b:".v:val)')
+    " no just exists, but exist in buffer context...
+    let always_used_options = filter(copy(s:qf_always_saved_options), 'lh#option#exists_in_buf(bid, v:val)')
     if !has_key(s:qf_options_to_import, bid) && empty(always_used_options)
       call s:Verbose('Import: No variable required for buffer %1 (%2)', bid, bufname(bid))
       return
@@ -321,9 +322,17 @@ function! s:QuickFixImport() abort
     let variables = keys(get(s:qf_options_to_import, bid, {})) + always_used_options
     call s:Verbose("Importing: ".string(variables))
     for var in variables
-      let value = deepcopy(lh#option#getbufvar(bid, var)) " don't want to be updated if the compilation mode changes
+      " Project data is not duplicated.
+      " We copy only the compilation information in a buffer local variable(s)
+      " that would overide p:variable(s).
+      let value = lh#option#getbufvar(bid, var)
       if lh#option#is_set(value)
-        call setbufvar(bhere, var, value)
+        if var == lh#project#_get_varname()
+          call setbufvar(bhere, var, value) " keep a reference to the same information
+          call setbufvar(bhere, 'BTW', deepcopy(value.get('BTW'))) " but duplicate/override BTW stuff
+        else
+          call setbufvar(bhere, var, deepcopy(value)) " don't want to be updated if the compilation mode changes
+        endif
       endif
       silent! unlet value
     endfor
@@ -387,10 +396,18 @@ function! lh#btw#_save_last_buffer_data() abort
   let variables = keys(get(s:qf_options_to_import, bid, {})) + always_used_options
   call s:Verbose("Saving: ".string(variables))
   let data = { 'bid': bid }
+  " Project data is not duplicated.
+  " We copy only the compilation information in a buffer local variable(s)
+  " that would overide p:variable(s).
   for var in variables
-    let value = deepcopy(lh#option#getbufvar(bid, var)) " don't want to be updated if the compilation mode changes
+    let value = lh#option#getbufvar(bid, var)
     if lh#option#is_set(value)
-      let data[var] = value
+      if var == lh#project#_get_varname()
+        let data[var] = value                        " keep a reference to the same information
+        let data['BTW'] = deepcopy(value.get('BTW')) " but duplicate/override BTW stuff
+      else
+        let data[var] = deepcopy(value)              " don't want to be updated if the compilation mode changes
+      endif
     endif
     silent! unlet value
   endfor
