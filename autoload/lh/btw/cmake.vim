@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  17th Nov 2016
+" Last Update:  24th Nov 2016
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -167,6 +167,7 @@ function! lh#btw#cmake#define_options(options) abort
     let menu_def = lh#let#if_undef('p:BTW.'.option, {})
     let menu_def.menu = copy(lh#option#get('menu'))
     let menu_def.project = lh#project#crt()
+    call lh#assert#true(lh#option#is_set(menu_def.project), 'lh#btw#cmake#define_options requires working with lhvl projects')
 
     " execute the action to initialize everything
     call lh#btw#cmake#{option}(menu_def)
@@ -311,7 +312,7 @@ endfunction
 function! lh#btw#cmake#def_toggable_compil_mode2(menu_def) abort
   " Automatically set variables for lh#btw#project_options#add_toggle_option,
   " and lh#menu#def_toggle_item
-  call assert_true(has_key(a:menu_def, 'project'))
+  call lh#assert#true(has_key(a:menu_def, 'project'))
   let menu_def = lh#let#if_undef('p:BTW._menu.compil_mode', lh#object#make_top_type({}))
   let menu_def.values         = keys(lh#option#get('BTW.build.mode.list'))
   " "variable" is a variable name, hence _project being a string
@@ -652,7 +653,7 @@ function! s:UpdateCompilDir() dict
   else
     let compil_mode = self.project.get('BTW.build.mode.current') " variable
     call s:Verbose("New compil_mode: %1", compil_mode)
-    call assert_true(lh#option#is_set(compil_mode))
+    call lh#assert#true(lh#option#is_set(compil_mode))
     let project_dir = self.project.get('paths.project')
     let compil_subpath = self.project.get('BTW.build.mode.list.'.compil_mode)
     call s:Verbose("Set compilation dir to %1/%2", project_dir, compil_subpath)
