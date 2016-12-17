@@ -41,8 +41,17 @@ With BTW, we can register any compilation directory (where `ccmake` has already
 ran) as a _build mode_. Actually this is not restricted to CMake based
 project as long as compilation is done ouside the sources directory.
 
-For now, build _modes_ have to be registered manually. This is likelly to
-improve in the future.
+For now, build _modes_ can be registered automatically from a single parent
+directory.
+
+If you don't need to register a set of directories, but a single one, you can
+simply execute:
+`:BTW config_out_of_sources_build {build_dir}` a second optional parameter
+permits to set the build target to something different from `all`.
+This feature works best coupled with
+[lh-vim-lib `:Project` feature](https://github.com/LucHermitte/doc/Project.md).
+This way, you won't need to execute the command on every buffer that belongs to
+the same project, which would defeat the purpose of this command.
 
 ## CTest support
 BTW can run CTest tests and import their result into the quickfix-window.
@@ -121,6 +130,9 @@ completion.
 Various information about the current project can be obtained. Some are set by
 you when you configure the project, other are maintained up to date after each
 modification (current build mode, build path, installation path (if you like), selected tests, ...)
+
+__Warning:__ what follows has been deprecated. Simplification attempts have
+been made.
 
 The entry points are:
  * `g:`_ProjectName_`_config`

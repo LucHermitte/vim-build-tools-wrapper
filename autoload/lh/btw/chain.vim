@@ -151,23 +151,24 @@ if !exists('g:BTW_BTW_in_use')
   function! lh#btw#chain#_BTW(command, ...) abort
     call s:Verbose(':BTW %1', [a:command]+a:000)
     " todo: check a:0 > 1
-    if     'set'      == a:command | let g:BTW_build_tool = a:1
+    if     'set'      == a:command                    | let g:BTW_build_tool = a:1
       if exists('b:BTW_build_tool')
         let b:BTW_build_tool = a:1
       endif
-    elseif 'setlocal'       == a:command | let b:BTW_build_tool = a:1
-    elseif 'setoption'      == a:command | call s:SetOption('g', a:000)
-    elseif 'setoptionlocal' == a:command | call s:SetOption('p', a:000)
-    elseif 'add'            == a:command | call s:AddFilter('g', a:1)
-    elseif 'addlocal'       == a:command | call s:AddFilter('p', a:1)
+    elseif 'setlocal'       == a:command              | let b:BTW_build_tool = a:1
+    elseif 'setoption'      == a:command              | call s:SetOption('g', a:000)
+    elseif 'setoptionlocal' == a:command              | call s:SetOption('p', a:000)
+    elseif 'config_out_of_sources_build' == a:command | call s:ConfigOutOfSourcesBuild('p', a:000)
+    elseif 'add'            == a:command              | call s:AddFilter('g', a:1)
+    elseif 'addlocal'       == a:command              | call s:AddFilter('p', a:1)
       " if exists('b:'.s:filter_list_varname) " ?????
         " call s:AddFilter('b', a:1)
       " endif
-    elseif 'remove'         == a:command | call s:RemoveFilter('g', a:1)
-    elseif 'removelocal'    == a:command | call s:RemoveFilter('p', a:1)
+    elseif 'remove'         == a:command              | call s:RemoveFilter('g', a:1)
+    elseif 'removelocal'    == a:command              | call s:RemoveFilter('p', a:1)
     elseif 'rebuild'        == a:command " wait for lh#btw#chain#_reconstruct()
-    elseif 'echo'           == a:command | exe "echo s:".a:1
-    elseif 'debug'          == a:command | exe "debug echo s:".a:1
+    elseif 'echo'           == a:command              | exe "echo s:".a:1
+    elseif 'debug'          == a:command              | exe "debug echo s:".a:1
       " echo s:{a:f1} ## don't support «echo s:f('foo')»
     elseif 'reloadPlugin'   == a:command
       let cleanup = lh#on#exit()
@@ -412,7 +413,7 @@ endfunction
 
 " # Command completion                   {{{2
 " Constants                                                    {{{3
-let s:commands="setlocal\nset\nsetoptionlocal\nsetoption\naddlocal\nadd\nremovelocal\nremove\nrebuild\necho\ndebug\nreloadPlugin\nnew_project\n?\nhelp"
+let s:commands="setlocal\nset\nsetoptionlocal\nsetoption\nconfig_out_of_sources_build\naddlocal\nadd\nremovelocal\nremove\nrebuild\necho\ndebug\nreloadPlugin\nnew_project\n?\nhelp"
 let s:functions="ToolsChain()\nHasFilterGuessScope(\nHasFilter(\nFindFilter("
 let s:functions=s:functions. "\nProjectName()\nTargetRule()\nExecutable()"
 let s:variables="commands\nfunctions\nvariables"
@@ -445,7 +446,10 @@ function! lh#btw#chain#_BTW_complete(ArgLead, CmdLine, CursorPos)
       return files
     elseif -1 != match(a:CmdLine, '^BTW\s\+\%(setoption\)\%(local\)\=\>')
       return join(s:k_options, "\n")
-    elseif -1 != match(a:CmdLine, '^BTW\s\+removelocal') " Removes a local filter
+    elseif -1 != match(a:CmdLine, '^BTW\s\+\%(config_out_of_sources_build\)\%(_local\)\=\>')
+     let paths = filter(split(glob(a:ArgLead.'*'), "\n"), 'isdirectory(v:val)')
+     return join(paths, "\n")
+   elseif -1 != match(a:CmdLine, '^BTW\s\+removelocal') " Removes a local filter
       return join(lh#btw#chain#_filters_list('p'), "\n")
     elseif -1 != match(a:CmdLine, '^BTW\s\+remove')      " Removes a global filter
       return join(lh#btw#chain#_filters_list('g'), "\n")
@@ -488,6 +492,16 @@ function! s:SetOption(scope, opts) abort
         call lh#common#warning_msg("Warning: ".a_name." is not set.")
     endif
   endif
+endfunction
+
+function! s:ConfigOutOfSourcesBuild(scope, opts) " {{{3
+  call lh#assert#value(len(a:opts)).is_ge(0) " dir
+  let dir = a:opts[0]
+  " When dealing with OoSB, the target is usually "all"
+  " However, we must not override previous settings
+  let target = lh#option#get('BTW.target', get(a:opts, 2, 'all'))
+  call s:SetOption(a:scope, ['compilation_dir', fnamemodify(dir, ':p')])
+  call s:SetOption(a:scope, ['target', target])
 endfunction
 " }}}1
 "------------------------------------------------------------------------

@@ -72,7 +72,7 @@ global settings.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                                                         *BTW-filter-purpose*
 
-?Insert here?
+«Insert here»
 
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -83,24 +83,24 @@ The filters used in a specific project are managed with the command :BTW.
 
 This command accepts the following sub-commands:
 
-- :BTW set      {main-filter}                           *:BTW-set*
-- :BTW setlocal {main-filter}                           *:BTW-setlocal*
+- `:BTW set      {main-filter}`                           *:BTW-set*
+- `:BTW setlocal {main-filter}`                           *:BTW-setlocal*
   These two commands set the main filter-plugin, i.e. the one associated to the
   build tool -- i.e. make, A-A-P, scons, bjam, ...
   With "setlocal", we override the main filter-plugin.
 
-- :BTW add      {filter}                                *:BTW-add*
-- :BTW addlocal {filter}                                *:BTW-addlocal*
+- `:BTW add      {filter}`                                *:BTW-add*
+- `:BTW addlocal {filter}`                                *:BTW-addlocal*
   These two commands add a filter-plugin at the end of the chain
   of filter-plugins applied over the result of the compilation process.
   The order of the filters applied respects the order of the calls to
-  ":BTW add(local)".
+  `:BTW add(local)`.
   With "addlocal", we override (ignore), in the scope of the current buffer, the
   filter-plugins globally loaded.
   ? must add-global apply to local lists when they already exist ?
 
-- :BTW remove      {filter}                             *:BTW-remove*
-- :BTW removelocal {filter}                             *:BTW-removelocal*
+- `:BTW remove      {filter}`                             *:BTW-remove*
+- `:BTW removelocal {filter}`                             *:BTW-removelocal*
   Remove a filter-plugin from the chain of filter-plugins applied.
   global: the filter-plugin will also be removed from every buffer-local list
   local:  if there is no local list, and the filter is found in the global list,
@@ -108,24 +108,28 @@ This command accepts the following sub-commands:
           filter.
           todo: retest
 
-- :BTW clear      {filter}                              *:BTW-clear*
-- :BTW clearlocal {filter}                              *:BTW-clearlocal*
+- `:BTW clear      {filter}`                              *:BTW-clear*
+- `:BTW clearlocal {filter}`                              *:BTW-clearlocal*
   Full reset of the filter-plugins used. This command can be seen as an
   alternative to calling |:BTW-remove| on every filter-plugin.
   Yet to be implemented
 
-- :BTW rebuild                                          *:BTW-rebuild*
+- `:BTW rebuild`                                          *:BTW-rebuild*
   Little helper command. Only useful when the vim script (that defines a
   filter-plugin) has been changed, and we want to refresh 'makeprg' and
   'errorformat' in consequence.
 
-- :BTW echo {expr}                                      *:BTW-echo*
+- `:BTW echo {expr}`                                      *:BTW-echo*
   Debug oriented helper function. It serves to evaluate and display an internal
   (script scope -> s:) data/function from BuildToolsWrapper.vim.
 
+- `:BTW config_out_of_sources_build {dir} [{tgt}]`        *BTW-configure-out-of-sources-build*
+  Helper command to configure out-of-sources compilation without the need to
+  configure a complete CMake project with all the required variables and all.
+  When the {target} option isn't set, `"all"` is assumed.
+
 In order to ease the use of |:BTW|, this command supports a smart
 auto-completion.
-
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                                                         *BTW-default-filters*
