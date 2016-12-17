@@ -210,7 +210,7 @@ function! lh#btw#chain#_resolve_makeprg(scope) abort
       call a:scope.set('&makeprg', '='.makeprg)
     endif
   else
-    call lh#let#to(a:scope.'&makeprg', makeprg)
+    call lh#let#to('&'.a:scope.'makeprg', makeprg)
   endif
 endfunction
 
@@ -286,7 +286,7 @@ function! lh#btw#chain#_reconstruct() abort
   " default used ... by default
   if !empty(v_efm)
     " Add the new formats
-    call lh#let#to(scope.'&efm', '='.v_efm)
+    call lh#let#to('&'.scope.'efm', '='.v_efm)
   endif
 endfunction
 
