@@ -6,7 +6,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      28th Nov 2004
-" Last Update:  28th Oct 2016
+" Last Update:  04th Jan 2017
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -291,7 +291,7 @@ let g:loaded_BuildToolsWrapper = s:k_version
 runtime plugin/compil-hints.vim
 
 " Global options                                     {{{1
-let s:key_make       = lh#option#get('BTW.key.make'     , '<F7>', 'g')
+let s:key_make       = lh#option#get('BTW.key.make'     , '<F7>',   'g')
 let s:key_execute    = lh#option#get('BTW.key.execute'  , '<C-F5>', 'g')
 let s:key_config     = lh#option#get('BTW.key.config'   , '<M-F7>', 'g')
 let s:key_re_config  = lh#option#get('BTW.key.re_config', '<M-F8>', 'g')
@@ -319,7 +319,7 @@ command! -nargs=+ CopenBG               :call lh#btw#build#_copen_bg(<f-args>)
 command! -nargs=0 ToggleMakeMJ          :call s:ToggleMakeMJ()
 command! -nargs=0 ToggleMakeBG          :call s:ToggleMakeInBG()
 
-let s:has_jobs = exists('*job_start') && has("patch-7.4.1980")
+let s:has_jobs = lh#has#jobs()
 if s:has_jobs
   if exists(':cbottom')
     command! -nargs=0 ToggleAutoScrollBG    :call s:ToggleAutoScrollInBG()
