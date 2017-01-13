@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  24th Nov 2016
+" Last Update:  12th Jan 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -435,7 +435,7 @@ function! lh#btw#build#_re_config() abort
     " call lh#buffer#jump(wd.'/'.file)
     return
   elseif how.type == 'ccmake'
-    debug let wd = lh#btw#_evaluate(how.wd)
+    let wd = lh#btw#_evaluate(how.wd)
     if lh#os#OnDOSWindows()
       " - the first ":!start" runs a windows command
       " - "cmd /c" is used to define the second "start" command (see "start /?")
