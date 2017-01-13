@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  28th Oct 2016
+" Last Update:  04th Jan 2017
 "------------------------------------------------------------------------
 " Description:
 "       Centralize BTW option retrieval
@@ -157,7 +157,7 @@ endfunction
 function! lh#btw#option#_has_project_config() abort
   return     exists('b:BTW_project_config')
         \ || exists('b:BTW.project_config')
-        \ || lh#project#exists('p:BTW.project_config')
+        \ || (exists('*lh#project#exists') && lh#project#exists('p:BTW.project_config'))
 endfunction
 
 
