@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  12th Jan 2017
+" Last Update:  06th Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -495,6 +495,17 @@ function! lh#btw#build#_add_let_modeline() abort
   endif
 endfunction
 
+" # Completion     {{{2
+" Function: lh#btw#build#_make_complete(ArgLead, CmdLine, CursorPos) {{{3
+function! lh#btw#build#_make_complete(ArgLead, CmdLine, CursorPos) abort
+  let [pos, tokens, ArgLead, CmdLine, CursorPos] = lh#command#analyse_args(a:ArgLead, a:CmdLine, a:CursorPos)
+  " TODO: detect -j, etc
+  let how = lh#btw#option#_project_config()
+  let wd = lh#btw#_evaluate(how.wd)
+  call s:Verbose('Project config: %1', how)
+  let res = lh#command#matching_make_completion(ArgLead, wd)
+  return res
+endfunction
 " }}}1
 "------------------------------------------------------------------------
 let &cpo=s:cpo_save

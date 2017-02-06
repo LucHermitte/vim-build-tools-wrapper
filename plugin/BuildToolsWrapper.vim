@@ -6,7 +6,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      28th Nov 2004
-" Last Update:  04th Jan 2017
+" Last Update:  06th Feb 2017
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -268,6 +268,7 @@ let s:k_version = 0700
 "         several windows from a same project.
 "       * executable() filters should be able to accept arguments
 "       * Chain successful compilation with program execution
+"       * Support command-line completion on `:Make`
 " }}}1
 "=============================================================================
 
@@ -308,7 +309,8 @@ command! -nargs=1 -complete=var QFImport      :call lh#btw#qf_add_var_to_import(
 command! -nargs=0               QFClearImport :call lh#btw#qf_clear_import()
 
 " # Build/Make invokation                  {{{2
-command! -nargs=* Make                  :call lh#btw#build#_compile("<args>")
+command! -nargs=* -complete=customlist,lh#btw#build#_make_complete
+      \           Make                  :call lh#btw#build#_compile("<args>")
 command! -nargs=0 Execute               :call lh#btw#build#_execute()
 command! -nargs=0 AddLetModeline        :call lh#btw#build#_add_let_modeline()
 command! -nargs=0 Config                :call lh#btw#build#_config()
