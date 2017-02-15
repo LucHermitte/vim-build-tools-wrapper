@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  06th Feb 2017
+" Last Update:  15th Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -425,8 +425,8 @@ endfunction
 function! lh#btw#build#_re_config() abort
   let how = lh#btw#option#_project_config()
   if     how.type == 'modeline'
-    if exists(':FirstModeLine')
-      :FirstModeLine
+    if exists(':LetModeLine')
+      :LetModeLine
       return
     endif
   elseif how.type == 'makefile'
