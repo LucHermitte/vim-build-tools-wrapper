@@ -2,9 +2,9 @@
 " File:         compiler/BTW/cmake.vim                            {{{1
 " Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
-" Version:      0.4.2
+" Version:      0.7.0
 " Created:      21st Feb 2012
-" Last Update:  10th Apr 2015
+" Last Update:  16th Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       BTW cmake compilation toolchain
@@ -24,6 +24,20 @@
 
 let s:cpo_save=&cpo
 set cpo&vim
+
+"=============================================================================
+" ## Helper functions {{{1
+"------------------------------------------------------------------------
+" s:getSNR([func_name]) {{{2
+function! s:getSNR(...)
+  if !exists("s:SNR")
+    let s:SNR=matchstr(expand('<sfile>'), '<SNR>\d\+_\zegetSNR$')
+  endif
+  return s:SNR . (a:0>0 ? (a:1) : '')
+endfunction
+
+"=============================================================================
+" ## &makeprg {{{1
 "------------------------------------------------------------------------
 " How to invoke cmake to compile with it
 function! s:compile_cmake(...)
@@ -35,6 +49,9 @@ function! s:compile_cmake(...)
 endfunction
 
 let b:BTW_filter_program_cmake = function(s:getSNR('compile_cmake'))
+
+"=============================================================================
+" ## &efm {{{1
 "------------------------------------------------------------------------
 " cmake messes up with the error format as it prepends the error lines with
 " "%d>"
@@ -42,6 +59,19 @@ let b:BTW_filter_program_cmake = function(s:getSNR('compile_cmake'))
 function! s:fix_efm_cmake(efm)
   let efm = split(a:efm, ',')
   call map(efm, '"%\\d%\\+>".v:val')
+
+  " Other  CMake adjustments inspired by Fernando Castillo unmerged contibution
+  " to compiler/gcc.vim, 2016 May 19, Vim licence
+  " See https://github.com/vim/vim/pull/821
+  call lh#list#push_if_new_elements(efm,
+        \ [ '%E%.%#CMake Error at %f:%l%.%#'
+        \ , '%E%.%#CMake Error in %f:%.%#'
+        \ , '%Z%.%#CMake Error:%.%#'
+        \ , '%Z-- Configuring incomplete%.%#'
+        \ , '%C%.%#:%l%.%#'
+        \ , '%C%m'
+        \ , '%C%.%#'
+        \ ])
   return join(efm, ',')
 endfunction
 
@@ -50,16 +80,7 @@ let b:BTW_adjust_efm_cmake = {
       \ 'value': 'default efm'
       \}
 
-"------------------------------------------------------------------------
-"
-" s:getSNR([func_name]) {{{3
-function! s:getSNR(...)
-  if !exists("s:SNR")
-    let s:SNR=matchstr(expand('<sfile>'), '<SNR>\d\+_\zegetSNR$')
-  endif
-  return s:SNR . (a:0>0 ? (a:1) : '')
-endfunction
-
+" }}}1
 "------------------------------------------------------------------------
 let &cpo=s:cpo_save
 "=============================================================================
