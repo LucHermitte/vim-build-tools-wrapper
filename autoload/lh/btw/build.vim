@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  15th Feb 2017
+" Last Update:  17th Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -320,8 +320,8 @@ function! lh#btw#build#_copen_bg(...) abort
 
   setlocal nowrap
 
-  call assert_notequal(winid, lh#window#getid()) " a call to setqflist() should move us to the qfwindow
-  call assert_equal(&ft, 'qf')
+  call lh#assert#not_equal(winid, lh#window#getid()) " a call to setqflist() should move us to the qfwindow
+  call lh#assert#equal('qf', &ft)
   " resize the window to have the right number of lines
   let nl = lh#btw#option#_qf_size()
   exe nl.' wincmd _'
@@ -340,7 +340,7 @@ endfunction
 function! lh#btw#build#_get_metrics() abort
   let qf = getqflist()
   let recognized = filter(qf, 'get(v:val, "valid", 1)')
-  " TODO: support other locales
+  " TODO: support other locales, see lh#po#context().tranlate()
   let errors   = filter(copy(recognized), 'v:val.type == "E" || v:val.text =~ "\\v^ *(error|erreur)"')
   let warnings = filter(copy(recognized), 'v:val.type == "W" || v:val.text =~ "\\v^ *(warning|attention)"')
   let res = { 'all': len(qf), 'errors': len(errors), 'warnings': len(warnings) }

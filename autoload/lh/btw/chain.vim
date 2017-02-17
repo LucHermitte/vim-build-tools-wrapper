@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  21st Nov 2016
+" Last Update:  17th Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -324,7 +324,7 @@ endfunction
 " AdjustEFM(filter, efm):                        {{{3
 function! s:AdjustEFM(filter, efm) abort
   let filter_efm = lh#btw#option#efm(a:filter)
-  " call assert_true(lh#option#is_set(filter_efm))
+  call lh#assert#true(lh#option#is_set(filter_efm))
   if type(filter_efm) == type({})
     let added = filter_efm.value
     if has_key(filter_efm, 'post')

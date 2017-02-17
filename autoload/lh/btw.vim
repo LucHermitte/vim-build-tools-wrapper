@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 070
 " Created:      14th Mar 2014
-" Last Update:  24th Nov 2016
+" Last Update:  17th Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -192,7 +192,7 @@ function! s:FixCTestOutput() abort
       if      qft =~ '^test \d\+\s*$'
         " Test start line
         let test_nr = matchstr(qft, '^test \zs\d\+\ze\s*$')
-        " assert(!has_key(qf_folds, test_nr))
+        lh#assert#value(qf_folds).not().has_key(qf_folds, test_nr)
         let s:qf_folds[test_nr] = {'begin': line_nr}
         let s:qf_folds[-1][line_nr] = test_nr
       elseif qft =~ '^\s*\d\+/\d\+ Test\s\+#\d\+:'
