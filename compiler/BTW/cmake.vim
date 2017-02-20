@@ -4,7 +4,7 @@
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      0.7.0
 " Created:      21st Feb 2012
-" Last Update:  16th Feb 2017
+" Last Update:  20th Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       BTW cmake compilation toolchain
@@ -39,16 +39,20 @@ endfunction
 "=============================================================================
 " ## &makeprg {{{1
 "------------------------------------------------------------------------
-" How to invoke cmake to compile with it
-function! s:compile_cmake(...)
-  let target = a:0 ? (' --target '.a:1) : ''
-  let build_dir = lh#btw#option#_compilation_dir()
-  let config    = lh#btw#build_mode('Release')
-  let res = 'cmake --build '.lh#path#fix(build_dir).' --config '.config.target
-  return res
-endfunction
+" How to invoke cmake to compile with it...
+if 1 == get(g:, 'lh#btw#chain#__loading_main_tool', 0)
+  " ... only if cmake filter has been loaded with `:BTW set(local)`, not with
+  " `:BTW add(local)`
+  function! s:compile_cmake(...)
+    let target = a:0 ? (' --target '.a:1) : ''
+    let build_dir = lh#btw#option#_compilation_dir()
+    let config    = lh#btw#build_mode('Release')
+    let res = 'cmake --build '.lh#path#fix(build_dir).' --config '.config.target
+    return res
+  endfunction
 
-let b:BTW_filter_program_cmake = function(s:getSNR('compile_cmake'))
+  let b:BTW_filter_program_cmake = function(s:getSNR('compile_cmake'))
+endif
 
 "=============================================================================
 " ## &efm {{{1
@@ -58,9 +62,14 @@ let b:BTW_filter_program_cmake = function(s:getSNR('compile_cmake'))
 " => tell BTW to fix efm by prepending what other tools add
 function! s:fix_efm_cmake(efm)
   let efm = split(a:efm, ',')
-  call map(efm, '"%\\d%\\+>".v:val')
 
-  " Other  CMake adjustments inspired by Fernando Castillo unmerged contibution
+  if 1 == get(g:, 'lh#btw#chain#__loading_main_tool', 0)
+    " ... only if cmake filter has been loaded with `:BTW set(local)`, not with
+    " `:BTW add(local)`
+    call map(efm, '"%\\d%\\+>".v:val')
+  endif
+
+  " Other CMake adjustments inspired by Fernando Castillo unmerged contibution
   " to compiler/gcc.vim, 2016 May 19, Vim licence
   " See https://github.com/vim/vim/pull/821
   call lh#list#push_if_new_elements(efm,

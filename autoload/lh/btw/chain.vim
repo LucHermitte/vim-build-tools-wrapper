@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  17th Feb 2017
+" Last Update:  20th Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -224,7 +224,7 @@ function! lh#btw#chain#_reconstruct() abort
   " - this is where "$*" is injected
   " - this is where directory is changed
   let prog = lh#btw#option#_build_tool()
-  call s:LoadFilter(prog)
+  call s:LoadFilter(prog, 1)
   let Makeprg = lh#btw#option#_filter_program(prog)
   if type(Makeprg) == type(function('has'))
     let makeprg_pattern = Makeprg('$*')
@@ -243,7 +243,7 @@ function! lh#btw#chain#_reconstruct() abort
 
   let filters_list = lh#btw#chain#_filters_list('pg')
   for filter in filters_list
-    call s:LoadFilter(filter)
+    call s:LoadFilter(filter, 0)
     " let efm = efm . ',' . lh#option#get('BTW_adjust_efm_'.filter, '', 'g')
     call s:AdjustEFM(filter, efm)
 
@@ -355,35 +355,43 @@ function! s:ToVarName(filterName) abort
 endfunction
 
 " LoadFilter(filter):                            {{{3
-function! s:LoadFilter(filter) abort
+function! s:LoadFilter(filter, is_main_tool) abort
   " TODO: do we really need to have "_filter.program.*" option local to a project?
   " -> It's likelly we can share it with anything.
-  if     !empty(lh#btw#chain#_find_filter(a:filter))
-    " First nominal case: there is a BTW-a:filter that will be loaded
-    call s:Verbose('Load BTW filter -> runtime! compiler/BTW-'.a:filter.'.vim compiler/BTW_'.a:filter.'.vim compiler/BTW/'.a:filter.'.vim')
-    exe  'runtime! compiler/BTW-'.a:filter.'.vim compiler/BTW_'.a:filter.'.vim compiler/BTW/'.a:filter.'.vim'
-  elseif !empty(globpath(&rtp, 'compiler/'.a:filter.'.vim'))
-    " Second case: there is a compiler plugin named {a:filter}.vim
-    call s:Verbose("Load compiler plugin %1.vim", a:filter)
-    let varname = lh#btw#option#_best_place_to_write('_filter.efm.use.'.a:filter)
-    call lh#let#to(varname, 'import: '.a:filter)
-    " let b:BTW_adjust_efm_{a:filter} = 'import: '.a:filter
-  elseif !empty(globpath(&rtp, 'compiler/BTW/'.a:filter.'.pl'))
-    " Third case: there is a perl script compiler/BTW/{a:filter}.pl
-    let path = globpath(&rtp, 'compiler/BTW/'.a:filter.'.vim')
-    call s:Verbose("Use perl script %1", path)
-    let varname = lh#btw#option#_best_place_to_write('_filter.program.'.a:filter)
-    call lh#let#to(varname, path)
-    " let g:BTW_filter_program_{a:filter} = path
-  elseif executable(a:filter)
-    " Fourth case: there is a executable with the same name
-    let filter = s:ToVarName(a:filter)
-    let varname = lh#btw#option#_best_place_to_write('_filter.program.'.a:filter)
-    call lh#let#to(varname, a:filter)
-    " let g:BTW_filter_program_{filter} = a:filter
-  else
-    " There is no such a:filter
-  endif
+  let cleanup = lh#on#exit()
+        \.restore('g:lh#btw#chain#__loading_main_tool')
+  try
+    let g:lh#btw#chain#__loading_main_tool = a:is_main_tool
+
+    if     !empty(lh#btw#chain#_find_filter(a:filter))
+      " First nominal case: there is a BTW-a:filter that will be loaded
+      call s:Verbose('Load BTW filter -> runtime! compiler/BTW-'.a:filter.'.vim compiler/BTW_'.a:filter.'.vim compiler/BTW/'.a:filter.'.vim')
+      exe  'runtime! compiler/BTW-'.a:filter.'.vim compiler/BTW_'.a:filter.'.vim compiler/BTW/'.a:filter.'.vim'
+    elseif !empty(globpath(&rtp, 'compiler/'.a:filter.'.vim'))
+      " Second case: there is a compiler plugin named {a:filter}.vim
+      call s:Verbose("Load compiler plugin %1.vim", a:filter)
+      let varname = lh#btw#option#_best_place_to_write('_filter.efm.use.'.a:filter)
+      call lh#let#to(varname, 'import: '.a:filter)
+      " let b:BTW_adjust_efm_{a:filter} = 'import: '.a:filter
+    elseif !empty(globpath(&rtp, 'compiler/BTW/'.a:filter.'.pl'))
+      " Third case: there is a perl script compiler/BTW/{a:filter}.pl
+      let path = globpath(&rtp, 'compiler/BTW/'.a:filter.'.vim')
+      call s:Verbose("Use perl script %1", path)
+      let varname = lh#btw#option#_best_place_to_write('_filter.program.'.a:filter)
+      call lh#let#to(varname, path)
+      " let g:BTW_filter_program_{a:filter} = path
+    elseif executable(a:filter)
+      " Fourth case: there is a executable with the same name
+      let filter = s:ToVarName(a:filter)
+      let varname = lh#btw#option#_best_place_to_write('_filter.program.'.a:filter)
+      call lh#let#to(varname, a:filter)
+      " let g:BTW_filter_program_{filter} = a:filter
+    else
+      " There is no such a:filter
+    endif
+  finally
+    call cleanup.finalize()
+  endtry
 endfunction
 
 " ToolsChain():                                  Helper {{{3
