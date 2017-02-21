@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  24th Nov 2016
+" Last Update:  21st Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -172,6 +172,8 @@ function! lh#btw#cmake#define_options(options) abort
     " execute the action to initialize everything
     call lh#btw#cmake#{option}(menu_def)
   endfor
+
+  call lh#btw#cmake#_add_menus()
 endfunction
 
 " Function: lh#btw#cmake#auto_detect_compil_modes(menu_def) {{{2
@@ -624,6 +626,13 @@ function! lh#btw#cmake#add_gen_clic_DB(menu_def)
   call lh#menu#make('nic',
         \ a:menu_def.menu.priority.'91', a:menu_def.menu.name.'Update Code &Index Base',
         \ '<localleader>ti', '', ':call clang#update_clic('.string(a:menu_def._project).')<cr>' )
+endfunction
+
+" Function: lh#btw#cmake#_add_menus() {{{2
+function! lh#btw#cmake#_add_menus() abort
+  call lh#project#menu#make('nic', '11', 'Edit local &CMake file', '<localleader><F7>', '<buffer>', ':call lh#project#crt().get("BTW.config.functions").EditLocalCMakeFile()<cr>')
+  call lh#project#menu#make('nic', '12', 'Edit local &CMake file (vertical)', '<localleader>v<F7>', '<buffer>', ':call lh#project#crt().get("BTW.config.functions").EditLocalCMakeFile("vert")<cr>')
+
 endfunction
 
 " ## Internal functions {{{1
