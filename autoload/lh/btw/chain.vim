@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  20th Feb 2017
+" Last Update:  21st Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -301,10 +301,7 @@ function! s:DefaultEFM(wanted_efm) abort
     if a:wanted_efm == 'default efm'
       setlocal efm&vim
     else
-      if exists("g:current_compiler")
-        unlet g:current_compiler
-      endif
-      " exe 'compiler '.a:wanted_efm
+      call lh#let#unlet('g:current_compiler')
       exe 'runtime compiler/'.a:wanted_efm.'.vim'
       " TODO: check why did I update BTW._filter.program in s:DefaultEFM() ?
       if !empty(&makeprg) && !empty(lh#btw#option#_filter_program_empty_default(a:wanted_efm))
