@@ -6,7 +6,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      28th Nov 2004
-" Last Update:  06th Feb 2017
+" Last Update:  21st Feb 2017
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -333,12 +333,12 @@ endif
 function! s:MenuMakeBG()
   if has('gui_running') && has ('menu')
     let value = lh#btw#option#_make_in_bg()
-    amenu 50.99 &Project.---<sep>--- Nop
-    let C  = value ? 'X' : "\\ "
-    let UC = value ? "\\ " : 'X'
-    silent! exe "anoremenu 50.100 &Project.&[" . C . escape("] Make in &background", '\ ') . " :ToggleMakeBG<cr>"
+    call lh#project#menu#make('a', '99', '---<sep>---', '', 'Nop')
+    let C  = value ? 'X' : " "
+    let UC = value ? " " : 'X'
+    silent! call lh#project#menu#make('anore', '100', "&[" . C . "] Make in &background", '', ':ToggleMakeBG<cr>')
     if exists('s:old_bg')
-      silent! exe "aunmenu Project.[" . UC . escape ("] Make in background", ' ')
+      silent! call lh#project#menu#remove('a', "[" . UC . "] Make in background")
     endif
     let s:old_bg = value
   endif
@@ -347,12 +347,11 @@ endfunction
 function! s:MenuAutoScrollBG()
   if has('gui_running') && has ('menu')
     let value = lh#btw#option#_auto_scroll_in_bg()
-    amenu 50.99 &Project.---<sep>--- Nop
-    let C  = value ? 'X' : "\\ "
-    let UC = value ? "\\ " : 'X'
-    silent! exe "anoremenu 50.100 &Project.&[" . C . escape("] AutoScroll in &background", '\ ') . " :ToggleAutoScrollBG<cr>"
+    let C  = value ? 'X' : " "
+    let UC = value ? " " : 'X'
+    silent! call lh#project#menu#make('anore', '101', "&[" . C . "] &AutoScroll in background", '', ':ToggleAutoScrollBG<cr>')
     if exists('s:old_ASBG')
-      silent! exe "aunmenu Project.[" . UC . escape ("] AutoScroll in background", ' ')
+      silent! call lh#project#menu#remove('a', "[" . UC . "] AutoScroll in background")
     endif
     let s:old_ASBG = value
   endif
@@ -364,10 +363,9 @@ function! s:MenuMakeMJ()
     " if type(value) != type(0)
     " endif
     if exists('s:old_mj')
-      silent! exe "aunmenu Project.[" . s:old_mj . escape ("] Make using multiple jobs", ' ')
+      silent! call lh#project#menu#remove('a', "[" . s:old_mj . "] Make using multiple jobs")
     endif
-    amenu 50.99 &Project.---<sep>--- Nop
-    silent! exe "anoremenu 50.101 &Project.[" . value . escape("] Make using multiple &jobs", '\ ') . " :ToggleMakeMJ<cr>"
+    silent! call lh#project#menu#make('anore', '102', "&[" . value . "] Make using multiple &jobs", '', ':ToggleMakeMJ<cr>')
     let s:old_mj = value
   endif
 endfunction
@@ -376,18 +374,16 @@ if has('gui_running') && has ('menu')
       \ && 0!=strlen(globpath(&rtp, 'autoload/lh/menu.vim'))
     " let b:want_buffermenu_or_global_disable = 0
     " 0->no ; 1->yes ; 2->global disable
-  call lh#menu#make('n', '50.10', '&Project.&ReConfig', s:key_re_config,
-          \ '', ':ReConfig<cr>')
-  call lh#menu#make('n', '50.15', '&Project.&Config', s:key_config,
-          \ '', ':Config<cr>')
-    amenu 50.29 &Project.--<sep>-- Nop
-  call lh#menu#make('ni', '50.30', '&Project.&Make project', s:key_make,
-          \ '', ':Make<cr>')
-  call lh#menu#make('ni', '50.50', '&Project.&Execute', s:key_execute,
-          \ '', ':Execute<cr>')
+  call lh#project#menu#make('n', '10', '&ReConfig',      s:key_re_config, '', ':ReConfig<cr>')
+  call lh#project#menu#make('n', '15', '&Config',        s:key_config,    '', ':Config<cr>')
+  call lh#project#menu#make('a', 29, '--<sep>--', '', 'Nop')
+  call lh#project#menu#make('ni', '30', '&Make project', s:key_make,      '', ':Make<cr>')
+  call lh#project#menu#make('ni', '50', '&Execute',      s:key_execute,   '', ':Execute<cr>')
 
+  call lh#project#menu#make('a', 99, '---<sep>---', '', 'Nop')
   call s:MenuMakeBG()
   call s:MenuMakeMJ()
+  call s:MenuAutoScrollBG()
 else
   exe '  nnoremap '.s:key_make      .' :call lh#btw#build#_compile()<cr>'
   exe '  inoremap '.s:key_make      .' <c-o>:call lh#btw#build#_compile()<cr>'
