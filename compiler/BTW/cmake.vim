@@ -4,7 +4,7 @@
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      0.7.0
 " Created:      21st Feb 2012
-" Last Update:  20th Feb 2017
+" Last Update:  21st Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       BTW cmake compilation toolchain
@@ -12,13 +12,14 @@
 "       $ ctest <build_dir>
 "
 " Options:
-"       [bg]:BTW_project_build_dir
-"       [bg]:BTW_project_config._.compilation.mode/[bg]:BTW_project_build_mode
+"       [bpg]:BTW.compilation_dir
+"       [bpg]:BTW.compilation.mode
+"       [bpg]:BTW.build.mode.current
+"       p:paths.sources
 "
 " TODO:
 "       * Use the internal lh#btw#_register_fix_ctest()
-"       * Have a option function instead of [bg]:BTW_project_build_dir in order
-"       to be able to peek into the unique (to be) [bg]:BTW_project_config.
+"       * Check with non lhvl-project enabled projects
 " }}}1
 "=============================================================================
 
@@ -88,6 +89,20 @@ let b:BTW_adjust_efm_cmake = {
       \ 'post': function(s:getSNR('fix_efm_cmake')),
       \ 'value': 'default efm'
       \}
+
+"=============================================================================
+" ## project config {{{1
+"------------------------------------------------------------------------
+if lh#project#is_in_a_project()
+  LetIfUndef p:BTW.target = ''
+  let s:project_config = {
+        \ 'type': 'ccmake',
+        \ 'arg': lh#ref#bind('p:paths.sources'),
+        \ 'wd' : lh#ref#bind('p:BTW.compilation_dir')
+        \ }
+  call lh#let#if_undef('p:BTW.project_config', s:project_config)
+endif
+
 
 " }}}1
 "------------------------------------------------------------------------
