@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  21st Feb 2017
+" Last Update:  22nd Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -262,12 +262,11 @@ function! lh#btw#chain#_reconstruct() abort
     let makeprg_pattern = 'set -o pipefail ; ' . makeprg_pattern
   endif
 
-  " Set errorformat ; strip redundant commas
-  let v_efm = substitute(efm.value, ',\+', ',', "g")
-  let v_efm = matchstr(v_efm, '^,*\zs.*')
+  let l_efm = split(efm.value, '\v\\@<!,') " comma not after a backslash, used to have commas in errorformat
   for P in efm.post
-    let v_efm = P(v_efm)
+    let l_efm = P(l_efm)
   endfor
+  let v_efm = join(l_efm, ',')
 
   " and finally set makeprg and efm variables in the right scope
   let islocal = exists('b:BTW_build_tool') || exists('b:BTW') || exists('b:'.s:filter_list_varname)

@@ -4,7 +4,7 @@
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      0.7.0
 " Created:      21st Feb 2012
-" Last Update:  21st Feb 2017
+" Last Update:  22nd Feb 2017
 "------------------------------------------------------------------------
 " Description:
 "       BTW cmake compilation toolchain
@@ -62,7 +62,7 @@ endif
 " "%d>"
 " => tell BTW to fix efm by prepending what other tools add
 function! s:fix_efm_cmake(efm)
-  let efm = split(a:efm, ',')
+  let efm = a:efm
 
   if 1 == get(g:, 'lh#btw#chain#__loading_main_tool', 0)
     " ... only if cmake filter has been loaded with `:BTW set(local)`, not with
@@ -82,7 +82,7 @@ function! s:fix_efm_cmake(efm)
         \ , '%C%m'
         \ , '%C%.%#'
         \ ])
-  return join(efm, ',')
+  return efm
 endfunction
 
 let b:BTW_adjust_efm_cmake = {
