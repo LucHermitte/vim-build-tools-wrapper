@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  17th Feb 2017
+" Last Update:  15th Mar 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -474,7 +474,7 @@ function! lh#btw#build#_add_let_modeline() abort
   elseif &ft == 'c'
     let opts .= "\n&CFLAGS\nC&PPFLAGS"
   endif
-  let which = WHICH('COMBO', 'Which option must be set ?',
+  let which = lh#ui#which('lh#ui#combo', 'Which option must be set ?',
         \ "Abort"
         \ . make_files
         \ . opts
