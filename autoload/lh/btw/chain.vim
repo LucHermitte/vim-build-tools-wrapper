@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  22nd Feb 2017
+" Last Update:  14th Apr 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to filter chain management.
@@ -225,12 +225,8 @@ function! lh#btw#chain#_reconstruct() abort
   " - this is where directory is changed
   let prog = lh#btw#option#_build_tool()
   call s:LoadFilter(prog, 1)
-  let Makeprg = lh#btw#option#_filter_program(prog)
-  if type(Makeprg) == type(function('has'))
-    let makeprg_pattern = Makeprg('$*')
-  else
-    let makeprg_pattern = Makeprg . ' $*'
-  endif
+  let l:Makeprg = lh#btw#option#_filter_program(prog)
+  let makeprg_pattern = s:AdjustMakePrg(l:Makeprg)
   call s:AdjustEFM(prog, efm)
 
   let dir = lh#btw#option#_compilation_dir()
@@ -295,6 +291,7 @@ endfunction
 function! s:DefaultEFM(wanted_efm) abort
   let cleanup = lh#on#exit()
         \.restore('&efm')
+        \.restore('&makeprg')
   try
     call s:Verbose('wanted_efm: %1', a:wanted_efm)
     if a:wanted_efm == 'default efm'
@@ -317,7 +314,44 @@ function! s:DefaultEFM(wanted_efm) abort
   endtry
 endfunction
 
-" AdjustEFM(filter, efm):                        {{{3
+" s:AdjustMakePrg(filter, Makeprg):              {{{3
+function! s:AdjustMakePrg(Makeprg) abort
+  " 1- Functions case
+  if type(a:Makeprg) == type(function('has'))
+    return a:Makeprg('$*')
+  else
+    " 2- Strings case
+    " 2.1- Check whether we import a compiler plugin
+    let makeprg = a:Makeprg
+    if makeprg =~ 'import:'
+      let compiler_plugin_imported = matchstr(makeprg, 'import: \zs[^,]*')
+      call s:Verbose('Import makeprg from %1', compiler_plugin_imported)
+      let cleanup = lh#on#exit()
+            \.restore('&efm')
+            \.restore('&makeprg')
+      try
+        call lh#let#unlet('g:current_compiler')
+        let &l:makeprg = ''
+        exe 'runtime compiler/'.compiler_plugin_imported.'.vim'
+        if !empty(&makeprg)
+          let makeprg = &makeprg
+          call s:Verbose('Importing &makeprg=%1', makeprg)
+        else
+          call s:Verbose('WARNING: %1 does not update makeprg', compiler_plugin_imported)
+        endif
+      finally
+        call cleanup.finalize()
+      endtry
+    endif
+    " 2.2- Inject "$*" if not used
+    let makeprg = substitute(makeprg, '\s\+$\*\|$', ' $*', '')
+
+    " 2.3- return new value
+    return makeprg
+  endif
+endfunction
+
+" s:AdjustEFM(filter, efm):                      {{{3
 function! s:AdjustEFM(filter, efm) abort
   let filter_efm = lh#btw#option#efm(a:filter)
   call lh#assert#true(lh#option#is_set(filter_efm))
@@ -368,7 +402,8 @@ function! s:LoadFilter(filter, is_main_tool) abort
       call s:Verbose("Load compiler plugin %1.vim", a:filter)
       let varname = lh#btw#option#_best_place_to_write('_filter.efm.use.'.a:filter)
       call lh#let#to(varname, 'import: '.a:filter)
-      " let b:BTW_adjust_efm_{a:filter} = 'import: '.a:filter
+      let varname = lh#btw#option#_best_place_to_write('_filter.program.'.a:filter)
+      call lh#let#to(varname, 'import: '.a:filter)
     elseif !empty(globpath(&rtp, 'compiler/BTW/'.a:filter.'.pl'))
       " Third case: there is a perl script compiler/BTW/{a:filter}.pl
       let path = globpath(&rtp, 'compiler/BTW/'.a:filter.'.vim')
