@@ -6,7 +6,7 @@
 " Version:	0.7.0
 let s:version = '0.7.0'
 " Created:	06th Nov 2007
-" Last Update:	17th Jun 2016
+" Last Update:	14th Apr 2017
 "------------------------------------------------------------------------
 let s:project = 'lh-BTW'
 cd <sfile>:p:h
@@ -52,6 +52,7 @@ compiler/BTW/run_and_recontact_vim.pl
 compiler/BTW/run_in_background.pl
 compiler/BTW/substitute_filenames.vim
 compiler/BTW/syntax/cc.vim
+compiler/shellcheck.vim
 doc/BuildToolsWrapper.txt
 doc/cmake.md
 lh-build-tools-wrapper-addon-info.txt
