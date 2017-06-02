@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  15th Mar 2017
+" Last Update:  02nd Jun 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -104,6 +104,7 @@ function! s:Executable() abort
   elseif exists('b:BTW_project_executable') | return b:BTW_project_executable
   elseif exists('g:BTW_project_executable') | return g:BTW_project_executable
   else
+    unlet res
     let res = s:ProjectName()
     if empty(res)
       throw "BTW: Sorry, I'm not able to deduce project name in order to know which executable to run. Please see `:h BTW-project-executable`"
