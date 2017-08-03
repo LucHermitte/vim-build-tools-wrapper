@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  25th Apr 2017
+" Last Update:  03rd Aug 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -239,8 +239,8 @@ function! lh#btw#build#_compile(...) abort
   endif
 endfunction
 
-" Function: lh#btw#build#_show_error([cop|cwin])      {{{3
-function! lh#btw#build#_show_error(...) abort
+" Function: lh#btw#build#_do_copen(default, [cop|cwin])        {{{3
+function! lh#btw#build#_do_copen(default, ...) abort
   let qf_position = lh#btw#option#_qf_position()
 
   if a:0 == 1 && a:1 =~ '^\%(cw\%[window]\|copen\)$'
@@ -255,13 +255,27 @@ function! lh#btw#build#_show_error(...) abort
   " whether or not we end up in the quickfix window after the :cwindow
   " command is not fixed.
   let winnum = winnr()
+
   cclose
   " cd . is used to avoid absolutepaths in the quickfix window
-  cd .
+  " :lcd is required to not reset the local directory if in this situation
+  call lh#path#cd_without_sideeffects('.')
+
   exe qf_position . ' ' . open_qf
 
   setlocal nowrap
 
+  return [winid, winnum]
+endfunction
+
+" Function: lh#btw#build#_show_error([cop|cwin])      {{{3
+function! lh#btw#build#_show_error(...) abort
+  let [winid, winnum] = call('lh#btw#build#_do_copen', ['cwindow'] + a:000)
+
+  " --- The following code is borrowed from LaTeXSuite
+  " close the quickfix window before trying to open it again, otherwise
+  " whether or not we end up in the quickfix window after the :cwindow
+  " command is not fixed.
   " if we moved to a different window, then it means we had some errors.
   if winnum != winnr()
     " resize the window to just fit in with the number of lines.
@@ -305,21 +319,7 @@ endfunction
 " lh#btw#build#_show_error overload that does an unconditional opening of the
 " qf window
 function! lh#btw#build#_copen_bg(...) abort
-  let qf_position = lh#btw#option#_qf_position()
-
-  if a:0 == 1 && a:1 =~ '^\%(cw\%[window]\|copen\)$'
-    let open_qf = a:1
-  else
-    let open_qf = 'copen'
-  endif
-  let winid = lh#window#getid()
-
-  cclose
-  " cd . is used to avoid absolutepaths in the quickfix window
-  cd .
-  exe qf_position . ' ' . open_qf
-
-  setlocal nowrap
+  let [winid, winnum] = call('lh#btw#build#_do_copen', ['copen'] + a:000)
 
   call lh#assert#not_equal(winid, lh#window#getid()) " a call to setqflist() should move us to the qfwindow
   call lh#assert#equal('qf', &ft)
