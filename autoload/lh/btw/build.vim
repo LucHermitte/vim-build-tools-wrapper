@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  03rd Aug 2017
+" Last Update:  07th Aug 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -243,10 +243,11 @@ endfunction
 function! lh#btw#build#_do_copen(default, ...) abort
   let qf_position = lh#btw#option#_qf_position()
 
+  " call s:Verbose("lh#btw#build#_do_copen(%1)", a:)
   if a:0 == 1 && a:1 =~ '^\%(cw\%[window]\|copen\)$'
     let open_qf = a:1
   else
-    let open_qf = 'cwindow'
+    let open_qf = a:default
   endif
   let winid = lh#window#getid()
 
@@ -261,6 +262,7 @@ function! lh#btw#build#_do_copen(default, ...) abort
   " :lcd is required to not reset the local directory if in this situation
   call lh#path#cd_without_sideeffects('.')
 
+  call s:Verbose("%1 %2", qf_position, open_qf)
   exe qf_position . ' ' . open_qf
 
   setlocal nowrap
