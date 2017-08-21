@@ -282,7 +282,7 @@ function! lh#btw#chain#_reconstruct() abort
   " default used ... by default
   if !empty(v_efm)
     " Add the new formats
-    call lh#let#to('&'.scope.'efm', '='.v_efm)
+    call lh#let#to('&'.make_scope.'efm', '='.v_efm)
   endif
 endfunction
 
