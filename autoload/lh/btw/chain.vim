@@ -269,12 +269,15 @@ function! lh#btw#chain#_reconstruct() abort
   if lh#project#is_in_a_project()
     let make_scope = lh#project#crt()
     let scope = 'p:'
+    let opt_scope = 'p:'
   elseif islocal
     let make_scope = 'l:'
     let scope = 'b:'
+    let opt_scope = 'l:'
   else
     let make_scope = ''
     let scope = 'g:'
+    let opt_scope = ''
   endif
   call lh#let#to(scope.'BTW._makeprg_pattern', makeprg_pattern)
   call lh#btw#chain#_resolve_makeprg(make_scope)
@@ -282,7 +285,7 @@ function! lh#btw#chain#_reconstruct() abort
   " default used ... by default
   if !empty(v_efm)
     " Add the new formats
-    call lh#let#to('&'.make_scope.'efm', '='.v_efm)
+    call lh#let#to('&'.opt_scope.'efm', '='.v_efm)
   endif
 endfunction
 
