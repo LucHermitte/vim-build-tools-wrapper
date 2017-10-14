@@ -1,5 +1,5 @@
 *BuildToolsWrapper.txt* Projects building plugin
-                        For Vim version 7.x.    Last change: 14th Oct 2016
+                        For Vim version 7.x.    Last change: 14th Oct 2017
 
 
                 BuildToolsWrapper Plugin MANUAL   By Luc Hermitte
@@ -260,6 +260,10 @@ determined according to the heuristic described in |BTW-project-executable|.
 Arguments to the program can be specified with the option
 |(bpg):BTW.run_parameters|.
 
+Since |:terminal| support, the execution can be done within a terminal. Set
+*g:BTW.execute_with* to one of the three accepted value: `!`, `:terminal`, or
+`:vert terminal`. This option is best set with `:Toggle` command.
+
 By default, |:Execute| (with no argument) is binded to <C-F5> This can be
 overrided with the option |[bpg]:BTW.key_execute|.
 
@@ -401,6 +405,6 @@ TODO list~
 - Improve and document *QFImport* , |BTW.compilation_dir| , "import:"
 
 ------------------------------------------------------------------------------
- © Luc Hermitte, 2004-2016, <http://github.com/LucHermitte/vim-build-tools-wrapper>, CC by SA 3.0 {{{1
+ © Luc Hermitte, 2004-2017, <http://github.com/LucHermitte/vim-build-tools-wrapper>, CC by SA 3.0 {{{1
  VIM: let b:VS_language = 'american'
  vim:ts=8:sw=4:tw=80:fo=tcq2:isk=!-~,^*,^\|,^\":ft=help:

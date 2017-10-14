@@ -6,7 +6,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      28th Nov 2004
-" Last Update:  21st Feb 2017
+" Last Update:  14th Oct 2017
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -243,6 +243,7 @@ let s:k_version = 0700
 "       * Use new logging framework in some places
 "       * Background compilation based on lh#async
 "       * Take p:$ENV into account to compile programs
+"       * Can execute in `:terminal`
 "
 " TODO:                                    {{{2
 "       * &magic
@@ -393,6 +394,19 @@ else
 
   exe '  nnoremap '.s:key_re_config .' :ReConfig<cr>'
   exe '  nnoremap '.s:key_config    .' :Config<cr>'
+endif
+
+if exists(':terminal') " TODO: find a better version number has terminal has been implemented through many patches...
+    let s:ExecuteWith = {
+          \ "variable": "BTW.execute_with",
+          \ "values": [ '!', 'terminal', 'vert terminal' ],
+          \ "idx_crt_value": 2,
+          \ "menu": {
+          \     "priority": 105,
+          \     "name": 'Execute &with'}
+          \}
+    call lh#project#menu#def_toggle_item(s:ExecuteWith)
+
 endif
 " ## Commands and mappings }}}1
 "------------------------------------------------------------------------

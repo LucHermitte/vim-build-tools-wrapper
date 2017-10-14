@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  07th Aug 2017
+" Last Update:  14th Oct 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -384,13 +384,15 @@ function! lh#btw#build#_execute()
       call lh#common#error_msg( "BTW: unexpected type (".(path.type).") for the command to run")
     endif
   else " normal case: string = command to execute
-    if (lh#os#system_detected() == 'unix') && (path[0]!='/') && (path!~'[a-zA-Z]:[/\\]') && (path!~'cd')
+    if !lh#path#is_absolute_path(path) && path !~ '[/\\]'
+      " if (lh#os#system_detected() == 'unix') && (path[0]!='/') && (path!~'[a-zA-Z]:[/\\]') && (path!~'cd')
       " todo, check executable(split(path)[0])
       let path = './' . path
     endif
     let cmd = lh#path#fix(path) . ' ' .lh#btw#option#_run_parameters()
     call s:Verbose(':!%1', cmd)
-    exe ':!'.cmd
+    let execute_with = lh#option#get('BTW.execute_with', '!')
+    exe ':'execute_with.cmd
   endif
 endfunction
 
