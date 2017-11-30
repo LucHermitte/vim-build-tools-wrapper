@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  14th Oct 2017
+" Last Update:  30th Nov 2017
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -474,10 +474,10 @@ function! lh#btw#build#_add_let_modeline() abort
   endif
 
   let opts = ''
-  if &ft == 'cpp'
-    let opts .= "\nC&XXFLAGS\nC&PPFLAGS"
+  if &ft     == 'cpp'
+    let opts .= "\n$C&XXFLAGS\n$C&PPFLAGS"
   elseif &ft == 'c'
-    let opts .= "\n&CFLAGS\nC&PPFLAGS"
+    let opts .= "\n$&CFLAGS\n$C&PPFLAGS"
   endif
   let which = lh#ui#which('lh#ui#combo', 'Which option must be set ?',
         \ "Abort"
