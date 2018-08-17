@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  30th Nov 2017
+" Last Update:  26th Jun 2018
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -233,9 +233,6 @@ function! lh#btw#build#_compile(...) abort
   let bg = s:DoRunAndCaptureOutput(&makeprg, rule)
   if !bg
     echomsg "Compilation finished".(len(rule)?" (".rule.")" : "")
-    if exists(':CompilHintsUpdate')
-      :CompilHintsUpdate
-    endif
   endif
 endfunction
 
@@ -312,9 +309,6 @@ function! lh#btw#build#_copen_bg_complete(what, job_info, ...) abort
         \ = a:what
         \ . (a:job_info.exitval == 0 ? " successfully built" : " build failed (w/ exitval:".(a:job_info.exitval).")")
   call lh#common#warning_msg("Build complete: ".msg."!")
-  if exists(':CompilHintsUpdate')
-    :CompilHintsUpdate
-  endif
 endfunction
 
 " Function: lh#btw#build#_copen_bg([cop|cwin])      {{{3
