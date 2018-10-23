@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  21st Feb 2017
+" Last Update:  23rd Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -165,7 +165,8 @@ function! lh#btw#cmake#define_options(options) abort
   for option in a:options
     " save the menu in order to make hooks and other stuff accessible
     let menu_def = lh#let#if_undef('p:BTW.'.option, {})
-    let menu_def.menu = copy(lh#option#get('menu'))
+    call extend(menu_def, copy(lh#option#get('menu')), 'keep')
+    " let menu_def.menu = copy(lh#option#get('menu'))
     let menu_def.project = lh#project#crt()
     call lh#assert#true(lh#option#is_set(menu_def.project), 'lh#btw#cmake#define_options requires working with lhvl projects')
 
@@ -266,8 +267,10 @@ function! lh#btw#cmake#auto_detect_compil_modes2(menu_def) abort
     call lh#common#echomsg_multilines(msg)
   endif
 
+  let list = lh#let#if_undef('p:BTW.build.mode.list', {})
   for sub in subs
-    call lh#let#if_undef('p:BTW.build.mode.list.'.fnamemodify(sub, ':t'), lh#path#strip_start(sub, project_root))
+    " In case the {sub}  contains a dot => don't interpret it as a new subkey
+    let list[fnamemodify(sub, ':t')] = lh#path#strip_start(sub, project_root)
   endfor
 
   " And finally, prepare everything
@@ -642,6 +645,11 @@ function! s:getSNR(...)
     let s:SNR=matchstr(expand('<sfile>'), '<SNR>\d\+_\zegetSNR$')
   endif
   return s:SNR . (a:0>0 ? (a:1) : '')
+endfunction
+
+" # s:function() {{{2
+function! s:function(...) abort
+  return function(call('s:getSNR', a:000))
 endfunction
 
 " # s:project() {{{2
