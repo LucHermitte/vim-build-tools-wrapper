@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 070
 " Created:      14th Mar 2014
-" Last Update:  17th Feb 2017
+" Last Update:  06th Sep 2018
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -308,6 +308,7 @@ function! s:QuickFixImport() abort
   else
     " If everyting works fine, this branch of code should not be executed!
     " It could, when not using BTW function to compile.
+    return
 
     " First call to :copen, things haven't been serialized yet
     if !exists('g:lh#btw#_last_buffer') | return | endif
