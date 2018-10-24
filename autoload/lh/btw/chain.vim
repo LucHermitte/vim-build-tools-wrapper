@@ -5,10 +5,12 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  14th Apr 2017
+" Last Update:  24th Oct 2018
 "------------------------------------------------------------------------
 " Description:
-"       Internal functions dedicated to filter chain management.
+"       Internal functions dedicated to:
+"       - filter chain management.
+"       - and automagic chain detection
 " }}}1
 "=============================================================================
 
@@ -49,6 +51,40 @@ endfunction
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
 let s:filter_list_varname = 'BTW._filter.list'
+
+" # Chain auto detection                 {{{2
+" Function: lh#btw#chain#register(file, chain, priority) {{{3
+let s:registered_chains = get(s:, 'registered_chains', {})
+let s:chain_priorities  = sort(keys(s:registered_chains))
+function! lh#btw#chain#register(file, chain, priority) abort
+  if !has_key(s:registered_chains, a:priority)
+    let s:registered_chains[a:priority] = {}
+    let s:chain_priorities = sort(keys(s:registered_chains))
+  endif
+  let prio_list = get(s:registered_chains, a:priority)
+  call extend(prio_list, {(a:file) : a:chain}, "force")
+endfunction
+runtime! autoload/lh/btw/chain/_register_*.vim
+
+" Function: lh#btw#chain#_find_chain(dir) {{{3
+function! lh#btw#chain#_find_chain(dir) abort
+  for prio in s:chain_priorities
+    for [file, chain] in items(s:registered_chains[prio])
+      if filereadable(a:dir.'/'.file)
+        return chain
+      endif
+    endfor
+  endfor
+  return "_default"
+endfunction
+
+" Function: lh#btw#chain#load_config([chain]) {{{3
+function! lh#btw#chain#load_config(...) abort
+  let chain = a:0 > 0 ? a:1 : lh#btw#chain#_find_chain(lh#option#get('paths.sources', expand('%:p:h')))
+
+  call lh#btw#chain#{chain}#load_config()
+endfunction
+
 
 " # Filter list management {{{2
 " lh#btw#chain#_filters_list(scope):             Helper {{{3
