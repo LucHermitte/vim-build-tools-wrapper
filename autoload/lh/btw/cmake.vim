@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  23rd Oct 2018
+" Last Update:  24th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -114,7 +114,7 @@ function! lh#btw#cmake#def_options(config, options) abort
   " Set default values
   call lh#let#if_undef('g:'.a:config._project.'.compilation.mode',      'Release')
   call lh#let#if_undef('g:'.a:config._project.'.paths._clic',           '.clic/index.db')
-  call lh#let#if_undef('g:'.a:config._project.'.paths.clic',            function(s:getSNR('GetClic')))
+  call lh#let#if_undef('g:'.a:config._project.'.paths.clic',            s:function('GetClic'))
   call lh#let#if_undef('g:'.a:config._project.'.tests.verbosity',       '')
   call lh#let#if_undef('g:'.a:config._project.'.tests.checking_memory', 'no')
   call lh#let#if_undef('g:'.a:config._project.'.tests.test_regex',      '')
@@ -155,7 +155,7 @@ function! lh#btw#cmake#define_options(options) abort
   endif
   call lh#let#to('p:BTW.is_using_project', 1)
   call lh#let#if_undef('p:BTW.paths._clic',           '.clic/index.db')
-  call lh#let#if_undef('p:BTW.paths.clic',            function(s:getSNR('GetClic')))
+  call lh#let#if_undef('p:BTW.paths.clic',            s:function('GetClic'))
   call lh#let#if_undef('p:BTW.tests.verbosity',       '')
   call lh#let#if_undef('p:BTW.tests.checking_memory', 'no')
   call lh#let#if_undef('p:BTW.tests.test_regex',      '')
@@ -182,7 +182,7 @@ endfunction
 " def_toggable_compil_mode
 function! lh#btw#cmake#auto_detect_compil_modes(...) abort
   let menu_def = a:1
-  let menu_def.project = function(s:getSNR('project'))
+  let menu_def.project = s:function('project')
   let project = menu_def.project()
   let paths = project.paths
   " It may be a list of directories actually...
@@ -296,10 +296,10 @@ function! lh#btw#cmake#def_toggable_compil_mode(menu_def) abort
   " Default (polymorphic) functions for determining the current project
   " executable, and the current compilation directory
   if !has_key(a:menu_def, 'set_project_executable')
-    let a:menu_def.set_project_executable = function(s:getSNR('SetProjectExecutable'))
+    let a:menu_def.set_project_executable = s:function('SetProjectExecutable')
   endif
   if !has_key(a:menu_def, 'update_compil_dir')
-    let a:menu_def.update_compil_dir = function(s:getSNR('UpdateCompilDir'))
+    let a:menu_def.update_compil_dir = s:function('UpdateCompilDir')
   endif
   function! a:menu_def.do_update() dict abort
     " let b:BTW_project_build_mode = self.eval()
@@ -331,8 +331,8 @@ function! lh#btw#cmake#def_toggable_compil_mode2(menu_def) abort
   endif
   " Default (polymorphic) functions for determining the current project
   " executable, and the current compilation directory
-  let menu_def.set_project_executable = function(s:getSNR('SetProjectExecutable'))
-  let menu_def.update_compil_dir      = function(s:getSNR('UpdateCompilDir'))
+  let menu_def.set_project_executable = s:function('SetProjectExecutable')
+  let menu_def.update_compil_dir      = s:function('UpdateCompilDir')
   function! menu_def.do_update() dict abort
     call self.update_compil_dir()
     " Only the directory changes. No need to update everything w/ `BTW rebuild`
@@ -365,7 +365,7 @@ function! lh#btw#cmake#def_toggable_ctest_verbosity(menu_def) abort
   " Default (polymorphic) functions for determining the current project
   " executable, and the current compilation directory
   if !has_key(a:menu_def, 'set_ctest_argument')
-    let a:menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument'))
+    let a:menu_def.set_ctest_argument = s:function('SetCTestArgument')
   endif
   function! a:menu_def.do_update() dict abort
     call self.set_ctest_argument()
@@ -394,7 +394,7 @@ function! lh#btw#cmake#def_toggable_ctest_verbosity2(menu_def) abort
   " Default (polymorphic) functions for determining the current project
   " executable, and the current compilation directory
   if !has_key(menu_def, 'set_ctest_argument')
-    let menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument2'))
+    let menu_def.set_ctest_argument = s:function('SetCTestArgument2')
   endif
   function! menu_def.do_update() dict abort
     call self.set_ctest_argument()
@@ -421,7 +421,7 @@ function! lh#btw#cmake#def_ctest_targets(menu_def) abort
   " Default (polymorphic) functions for determining the current project
   " executable, and the current compilation directory
   if !has_key(a:menu_def, 'set_ctest_argument')
-    let a:menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument'))
+    let a:menu_def.set_ctest_argument = s:function('SetCTestArgument')
   endif
   function! a:menu_def.do_update() dict abort
     call self.set_ctest_argument()
@@ -450,7 +450,7 @@ function! lh#btw#cmake#def_ctest_targets2(menu_def) abort
   " Default (polymorphic) functions for determining the current project
   " executable, and the current compilation directory
   if !has_key(menu_def, 'set_ctest_argument')
-    let menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument2'))
+    let menu_def.set_ctest_argument = s:function('SetCTestArgument2')
   endif
   function! menu_def.do_update() dict abort
     call self.set_ctest_argument()
@@ -478,7 +478,7 @@ function! lh#btw#cmake#def_toggable_ctest_checkmem(menu_def) abort
   " Default (polymorphic) functions for determining the current project
   " executable, and the current compilation directory
   if !has_key(a:menu_def, 'set_ctest_argument')
-    let a:menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument'))
+    let a:menu_def.set_ctest_argument = s:function('SetCTestArgument')
   endif
   function! a:menu_def.do_update() dict abort
     call self.set_ctest_argument()
@@ -509,7 +509,7 @@ function! lh#btw#cmake#def_toggable_ctest_checkmem2(menu_def) abort
   " Default (polymorphic) functions for determining the current project
   " executable, and the current compilation directory
   if !has_key(menu_def, 'set_ctest_argument')
-    let menu_def.set_ctest_argument = function(s:getSNR('SetCTestArgument2'))
+    let menu_def.set_ctest_argument = s:function('SetCTestArgument2')
   endif
   function! menu_def.do_update() dict abort
     call self.set_ctest_argument()
@@ -572,7 +572,7 @@ function! lh#btw#cmake#update_list(menu_def) abort
     let menu._root         = menu_def.project().paths.trunk
     let menu._testname     = test
     let menu._testnr       = i
-    let menu.set_ctest_argument = function(s:getSNR('SetCTestArgument'))
+    let menu.set_ctest_argument = s:function('SetCTestArgument')
     function! menu.do_update() dict
       " This part affects a global setting
       let l_tests = self.project().tests.active_list
@@ -640,16 +640,16 @@ endfunction
 
 " ## Internal functions {{{1
 " # s:getSNR() {{{2
-function! s:getSNR(...)
+function! s:getSNR(funcname)
   if !exists("s:SNR")
     let s:SNR=matchstr(expand('<sfile>'), '<SNR>\d\+_\zegetSNR$')
   endif
-  return s:SNR . (a:0>0 ? (a:1) : '')
+  return s:SNR . a:funcname
 endfunction
 
 " # s:function() {{{2
-function! s:function(...) abort
-  return function(call('s:getSNR', a:000))
+function! s:function(funcname) abort
+  return function(s:getSNR(a:funcname))
 endfunction
 
 " # s:project() {{{2
