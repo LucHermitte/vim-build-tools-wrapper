@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  24th Oct 2018
+" Last Update:  25th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -111,6 +111,23 @@ function! lh#btw#cmake#define_options(options) abort
   endfor
 
   call lh#btw#cmake#_add_menus()
+endfunction
+
+" Function: lh#btw#cmake#_build_root_dir() {{{3
+function! lh#btw#cmake#_build_root_dir() abort
+  " It may be a list of directories actually...
+  " but relative to `project`
+  let build_root = lh#option#get('paths.build_root_dir', lh#option#unset(), 'p')
+  if lh#option#is_unset(build_root)
+    throw "Please set `p:paths.build_root_dir` in order to prepare compilation modes."
+  endif
+  " Path to which every build diretory is relative
+  let project_root = lh#option#get('paths.project')
+  if lh#option#is_unset(project_root)
+    throw "Please set `p:paths.project` to project root directory (that contains sources and build directories)"
+  endif
+  let build_root_path = project_root.'/'.build_root
+  return build_root_path
 endfunction
 
 " Function: lh#btw#cmake#auto_detect_compil_modes(menu_def) {{{2
