@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  25th Oct 2018
+" Last Update:  26th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -64,7 +64,7 @@ let s:k_script_name      = s:getSID()
 function! lh#btw#chain#cmake#load_config() abort
   LetIfUndef p:BTW.target = ''
   let config = lh#let#to('p:BTW.project_config', lh#btw#chain#cmake#_make())
-  call config.bootstrap()
+  return config.bootstrap()
 endfunction
 
 " # Access to cmake/ccmake executables {{{2
@@ -149,16 +149,63 @@ function! s:reconfig() dict abort " {{{3
   exe ':!'.prg
 endfunction
 
+function! s:do_bootstrap(dir, opts) dict abort " {{{3
+  let sources_dir = lh#option#get('paths.sources')
+  let cmd = lh#os#sys_cd(a:dir).' && '.printf(s:ccmake(), sources_dir). ' '.opts
+  return lh#os#system(cmd)
+endfunction
+
 function! s:bootstrap() dict abort " {{{3
-  return
-  " Try to autodetect build directory
-  " Register the bootstrapped configurations
-  let confs = lh#option#get('BTW.build.bootstrap', [])
-  let list = lh#let#if_undef('p:BTW.build.list', {})
-  let build_root_dir = lh#btw#cmake#_build_root_dir()
+  " 1- Try to autodetect build directory
+  let prj_root_dir = lh#option#get('paths.project')
+  if lh#option#is_set(prj_root_dir)
+    call s:Verbose("BTW: Bootstrapping cmake chain, using (bpg):paths.project='%1'", prj_root_dir)
+  else
+    unlet prj_root_dir
+    let sources_dir = lh#option#get('paths.sources')
+    call lh#assert#value(sources_dir).is_set()
+    " Sometimes, the paths.sources is artifically changed, in that case search
+    " for the last up-directory with a CMakeLists.txt
+    let updir_cmakelists = findfile('CMakeLists.txt', sources_dir.";", -1)
+    " If we're here, it's because a CMakeLists.txt has been found
+    call lh#assert#value(updir_cmakelists).not().empty()
+
+    let prj_root_dir = lh#let#to('p:paths.project', fnamemodify(updir_cmakelists[-1], ':p:h:h'))
+    call s:Verbose("BTW: Bootstrapping cmake chain, deducing (bpg):paths.project='%1'", prj_root_dir)
+  endif
+
+  let build_root_dir = lh#option#get('paths.build_root_dir')
+  if lh#option#is_set(build_root_dir)
+    call s:Verbose("BTW: Bootstrapping cmake chain, using (bpg):paths.build_root_dir='%1'", build_root_dir)
+  else
+    unlet build_root_dir
+    " Now if there is a build/ dir in the parent directory, let's say
+    let build_dirname = lh#option#get('paths.build_dirname', 'build')
+    let updir_build = finddir(build_dirname, updir_cmakelists[-1].';', -1)
+    if empty(updir_build)
+      let build_root_dir = lh#ui#input("No '".build_dirname."/' directory found\nWhere do you want to build? ",
+            \ prj_root_dir.'/'.build_dirname)
+    else
+      let build_root_dir = lh#ui#input("'".build_dirname."/' directory found\nDo you confirm? ",
+            \ updir_build[-1])
+    endif
+
+    if  empty(build_root_dir)
+      return 0
+    endif
+    let build_root_dir = lh#path#relative_to(prj_root_dir, build_root_dir)
+    call lh#let#to('p:paths.build_root_dir', build_root_dir)
+    call s:Verbose("BTW: Bootstrapping cmake chain, deducing (bpg):paths.build_root_dir='%1'", build_root_dir)
+  endif
+
+  " 2- Register the bootstrapped configurations
+  let confs = lh#option#get('BTW.build.mode.bootstrap', {})
+  let list = lh#let#if_undef('p:BTW.build.mode.list', {})
   for conf in keys(confs)
     let list[conf] = build_root_dir . '/' . conf
   endfor
+
+  return 1
 endfunction
 
 "------------------------------------------------------------------------

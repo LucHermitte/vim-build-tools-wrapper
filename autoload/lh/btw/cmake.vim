@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  25th Oct 2018
+" Last Update:  26th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -140,7 +140,7 @@ function! lh#btw#cmake#auto_detect_compil_modes(menu_def) abort
   if lh#option#is_unset(build_root)
     throw "Please set `p:paths.build_root_dir` in order to autodetect compilation modes."
   endif
-  " Path to which every build diretory is relative
+  " Path to which every build directory is relative
   let project_root = a:menu_def.project.get('paths.project')
   if lh#option#is_unset(project_root)
     throw "Please set `p:paths.project` to project root directory (that contains sources and build directories)"
@@ -327,6 +327,33 @@ function! lh#btw#cmake#_add_menus() abort
   call lh#project#menu#make('nic', '12', 'Edit local &CMake file (vertical)', '<localleader>v<F7>', '<buffer>', ':call lh#project#crt().get("BTW.config.functions").EditLocalCMakeFile("vert")<cr>')
 endfunction
 
+" Function: lh#btw#cmake#bootstrap() {{{3
+function! lh#btw#cmake#bootstrap() abort
+  let compil_mode = lh#option#get('BTW.build.mode.current')
+  call s:Verbose("bootstrapping CMake for compil_mode: %1", compil_mode)
+  if lh#option#is_unset(compil_mode)
+    call lh#common#error_msg('(bpg):BTW.build.mode.current is not set. Impossible to bootstrap cmake')
+    return 0
+  endif
+  let
+  let compil_subpath = lh#option#get('BTW.build.mode.list['.compil_mode.']')
+  call lh#assert#type(compil_subpath).is('')
+  let project_dir = lh#option#get('paths.project')
+  call lh#assert#type(project_dir).is('')
+  call s:Verbose("Use compilation dir: '%1/%2'", project_dir, compil_subpath)
+  let dir = project_dir.'/'.compil_subpath
+
+  let opts = lh#option#get('BTW.build.mode.bootstrap['.compil_mode.']')
+  if lh#option#is_unset(opts)
+    call lh#common#error_msg('BTW.build.mode.bootstrap['.compil_mode.'] is not set. Impossible to bootstrap cmake for '.compil_mode.' mode.')
+    return 0
+  endif
+
+  let config = lh#let#to('p:BTW.project_config')
+  call lh#assert#value(config).is_set()
+  return config.do_bootstrap(dir, opts)
+endfunction
+
 " ## Internal functions {{{1
 " # s:getSNR() {{{2
 function! s:getSNR(funcname)
@@ -356,7 +383,9 @@ function! lh#btw#cmake#__update_compil_dir() dict
     call s:Verbose("New compil_mode: %1", compil_mode)
     call lh#assert#true(lh#option#is_set(compil_mode))
     let project_dir = self.project.get('paths.project')
-    let compil_subpath = self.project.get('BTW.build.mode.list.'.compil_mode)
+    call lh#assert#type(project_dir).is('')
+    let compil_subpath = self.project.get('BTW.build.mode.list['.compil_mode.']')
+    call lh#assert#type(compil_subpath).is('')
     call s:Verbose("Set compilation dir to %1/%2", project_dir, compil_subpath)
     let dir = project_dir.'/'.compil_subpath
     " call lh#let#to('p:paths._build', dir)

@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  25th Oct 2018
+" Last Update:  26th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -62,6 +62,7 @@ let s:k_script_name      = s:getSID()
 " Function: lh#btw#chain#_default#load_config() {{{2
 function! lh#btw#chain#_default#load_config() abort
   LetTo p:BTW.project_config = lh#btw#chain#_default#_make()
+  return 1
 endfunction
 
 " Function: lh#btw#chain#_default#_make(...) {{{2

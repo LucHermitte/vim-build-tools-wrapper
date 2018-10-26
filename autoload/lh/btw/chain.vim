@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  24th Oct 2018
+" Last Update:  26th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to:
@@ -82,7 +82,7 @@ endfunction
 function! lh#btw#chain#load_config(...) abort
   let chain = a:0 > 0 ? a:1 : lh#btw#chain#_find_chain(lh#option#get('paths.sources', expand('%:p:h')))
 
-  call lh#btw#chain#{chain}#load_config()
+  return lh#btw#chain#{chain}#load_config()
 endfunction
 
 
