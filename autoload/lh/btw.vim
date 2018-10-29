@@ -325,7 +325,7 @@ function! s:QuickFixImport() abort
     for var in variables
       " Project data is not duplicated.
       " We copy only the compilation information in a buffer local variable(s)
-      " that would overide p:variable(s).
+      " that would override p:variable(s).
       let value = lh#option#getbufvar(bid, var)
       if lh#option#is_set(value)
         if var == lh#project#_get_varname()

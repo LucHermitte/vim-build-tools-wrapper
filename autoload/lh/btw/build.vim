@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  26th Jun 2018
+" Last Update:  29th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -147,15 +147,14 @@ function! s:RunInBackground()
 endfunction
 
 
-" Function: s:DoRunAndCaptureOutput(program [, args]) {{{3
+" Function: s:DoRunAndCaptureOutput(program, options [, args]) {{{3
 let s:k_multijobs_options = {
       \ 'make': '-j'
       \}
 let s:has_jobs = exists('*job_start') && has("patch-7.4.1980")
-function! s:DoRunAndCaptureOutput(program, ...) abort
-  let bg = (has('clientserver') || s:has_jobs) && lh#btw#option#_make_in_bg()
-  let cleanup = lh#on#exit()
-        \.restore('&makeprg')
+function! s:DoRunAndCaptureOutput(program, options, ...) abort
+  let ask_bg = get(a:options, 'background', lh#btw#option#_make_in_bg())
+  let bg = (has('clientserver') || s:has_jobs) && ask_bg
   let program = a:program
   if bg && !s:has_jobs
     let run_in = lh#btw#option#_make_in_bg_in()
@@ -190,7 +189,7 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
       exe cmd
     else
       " lh#os#make will inject p:$ENV on-the-fly, if needed.
-      call lh#os#make(args, '!')
+      call lh#os#make(args, '!', program)
     endif
   catch /.*/
     if lh#btw#filters#verbose() > 0
@@ -203,8 +202,6 @@ function! s:DoRunAndCaptureOutput(program, ...) abort
     if &ft != 'qf'
       call lh#btw#_save_last_buffer_data()
     endif
-
-    call cleanup.finalize()
   endtry
 
   if bg && s:has_jobs
@@ -230,9 +227,15 @@ function! lh#btw#build#_compile(...) abort
   if lh#btw#option#_use_prio() == 'update'
     call lh#btw#chain#_reconstruct()
   endif
-  let bg = s:DoRunAndCaptureOutput(&makeprg, rule)
+  call lh#btw#build#_do_compile(&makeprg, rule, "Compilation finished")
+endfunction
+
+" Function: lh#btw#build#_do_compile(makeprg, rule, msg [, args]) {{{3
+function! lh#btw#build#_do_compile(makeprg, rule, msg, ...) abort
+  let args = get(a:, 1, {})
+  let bg = s:DoRunAndCaptureOutput(a:makeprg, args, a:rule)
   if !bg
-    echomsg "Compilation finished".(len(rule)?" (".rule.")" : "")
+    echomsg a:msg.(len(a:rule)?" (".a:rule.")" : "")
   endif
 endfunction
 
@@ -373,7 +376,7 @@ function! lh#btw#build#_execute()
           let makeprg = makeprg[ : (p-1)].ctx.makeprg[p : ]
         endif
       endif
-      call s:DoRunAndCaptureOutput(makeprg, path.rule)
+      call s:DoRunAndCaptureOutput(makeprg, {}, path.rule)
     else
       call lh#common#error_msg( "BTW: unexpected type (".(path.type).") for the command to run")
     endif
@@ -393,65 +396,16 @@ endfunction
 " # Config         {{{2
 " Function: lh#btw#build#_config()                    {{{3
 function! lh#btw#build#_config() abort
-  let how = lh#btw#option#_project_config()
-  if     how.type == 'modeline'
-    call lh#btw#build#_add_let_modeline()
-  elseif how.type == 'makefile'
-    let wd = lh#btw#_evaluate(how.wd)
-    let file = lh#btw#_evaluate(how.file)
-    call lh#buffer#jump(wd.'/'.file)
-  elseif how.type == 'ccmake'
-    let wd = lh#btw#_evaluate(how.wd)
-    if lh#os#OnDOSWindows()
-      " - the first ":!start" runs a windows command
-      " - "cmd /c" is used to define the second "start" command (see "start /?")
-      " - the second "start" is used to set the current directory and run the
-      " execution.
-      let prg = 'start /b cmd /c start /D '.lh#path#fix(wd, 0, '"')
-            \.' /B cmake-gui '.lh#path#fix(how.arg, 0, '"')
-    else
-      " let's suppose no spaces are used
-      " let prg = 'xterm -e "cd '.wd.' && ccmake '.(how.arg).'"'
-      let prg = 'cd '.wd.' && cmake-gui '.(how.arg).'&'
-    endif
-    " let g:prg = prg
-    call s:Verbose(":!".prg)
-    exe ':silent !'.prg
-  endif
+  let config = lh#btw#option#_project_config()
+  call lh#assert#value(config).is_set().has_key('config')
+  return config.config({'background': lh#btw#option#_make_in_bg()})
 endfunction
 
 " Function: lh#btw#build#_re_config()                 {{{3
 function! lh#btw#build#_re_config() abort
-  let how = lh#btw#option#_project_config()
-  if     how.type == 'modeline'
-    if exists(':LetModeLine')
-      :LetModeLine
-      return
-    endif
-  elseif how.type == 'makefile'
-    " let wd = lh#btw#_evaluate(how.wd)
-    " let file = lh#btw#_evaluate(how.file)
-    " call lh#buffer#jump(wd.'/'.file)
-    return
-  elseif how.type == 'ccmake'
-    let wd = lh#btw#_evaluate(how.wd)
-    if lh#os#OnDOSWindows()
-      " - the first ":!start" runs a windows command
-      " - "cmd /c" is used to define the second "start" command (see "start /?")
-      " - the second "start" is used to set the current directory and run the
-      " execution.
-      let prg = 'start /b cmd /c start /D '.lh#path#fix(wd, 0, '"')
-            \.' /B cmake .'
-    else
-      " let's suppose no spaces are used
-      " let prg = 'xterm -e "cd '.wd.' && cmake ."'
-      call s:Verbose('Reconfigure with: cd %1 && cmake .', wd)
-      let prg = 'cd '.wd.' && cmake .'
-    endif
-    call s:Verbose(":!".prg)
-    " TODO: Asynch execution through &makeprg!
-    exe ':!'.prg
-  endif
+  let config = lh#btw#option#_project_config()
+  call lh#assert#value(config).is_set().has_key('reconfig')
+  return config.reconfig()
 endfunction
 
 " Function: lh#btw#build#_add_let_modeline()          {{{3

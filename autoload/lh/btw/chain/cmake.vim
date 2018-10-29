@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  26th Oct 2018
+" Last Update:  29th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -64,6 +64,8 @@ let s:k_script_name      = s:getSID()
 function! lh#btw#chain#cmake#load_config() abort
   LetIfUndef p:BTW.target = ''
   let config = lh#let#to('p:BTW.project_config', lh#btw#chain#cmake#_make())
+  " TODO: find the best place to do this...
+  BTW addlocal cmake
   return config.bootstrap()
 endfunction
 
@@ -83,7 +85,7 @@ function! s:cmake() abort " {{{3
   endif
 endfunction
 
-function! s:ccmake() abort " {{{3
+function! s:ccmake_interactive() abort " {{{3
   if executable('cmake-gui')
     return 'cmake-gui %s &'
   elseif executable('ccmake')
@@ -104,15 +106,36 @@ endfunction
 function! lh#btw#chain#cmake#_make(...) abort
   let res = lh#object#make_top_type(get(a:, 1, {}))
   let res.type = 'ccmake'
-  let res.args = lh#option#get('paths.sources')
+  let res.arg  = lh#option#get('paths.sources')
   let res.wd   = lh#ref#bind('p:BTW.compilation_dir')
   call lh#object#inject_methods(res, s:k_script_name, 'config', 'reconfig', 'bootstrap')
   return res
 endfunction
 
-function! s:config() dict abort " {{{3
-  let wd = self.wd
+function! s:ensure_directory(dir) abort " {{{3
+  if !isdirectory(a:dir)
+    if exists('*mkdir')
+      call mkdir(a:dir, 'p')
+    else
+      let cmd = lh#os#SystemCmd('mkdir')
+      call system(cmd. ' '.lh#path#fix(a:dir))
+    endif
+    if !isdirectory(a:dir)
+      throw "BTW: Cannot bootstrap ccmake in '".a:dir."': Impossible to create directory"
+    endif
+  endif
+endfunction
+
+function! s:config(...) dict abort " {{{3
+  " Running modes: interactive, background, synchronous
+  let args = get(a:, 1, {})
+  let mode = get(args, 'mode', 'interactive')
+
+  let wd = lh#btw#_evaluate(self.wd)
+  call s:ensure_directory(wd)
   if lh#os#OnDOSWindows()
+    " TODO: support all modes on Windows
+
     " - the first ":!start" runs a windows command
     " - "cmd /c" is used to define the second "start" command (see "start /?")
     " - the second "start" is used to set the current directory and run the
@@ -120,17 +143,49 @@ function! s:config() dict abort " {{{3
     let prg = 'start /b cmd /c start /D '.lh#path#fix(wd, 0, '"')
           \.' /B cmake-gui '.lh#path#fix(how.arg, 0, '"')
   else
-    " let's suppose no spaces are used
-    " let prg = 'xterm -e "cd '.wd.' && ccmake '.(how.arg).'"'
-    let prg = 'cd '.wd.' && '.printf(s:ccmake(), self.arg)
+    " Modes
+    " - "interactive" -> ccmake(-gui)
+    " - "background"  -> use BTW Make on cmake
+    " - "synchronous" -> direct call to system() on cmake
+    "
+    let prg = lh#os#sys_cd(wd).' && '
+    if mode == 'interactive'
+      let ccmake = s:ccmake_interactive()
+      if ccmake !~ '&$' && exists(':term')
+        let opts = get(args, 'opts', '')
+        let prg = printf(ccmake, self.arg). (empty(opts) ? '' : opts)
+        call lh#common#warning_msg('Running: '.prg)
+        let crt_prj = lh#project#crt()
+        if &buftype == 'terminal' && term_getstatus('%') == 'finished'
+          " reuse!
+        else
+          vnew
+        endif
+        call lh#path#cd_without_sideeffects(wd)
+        exe 'term ++curwin '.prg
+        if lh#option#is_set(crt_prj)
+          " When ccmake has finished, we are in a new and empty buffer, this is
+          " the one that need to be registered
+          call crt_prj._register_buffer()
+        endif
+      else
+        let prg .= printf(s:ccmake_interactive(), self.arg). ' '.get(args, 'opts', '')
+        call s:Verbose(":!".prg)
+        exe ':silent !'.prg
+      endif
+    else
+      let prg .= printf(s:cmake(), self.arg). ' '.get(args, 'opts', '')
+      let opts = {'background': (mode=='background')}
+      if mode == 'synchronous'
+        call lh#common#warning_msg('Running: '.prg."\nPlease wait...")
+      endif
+      call lh#btw#build#_do_compile(prg, '', "CMake execution terminated", opts)
+    endif
   endif
-  " let g:prg = prg
-  call s:Verbose(":!".prg)
-  exe ':silent !'.prg
 endfunction
 
 function! s:reconfig() dict abort " {{{3
-  let wd = self.wd
+  let wd = lh#btw#_evaluate(self.wd)
   if lh#os#OnDOSWindows()
     " - the first ":!start" runs a windows command
     " - "cmd /c" is used to define the second "start" command (see "start /?")
@@ -139,21 +194,12 @@ function! s:reconfig() dict abort " {{{3
     let prg = 'start /b cmd /c start /D '.lh#path#fix(wd, 0, '"')
           \.' /B cmake .'
   else
-    " let's suppose no spaces are used
-    " let prg = 'xterm -e "cd '.wd.' && cmake ."'
-    call s:Verbose('Reconfigure with: cd %1 && cmake .', wd)
-    let prg = 'cd '.wd.' && '.s:cmake('.')
+    let prg = lh#os#sys_cd(wd).' && '
+    let prg .= printf(s:cmake(), self.arg)
+    call lh#btw#build#_do_compile(prg, '', "CMake execution terminated")
   endif
-  call s:Verbose(":!".prg)
-  " TODO: Asynch execution through &makeprg!
-  exe ':!'.prg
 endfunction
 
-function! s:do_bootstrap(dir, opts) dict abort " {{{3
-  let sources_dir = lh#option#get('paths.sources')
-  let cmd = lh#os#sys_cd(a:dir).' && '.printf(s:ccmake(), sources_dir). ' '.opts
-  return lh#os#system(cmd)
-endfunction
 
 function! s:bootstrap() dict abort " {{{3
   " 1- Try to autodetect build directory

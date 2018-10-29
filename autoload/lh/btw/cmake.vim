@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  26th Oct 2018
+" Last Update:  29th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -335,7 +335,6 @@ function! lh#btw#cmake#bootstrap() abort
     call lh#common#error_msg('(bpg):BTW.build.mode.current is not set. Impossible to bootstrap cmake')
     return 0
   endif
-  let
   let compil_subpath = lh#option#get('BTW.build.mode.list['.compil_mode.']')
   call lh#assert#type(compil_subpath).is('')
   let project_dir = lh#option#get('paths.project')
@@ -349,9 +348,12 @@ function! lh#btw#cmake#bootstrap() abort
     return 0
   endif
 
-  let config = lh#let#to('p:BTW.project_config')
+  let config = lh#option#get('BTW.project_config')
   call lh#assert#value(config).is_set()
-  return config.do_bootstrap(dir, opts)
+  call lh#assert#value(config).has_key('wd')
+  call lh#assert#value(config).has_key('arg')
+  " return config.config(dir, opts)
+  return config.config({'mode': 'synchronous', 'opts': opts})
 endfunction
 
 " ## Internal functions {{{1
