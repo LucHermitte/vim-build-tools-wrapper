@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  29th Oct 2018
+" Last Update:  30th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -60,13 +60,39 @@ let s:k_script_name      = s:getSID()
 
 "------------------------------------------------------------------------
 " ## Internal functions {{{1
+" # Misc functions {{{2
+function! s:ensure_directory(dir) abort " {{{3
+  if !isdirectory(a:dir)
+    if exists('*mkdir')
+      call mkdir(a:dir, 'p')
+    else
+      let cmd = lh#os#SystemCmd('mkdir')
+      call system(cmd. ' '.lh#path#fix(a:dir))
+    endif
+    if !isdirectory(a:dir)
+      throw "BTW: Cannot bootstrap ccmake in '".a:dir."': Impossible to create directory"
+    endif
+  endif
+endfunction
+
 " Function: lh#btw#chain#cmake#load_config() {{{2
 function! lh#btw#chain#cmake#load_config() abort
-  LetIfUndef p:BTW.target = ''
-  let config = lh#let#to('p:BTW.project_config', lh#btw#chain#cmake#_make())
+  if lh#project#is_in_a_project()
+    LetIfUndef p:BTW.target = ''
+  endif
   " TODO: find the best place to do this...
-  BTW addlocal cmake
-  return config.bootstrap()
+  if SystemDetected() == 'msdos'
+    :BTW setlocal cmake
+  else
+    BTW addlocal cmake
+  endif
+
+  let config = lh#btw#chain#cmake#_make()
+  if config.analyse()
+    return config
+  else
+    return lh#option#unset('Failed to bootstrap a CMake environment')
+  endif
 endfunction
 
 " # Access to cmake/ccmake executables {{{2
@@ -103,27 +129,15 @@ function! s:ccmake_interactive() abort " {{{3
 endfunction
 
 " Function: lh#btw#chain#cmake#_make(...) {{{2
-function! lh#btw#chain#cmake#_make(...) abort
+function! lh#btw#chain#cmake#_make(...) abort "{{{3
+  let prefix = lh#project#is_in_a_project() ? 'p:' : 'b:'
+
   let res = lh#object#make_top_type(get(a:, 1, {}))
   let res.type = 'ccmake'
   let res.arg  = lh#option#get('paths.sources')
-  let res.wd   = lh#ref#bind('p:BTW.compilation_dir')
-  call lh#object#inject_methods(res, s:k_script_name, 'config', 'reconfig', 'bootstrap')
+  let res.wd   = lh#ref#bind(prefix.'BTW.compilation_dir')
+  call lh#object#inject_methods(res, s:k_script_name, 'config', 'reconfig', 'analyse', 'bootstrap', 'lazy_bootstrap')
   return res
-endfunction
-
-function! s:ensure_directory(dir) abort " {{{3
-  if !isdirectory(a:dir)
-    if exists('*mkdir')
-      call mkdir(a:dir, 'p')
-    else
-      let cmd = lh#os#SystemCmd('mkdir')
-      call system(cmd. ' '.lh#path#fix(a:dir))
-    endif
-    if !isdirectory(a:dir)
-      throw "BTW: Cannot bootstrap ccmake in '".a:dir."': Impossible to create directory"
-    endif
-  endif
 endfunction
 
 function! s:config(...) dict abort " {{{3
@@ -201,8 +215,11 @@ function! s:reconfig() dict abort " {{{3
 endfunction
 
 
-function! s:bootstrap() dict abort " {{{3
+function! s:analyse() dict abort " {{{3
+  let prefix = lh#project#is_in_a_project() ? 'p:' : 'b:'
+
   " 1- Try to autodetect build directory
+  " 1.1- Find the project root directory
   let prj_root_dir = lh#option#get('paths.project')
   if lh#option#is_set(prj_root_dir)
     call s:Verbose("BTW: Bootstrapping cmake chain, using (bpg):paths.project='%1'", prj_root_dir)
@@ -216,10 +233,11 @@ function! s:bootstrap() dict abort " {{{3
     " If we're here, it's because a CMakeLists.txt has been found
     call lh#assert#value(updir_cmakelists).not().empty()
 
-    let prj_root_dir = lh#let#to('p:paths.project', fnamemodify(updir_cmakelists[-1], ':p:h:h'))
+    let prj_root_dir = lh#let#to(prefix.'paths.project', fnamemodify(updir_cmakelists[-1], ':p:h:h'))
     call s:Verbose("BTW: Bootstrapping cmake chain, deducing (bpg):paths.project='%1'", prj_root_dir)
   endif
 
+  " 1.2- Find the build root directory
   let build_root_dir = lh#option#get('paths.build_root_dir')
   if lh#option#is_set(build_root_dir)
     call s:Verbose("BTW: Bootstrapping cmake chain, using (bpg):paths.build_root_dir='%1'", build_root_dir)
@@ -240,18 +258,53 @@ function! s:bootstrap() dict abort " {{{3
       return 0
     endif
     let build_root_dir = lh#path#relative_to(prj_root_dir, build_root_dir)
-    call lh#let#to('p:paths.build_root_dir', build_root_dir)
+    call lh#let#to(prefix.'paths.build_root_dir', build_root_dir)
     call s:Verbose("BTW: Bootstrapping cmake chain, deducing (bpg):paths.build_root_dir='%1'", build_root_dir)
   endif
 
   " 2- Register the bootstrapped configurations
   let confs = lh#option#get('BTW.build.mode.bootstrap', {})
-  let list = lh#let#if_undef('p:BTW.build.mode.list', {})
+  let list = lh#let#if_undef(prefix.'BTW.build.mode.list', {})
   for conf in keys(confs)
     let list[conf] = build_root_dir . '/' . conf
   endfor
 
   return 1
+endfunction
+
+function! s:bootstrap() dict abort " {{{3
+  let compil_mode = lh#option#get('BTW.build.mode.current')
+  call s:Verbose("bootstrapping CMake for compil_mode: %1", compil_mode)
+  if lh#option#is_unset(compil_mode)
+    call lh#common#error_msg('(bpg):BTW.build.mode.current is not set. Impossible to bootstrap cmake')
+    return 0
+  endif
+  let compil_subpath = lh#option#get('BTW.build.mode.list['.compil_mode.']')
+  call lh#assert#type(compil_subpath).is('')
+  let project_dir = lh#option#get('paths.project')
+  call lh#assert#type(project_dir).is('')
+  call s:Verbose("Use compilation dir: '%1/%2'", project_dir, compil_subpath)
+  let dir = project_dir.'/'.compil_subpath
+
+  let opts = lh#option#get('BTW.build.mode.bootstrap['.compil_mode.']')
+  if lh#option#is_unset(opts)
+    call lh#common#error_msg('BTW.build.mode.bootstrap['.compil_mode.'] is not set. Impossible to bootstrap cmake for '.compil_mode.' mode.')
+    return 0
+  endif
+
+  call lh#assert#value(self).has_key('wd')
+  call lh#assert#value(self).has_key('arg')
+  return self.config({'mode': 'synchronous', 'opts': opts})
+endfunction
+
+function! s:lazy_bootstrap() dict abort " {{{3
+  let wd = lh#btw#_evaluate(self.wd)
+  " TODO: use an option if the make of the Makefile file is different
+  if !filereadable(wd . '/' . 'Makefile')
+    return self.bootstrap()
+  else
+    return 1
+  endif
 endfunction
 
 "------------------------------------------------------------------------

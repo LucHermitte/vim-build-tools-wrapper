@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  29th Oct 2018
+" Last Update:  30th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -33,8 +33,6 @@ let s:k_version = 0700
 "       * Simplify the definition of the "_project" sub-dictionary as it
 "       requires many options.
 "       * For multiple tests, we need to use -I <coma-sep-list> and not -R
-"       * Get rid of b:BTW_compilation_dir and rely only on
-"       b:BTW_project_config._
 " }}}1
 "=============================================================================
 
@@ -323,37 +321,26 @@ endfunction
 
 " Function: lh#btw#cmake#_add_menus() {{{2
 function! lh#btw#cmake#_add_menus() abort
+  call lh#let#if_undef('p:BTW.config.functions',
+      \ {'EditLocalCMakeFile': s:function('EditLocalCMakeFile')})
+
   call lh#project#menu#make('nic', '11', 'Edit local &CMake file', '<localleader><F7>', '<buffer>', ':call lh#project#crt().get("BTW.config.functions").EditLocalCMakeFile()<cr>')
   call lh#project#menu#make('nic', '12', 'Edit local &CMake file (vertical)', '<localleader>v<F7>', '<buffer>', ':call lh#project#crt().get("BTW.config.functions").EditLocalCMakeFile("vert")<cr>')
 endfunction
 
-" Function: lh#btw#cmake#bootstrap() {{{3
+" Function: s:EditLocalCMakeFile() {{{3
+function! s:EditLocalCMakeFile(...) abort
+  let where = a:0==0 ? '' : a:1.' '
+  let file = lh#path#to_relative(expand('%:p:h').'/CMakeLists.txt')
+  call lh#buffer#jump(file, where.'sp')
+endfunction
+
+" Function: lh#btw#cmake#bootstrap() {{{2
 function! lh#btw#cmake#bootstrap() abort
-  let compil_mode = lh#option#get('BTW.build.mode.current')
-  call s:Verbose("bootstrapping CMake for compil_mode: %1", compil_mode)
-  if lh#option#is_unset(compil_mode)
-    call lh#common#error_msg('(bpg):BTW.build.mode.current is not set. Impossible to bootstrap cmake')
-    return 0
-  endif
-  let compil_subpath = lh#option#get('BTW.build.mode.list['.compil_mode.']')
-  call lh#assert#type(compil_subpath).is('')
-  let project_dir = lh#option#get('paths.project')
-  call lh#assert#type(project_dir).is('')
-  call s:Verbose("Use compilation dir: '%1/%2'", project_dir, compil_subpath)
-  let dir = project_dir.'/'.compil_subpath
-
-  let opts = lh#option#get('BTW.build.mode.bootstrap['.compil_mode.']')
-  if lh#option#is_unset(opts)
-    call lh#common#error_msg('BTW.build.mode.bootstrap['.compil_mode.'] is not set. Impossible to bootstrap cmake for '.compil_mode.' mode.')
-    return 0
-  endif
-
-  let config = lh#option#get('BTW.project_config')
+  let config = lh#btw#option#_project_config()
   call lh#assert#value(config).is_set()
-  call lh#assert#value(config).has_key('wd')
-  call lh#assert#value(config).has_key('arg')
-  " return config.config(dir, opts)
-  return config.config({'mode': 'synchronous', 'opts': opts})
+
+  return config.bootstrap()
 endfunction
 
 " ## Internal functions {{{1

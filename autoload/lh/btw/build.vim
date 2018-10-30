@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  29th Oct 2018
+" Last Update:  30th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -227,6 +227,14 @@ function! lh#btw#build#_compile(...) abort
   if lh#btw#option#_use_prio() == 'update'
     call lh#btw#chain#_reconstruct()
   endif
+  " Make sure the variables are correctly set
+  let project_config = lh#btw#option#_project_config()
+  " And that the makefile or equivalent files are here.
+  if lh#option#is_set(project_config) && !project_config.lazy_bootstrap()
+    throw "BTW: Error bootstrapping of the project failed, cannot compile."
+  endif
+
+  " Do compile with a current &makeprg
   call lh#btw#build#_do_compile(&makeprg, rule, "Compilation finished")
 endfunction
 

@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  14th Apr 2017
+" Last Update:  30th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       Centralize BTW option retrieval
@@ -149,7 +149,13 @@ function! lh#btw#option#_project_config(...) abort
     let bufid = a:1
     return s:get_from_buf(bufid, 'project_config', s:k_unset)
   else
-    return s:get('project_config', {'type': 'modeline'} )
+    let res = s:get('project_config', s:k_unset)
+    if lh#option#is_unset(res)
+      let res = lh#btw#chain#load_config()
+      let prefix = lh#project#is_in_a_project() ? 'p:' : 'b:'
+      call lh#let#to(prefix.'BTW.project_config', res)
+    endif
+    return res
   endif
 endfunction
 

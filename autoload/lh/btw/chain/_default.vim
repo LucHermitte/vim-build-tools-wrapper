@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  26th Oct 2018
+" Last Update:  30th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -61,14 +61,13 @@ let s:k_script_name      = s:getSID()
 " ## Internal functions {{{1
 " Function: lh#btw#chain#_default#load_config() {{{2
 function! lh#btw#chain#_default#load_config() abort
-  LetTo p:BTW.project_config = lh#btw#chain#_default#_make()
-  return 1
+  return lh#btw#chain#_default#_make()
 endfunction
 
 " Function: lh#btw#chain#_default#_make(...) {{{2
 function! lh#btw#chain#_default#_make(...) abort
   let res = lh#object#make_top_type(get(a:, 1, {}))
-  call lh#object#inject_methods(res, s:k_script_name, 'config', 'reconfig')
+  call lh#object#inject_methods(res, s:k_script_name, 'config', 'reconfig', 'bootstrap', 'lazy_bootstrap')
   let res.type = 'modeline'
   return res
 endfunction
@@ -83,6 +82,14 @@ function! s:reconfig() dict abort
   if exists(':LetModeLine')
     :LetModeLine
   endif
+endfunction
+
+function! s:lazy_bootstrap() dict abort
+  return 1
+endfunction
+
+function! s:bootstrap() dict abort
+  return 1
 endfunction
 
 "------------------------------------------------------------------------
