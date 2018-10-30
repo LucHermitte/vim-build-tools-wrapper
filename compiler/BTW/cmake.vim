@@ -73,10 +73,15 @@ function! s:fix_efm(efm) abort
   " Other CMake adjustments inspired by Fernando Castillo unmerged contibution
   " to compiler/gcc.vim, 2016 May 19, Vim licence
   " See https://github.com/vim/vim/pull/821
+  " TODO: This efm adjustment doesn't work that well as messages are lost. Improvements are required.
   call lh#list#push_if_new_elements(efm,
-        \ [ '%E%.%#CMake Error at %f:%l%.%#'
-        \ , '%E%.%#CMake Error in %f:%.%#'
-        \ , '%Z%.%#CMake Error:%.%#'
+        \ [ '%E%>%.%#CMake Error at %f:%l%.%#'
+        \ , '%E%>%.%#CMake Error in %f:%.%#'
+        \ , '%E%>%.%#CMake Error:%.%#'
+        \ , '%W%>%.%#CMake Warning at %f:%l%.%#'
+        \ , '%W%>%.%#CMake Warning in %f:%.%#'
+        \ , '%W%>%.%#CMake Warning:%.%#'
+        \ , '%Z  %m'
         \ , '%Z-- Configuring incomplete%.%#'
         \ , '%C%.%#:%l%.%#'
         \ , '%C%m'
