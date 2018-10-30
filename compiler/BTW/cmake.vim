@@ -4,7 +4,7 @@
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      0.7.0
 " Created:      21st Feb 2012
-" Last Update:  22nd Feb 2017
+" Last Update:  30th Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       BTW cmake compilation toolchain
@@ -61,7 +61,7 @@ endif
 " cmake messes up with the error format as it prepends the error lines with
 " "%d>"
 " => tell BTW to fix efm by prepending what other tools add
-function! s:fix_efm_cmake(efm)
+function! s:fix_efm(efm) abort
   let efm = a:efm
 
   if 1 == get(g:, 'lh#btw#chain#__loading_main_tool', 0)
@@ -85,25 +85,12 @@ function! s:fix_efm_cmake(efm)
   return efm
 endfunction
 
-let b:BTW_adjust_efm_cmake = {
-      \ 'post': function(s:getSNR('fix_efm_cmake')),
+let prefix = lh#project#is_in_a_project() ? 'p:' : 'b:'
+let s:efm = {
+      \ 'post': function(s:getSNR('fix_efm')),
       \ 'value': 'default efm'
       \}
-
-"=============================================================================
-" ## project config {{{1
-"------------------------------------------------------------------------
-if lh#project#is_in_a_project()
-  LetIfUndef p:BTW.target = ''
-  let s:project_config = {
-        \ 'type': 'ccmake',
-        \ 'arg': lh#ref#bind('p:paths.sources'),
-        \ 'wd' : lh#ref#bind('p:BTW.compilation_dir')
-        \ }
-  call lh#let#if_undef('p:BTW.project_config', s:project_config)
-endif
-
-
+call lh#let#to(prefix.'BTW._filter.efm.use.cmake', s:efm)
 " }}}1
 "------------------------------------------------------------------------
 let &cpo=s:cpo_save

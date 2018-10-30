@@ -1,34 +1,34 @@
 "=============================================================================
-" File:		compiler/BTW/gcc.vim                                           {{{1
-" Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
-"		<URL:http://code.google.com/p/lh-vim/>
+" File:         compiler/BTW/gcc.vim                                           {{{1
+" Author:       Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
+"               <URL:http://code.google.com/p/lh-vim/>
 " URL: http://hermitte.free.fr/vim/ressources/vimfiles/compiler/BTW/gcc.vim
-" Version:	0.1
-" Created:	28th Nov 2004
-" Last Update:	09th Dec 2004
+" Version:      0.1
+" Created:      28th Nov 2004
+" Last Update:  30th Oct 2018
 "------------------------------------------------------------------------
-" Description:	GCC Filter for Build-Tools-Wrapper -- a Vim plugin.
-" 
+" Description:  GCC Filter for Build-Tools-Wrapper -- a Vim plugin.
+"
 " Rationale:
 " - Better 'errorformat'
-"   Default filter does not handle correctly link errors 
+"   Default filter does not handle correctly link errors
 " - Enhanced syntax highlighting
 " - folding
 "
 "------------------------------------------------------------------------
-" Installation:	
+" Installation:
 "      -2- Install Perl
 "      -1- Install GCC, if not
-"	0- Install Build-Tools-Wrapper.
-"	1- Drop this file into {rtp}/compiler/BTW/
-"	2- Execute the command ":BTW set gcc" or ":BTW setlocal gcc" to load
-"	   this filter.
+"       0- Install Build-Tools-Wrapper.
+"       1- Drop this file into {rtp}/compiler/BTW/
+"       2- Execute the command ":BTW set gcc" or ":BTW setlocal gcc" to load
+"          this filter.
 "
-" History:	
+" History:
 "   v0.1: First version of the filter
-"	Uses the work done on my (LH speaking) previous compiler-plugin for
-"	aap!
-" TODO:		
+"       Uses the work done on my (LH speaking) previous compiler-plugin for
+"       aap!
+" TODO:
 "  * Add various levels of options ; see LaTeXSuite
 "  * Change the options with «:BTW gcc set {opt}={value}»
 "  * gcc.pl: If the transl. unit does not exist, do no make it clickable
@@ -42,9 +42,9 @@
 
 "=============================================================================
 " Avoid global reinclusion {{{1
-if exists("g:loaded_gcc") 
+if exists("g:loaded_gcc")
       \ && !exists('g:force_reload_gcc')
-  finish 
+  finish
 endif
 let g:loaded_gcc = 1
 let s:cpo_save=&cpo
@@ -54,7 +54,7 @@ set cpo&vim
 
 " Options:                                  {{{1
 " - Factorize Link error
-"   -> :substitute rule to found where a translation unit is 
+"   -> :substitute rule to found where a translation unit is
 "   -> color for the «||(.text+0xa42)»
 " - Cliquable link error
 " - Fold link errors, and the compilation of every translation unit
@@ -79,28 +79,29 @@ let s:file = substitute(expand('<sfile>:p:h'), ' ', '\\ ', 'g')
 " b- filter to apply over outputs:     {{{2
 function! s:Reset_program()
   let g:BTW_filter_program_gcc = 'perl '.s:file."/gcc.pl"
-	\ . s:Option('group_lnk', '-grp-lnk')
-	\ . s:Option('click_lnk', '-clk-lnk')
-	\ . s:Option('obj_dir', '-obj')
-	\ . s:Option('src_dir', '-tu')
+        \ . s:Option('group_lnk', '-grp-lnk')
+        \ . s:Option('click_lnk', '-clk-lnk')
+        \ . s:Option('obj_dir', '-obj')
+        \ . s:Option('src_dir', '-tu')
 endfunction
 
 call s:Reset_program()
 
 " c- default value for 'efm'           {{{2
 function! s:Reset_efm()
-  let g:BTW_adjust_efm_gcc = '%f:%l: %m'
+  let efm = '%f:%l: %m'
   " - GCC link errors (undefined reference to..., etc.)
-  if lh#option#get('g:BTW_gcc_click_lnk', 0, 'g')
-    let g:BTW_adjust_efm_gcc = 
-	  \ '%f:1: %m'
-	  \ .','.
-	  \ .'In file included from %f:%l:'
-	  \ .','.
-	  \ ."\t\tfrom %f:%l%m'"
-	  \ .','.
-	  \ g:BTW_adjust_efm_gcc  
+  if get(g:, 'BTW_gcc_click_lnk', 0)
+    let efm =
+          \ '%f:1: %m'
+          \ .','.
+          \ .'In file included from %f:%l:'
+          \ .','.
+          \ ."\t\tfrom %f:%l%m'"
+          \ .','.
+          \ efm
   endif
+  call lh#let#to(prefix.'BTW._filter.efm.use.gcc', efm)
 endfunction
 
 call s:Reset_efm()
@@ -113,19 +114,19 @@ call s:Reset_efm()
 " %f:%l:\ %m,In\ file\ included\ from\ %f:%l:,\^I\^Ifrom\ %f:%l%m
 
 
-" Enhance syntax highlighting		         {{{1
+" Enhance syntax highlighting                    {{{1
 function! s:EnhanceHighlight()
-  syn match	qfLnkFileName	"^|| \f*"hs=s+2 nextgroup=qfLnkSepOp
-  syn match	qfLnkSepOp 	"(" nextgroup=qfLnkObjFile contained
-  syn match	qfLnkObjFile	"\f*" nextgroup=qfLnkSepCl contained
-  " ¿ \f\+ ? 
-  syn match	qfLnkSepCl	") " contained nextgroup=qfLnkTransUnit
-  syn match	qfLnkTransUnit	"\f\f\+: "he=e-2 contained 
+  syn match     qfLnkFileName   "^|| \f*"hs=s+2 nextgroup=qfLnkSepOp
+  syn match     qfLnkSepOp      "(" nextgroup=qfLnkObjFile contained
+  syn match     qfLnkObjFile    "\f*" nextgroup=qfLnkSepCl contained
+  " ¿ \f\+ ?
+  syn match     qfLnkSepCl      ") " contained nextgroup=qfLnkTransUnit
+  syn match     qfLnkTransUnit  "\f\f\+: "he=e-2 contained
 
   " The default highlighting.
-  hi def link qfLnkFileName	Directory
-  hi def link qfLnkTransUnit	Directory
-  hi def link qfLnkObjFile	LineNr
+  hi def link qfLnkFileName     Directory
+  hi def link qfLnkTransUnit    Directory
+  hi def link qfLnkObjFile      LineNr
 endfunction
 
 aug Qf_GCC
