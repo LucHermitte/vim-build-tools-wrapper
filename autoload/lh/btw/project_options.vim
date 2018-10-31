@@ -6,7 +6,7 @@
 " Version:	0.7.0
 let s:k_version = 0700
 " Created:      06th Sep 2012
-" Last Update:  28th Oct 2016
+" Last Update:  31st Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       API to help define project options
@@ -227,7 +227,7 @@ function! lh#btw#project_options#add_toggle_option(menu) abort
     let menu = s:menus[a:menu.menu.name]
     let menu.hook = function(s:getSNR('Hook'))
   endif
-  call lh#menu#def_toggle_item(menu)
+  call lh#project#menu#def_toggle_item(menu)
   " call menu.hook() " already called in menu#s:Set()
   return menu
 endfunction

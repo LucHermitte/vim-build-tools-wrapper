@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  30th Oct 2018
+" Last Update:  31st Oct 2018
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -269,6 +269,13 @@ function! s:analyse() dict abort " {{{3
     let list[conf] = build_root_dir . '/' . conf
   endfor
 
+  let prj = lh#project#crt()
+  call lh#let#if_undef('p:menu.menu.priority', lh#project#menu#reserve_id(prj).'.')
+  call lh#let#if_undef('p:menu.menu.name'    , prj.name.'.')
+
+  call lh#btw#cmake#define_options([
+        \ 'auto_detect_compil_modes'
+        \ ])
   return 1
 endfunction
 
