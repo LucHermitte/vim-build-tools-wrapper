@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  30th Oct 2018
+" Last Update:  15th Feb 2019
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -99,7 +99,7 @@ function! lh#btw#cmake#define_options(options) abort
   for option in a:options
     " save the menu in order to make hooks and other stuff accessible
     let menu_def = lh#let#if_undef('p:BTW.'.option, {})
-    call extend(menu_def, copy(lh#option#get('menu')), 'keep')
+    call extend(menu_def, deepcopy(lh#option#get('menu')), 'keep')
     " let menu_def.menu = copy(lh#option#get('menu'))
     let menu_def.project = lh#project#crt()
     call lh#assert#true(lh#option#is_set(menu_def.project), 'lh#btw#cmake#define_options requires working with lhvl projects')

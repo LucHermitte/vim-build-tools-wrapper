@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  31st Oct 2018
+" Last Update:  15th Feb 2019
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -76,7 +76,7 @@ function! s:ensure_directory(dir) abort " {{{3
 endfunction
 
 " Function: lh#btw#chain#cmake#load_config() {{{2
-function! lh#btw#chain#cmake#load_config() abort
+function! lh#btw#chain#cmake#load_config(...) abort
   if lh#project#is_in_a_project()
     LetIfUndef p:BTW.target = ''
   endif
@@ -88,7 +88,7 @@ function! lh#btw#chain#cmake#load_config() abort
   endif
 
   let config = lh#btw#chain#cmake#_make()
-  if config.analyse()
+  if call(config.analyse, lh#list#flatten(a:000), config)
     return config
   else
     return lh#option#unset('Failed to bootstrap a CMake environment')
@@ -215,7 +215,7 @@ function! s:reconfig() dict abort " {{{3
 endfunction
 
 
-function! s:analyse() dict abort " {{{3
+function! s:analyse(...) dict abort " {{{3
   let prefix = lh#project#is_in_a_project() ? 'p:' : 'b:'
 
   " 1- Try to autodetect build directory
@@ -275,7 +275,8 @@ function! s:analyse() dict abort " {{{3
 
   call lh#btw#cmake#define_options([
         \ 'auto_detect_compil_modes'
-        \ ])
+        \ ]
+        \ + a:000)
   return 1
 endfunction
 
