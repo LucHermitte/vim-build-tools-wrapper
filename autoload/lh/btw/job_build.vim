@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      10th May 2016
-" Last Update:  04th Nov 2016
+" Last Update:  04th Jul 2019
 "------------------------------------------------------------------------
 " Description:
 "       Background compilation with latest job_start() API
@@ -103,6 +103,7 @@ function! s:callbackCB(channel, msg) abort " {{{3
     call assert_true(!empty(qf))
     cbottom
     if qf[-1].valid
+      call s:Verbose("Error found auto_cbottom disabled (%1)", qf[-1])
       let g:lh#btw#auto_cbottom = 0
     endif
   endif
@@ -113,10 +114,11 @@ function! s:start_fail_cb() dict abort " {{{3
 endfunction
 
 function! s:before_start_cb() dict abort " {{{3
+  call s:Verbose("Background compilation with `%1' started", self.cmd)
   if exists(':cbottom')
     let g:lh#btw#auto_cbottom = lh#btw#option#_auto_scroll_in_bg()
+    call s:Verbose("Reset auto_cbottom to autoscroll (%1)", g:lh#btw#auto_cbottom)
   endif
-  call s:Verbose("Background compilation with `%1' started", self.cmd)
   " Filling qflist is required because of lh#btw#build#_show_error() in caller
   " function
   let what = s:job_description(self)
@@ -132,7 +134,11 @@ if exists(':cbottom') " {{{3
   let g:lh#btw#auto_cbottom = 0
   augroup BTW_stop_cbottom
     au!
-    au BufEnter * if &ft=='qf' | let g:lh#btw#auto_cbottom = 0 | endif
+    au BufEnter *
+          \   if &ft=='qf' && ! get(g:, 'lh#btw#_ignore_bufenter_qf', 0)
+          \ |   call s:Verbose('enter qf => no cbottom')
+          \ |   let g:lh#btw#auto_cbottom = 0
+          \ | endif
   augroup END
 endif
 

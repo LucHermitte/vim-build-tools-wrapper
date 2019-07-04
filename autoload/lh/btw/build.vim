@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  30th Oct 2018
+" Last Update:  04th Jul 2019
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -271,7 +271,12 @@ function! lh#btw#build#_do_copen(default, ...) abort
   call lh#path#cd_without_sideeffects('.')
 
   call s:Verbose("%1 %2", qf_position, open_qf)
-  exe qf_position . ' ' . open_qf
+  try
+    let g:lh#btw#_ignore_bufenter_qf = 1
+    exe qf_position . ' ' . open_qf
+  finally
+    unlet g:lh#btw#_ignore_bufenter_qf
+  endtry
 
   setlocal nowrap
 
@@ -326,6 +331,7 @@ endfunction
 " lh#btw#build#_show_error overload that does an unconditional opening of the
 " qf window
 function! lh#btw#build#_copen_bg(...) abort
+  call s:Verbose("_copen_bg start")
   let [winid, winnum] = call('lh#btw#build#_do_copen', ['copen'] + a:000)
 
   call lh#assert#not_equal(winid, lh#window#getid()) " a call to setqflist() should move us to the qfwindow
@@ -342,6 +348,7 @@ function! lh#btw#build#_copen_bg(...) abort
   endif
   call lh#btw#filters#_apply_quick_fix_hooks('syntax')
   call lh#window#gotoid(winid)
+  call s:Verbose("_copen_bg end")
 endfunction
 
 " Function: lh#btw#build#_get_metrics() {{{3
