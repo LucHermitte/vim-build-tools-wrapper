@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  30th Oct 2018
+" Last Update:  08th Jul 2019
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -72,7 +72,7 @@ function! lh#btw#chain#_default#_make(...) abort
   return res
 endfunction
 
-function! s:config() dict abort
+function! s:config(...) dict abort
   if exists(':LetModeLine')
     call lh#btw#build#_add_let_modeline()
   endif
