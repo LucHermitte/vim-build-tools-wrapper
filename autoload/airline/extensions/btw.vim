@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = '070'
 " Created:      09th Apr 2015
-" Last Update:  16th Oct 2016
+" Last Update:  12th Jul 2019
 "------------------------------------------------------------------------
 " Description:
 "       Airline extension for BuildToolsWrapper
@@ -74,7 +74,7 @@ endfunction
 function! airline#extensions#btw#apply(...) abort
   " First, in case this is a qf window, add metrics.
   if &ft ==  'qf'
-    let metrics = lh#btw#build#_get_metrics()
+    let metrics = lh#qf#get_metrics()
     let w:airline_section_error   = metrics.errors
     let w:airline_section_warning = metrics.warnings
   endif
