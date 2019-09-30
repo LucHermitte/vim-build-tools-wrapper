@@ -37,8 +37,8 @@ Several options can permit to tune the behaviour of BTW.
   * <sup>1</sup> Requires perl or Vim 7.4-1980 compiled with +job feature. The
     old perl way works on *nix systems. The new +job way has been tested
     successfully on:
-  
-    |                   | Linux              | Cygwin + gvim64<sup>3</sup> | Cygwin + cyg-vim | Mingw + gvim64<sup>5</sup> | VC10 + gvim 64<sup>5</sup>      | 
+
+    |                   | Linux              | Cygwin + gvim64<sup>3</sup> | Cygwin + cyg-vim | Mingw + gvim64<sup>5</sup> | VC10 + gvim 64<sup>5</sup>      |
     |:------------------|:-------------------|:----------------------------|:-----------------|:---------------------------|:--------------------------------|
     |Mono-file project  | :heavy_check_mark: | :heavy_check_mark:          | :question:       | :question:                 | :heavy_check_mark: <sup>4</sup> |
     |Out-of-source build| :heavy_check_mark: | :question:                  | :question:       | :question:                 | :question:                      |
@@ -46,7 +46,7 @@ Several options can permit to tune the behaviour of BTW.
   * <sup>3</sup> My `&shell` options are configured through my very old [system-tool plugin](https://github.com/LucHermitte/vim-system-tools). More investigations are required for other configurations.
   * <sup>4</sup> Tested with [gvim64](https://bintray.com/veegee/generic/vim_x64) launched from _VS2015 CLI for native x64_ console, and `:BTW set cl`, and `:Make %`.
   * <sup>5</sup> Without any Cygwin binaries in the $PATH.
-    
+
 
 ### Configuration
 
@@ -58,11 +58,13 @@ When `(bpg):BTW.project_config.type` equals
 
 
 ### Report errors
-|   Role                                          |   Option name        |   Values (default)                       |   Best set in   |
-|:------------------------------------------------|:---------------------|:-----------------------------------------|:----------------|
-| Tunes where the quickfix window shall be opened | `g:BTW.qf_position`  | (`''`)/`'botright'`/...                  | `.vimrc`        |
-| Tunes the size of the quickfix window           | `g:BTW.qf_size`      | number of lines (max(15, &winfixheight)) | `.vimrc`        |
-| Tells whether we shall jump to the first error  | `g:BTW.goto_error`   | (1)/0                                    | `.vimrc`        |
+|   Role                                          |   Option name             |   Values (default)                       |   Best set in   |
+|:------------------------------------------------|:--------------------------|:-----------------------------------------|:----------------|
+| Tunes where the quickfix window shall be opened | `g:BTW.qf_position`       | (`''`)/`'botright'`/...                  | `.vimrc`        |
+| Tunes the size of the quickfix window           | `g:BTW.qf_size`           | number of lines (max(15, &winfixheight)) | `.vimrc`        |
+| Tells whether we shall jump to the first error  | `g:BTW.goto_error`        | (1)/0                                    | `.vimrc`        |
+| Highlight color to report compilation success   | `g:BTW.highlight.success` | `Comment`                                | `.vimrc`        |
+| Highlight color to report compilation failure   | `g:BTW.highlight.error`   | `Error`                                  | `.vimrc`        |
 
 ### Execution
 

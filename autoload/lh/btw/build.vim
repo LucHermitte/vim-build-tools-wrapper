@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  12th Jul 2019
+" Last Update:  30th Sep 2019
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -324,7 +324,10 @@ function! lh#btw#build#_copen_bg_complete(what, job_info, ...) abort
   let msg
         \ = a:what
         \ . (a:job_info.exitval == 0 ? " successfully built" : " build failed (w/ exitval:".(a:job_info.exitval).")")
-  call lh#common#warning_msg("Build complete: ".msg."!")
+  let hl = a:job_info.exitval == 0
+        \ ? lh#option#get('BTW.highlight.success', 'Comment', 'g')
+        \ : lh#option#get('BTW.highlight.error', 'Error', 'g')
+  call lh#common#warning_msg("Build complete: ".msg."!", hl)
 endfunction
 
 " Function: lh#btw#build#_copen_bg([cop|cwin])      {{{3
