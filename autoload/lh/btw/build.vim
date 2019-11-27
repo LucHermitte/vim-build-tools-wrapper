@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  22nd Nov 2019
+" Last Update:  27th Nov 2019
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -224,7 +224,7 @@ function! lh#btw#build#_compile(...) abort
   endif
   " else ... pouvoir avoir s:TargetRule() . a:1 ; si <bang> ?!
 
-  if lh#btw#option#_use_prio() == 'update' && b:current_compiler != 'git'
+  if lh#btw#option#_use_prio() == 'update' && get(b:, 'current_compiler', '') != 'git'
     " fugitive uses :Make to do stuff, let's not update the compiler in
     " these cases
     call lh#btw#chain#_reconstruct()
