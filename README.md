@@ -11,7 +11,7 @@ that displays the current project name and compilation mode. This information
 will also be displayed for the quickfix window.
 
 # Installation
-  * Requirements: Vim 7.+, [lh-vim-lib](http://github.com/LucHermitte/lh-vim-lib) (v4.7.0)
+  * Requirements: Vim 7.+, [lh-vim-lib](http://github.com/LucHermitte/lh-vim-lib) (v5.0.0)
   * With [vim-addon-manager](https://github.com/MarcWeber/vim-addon-manager), install build-tools-wrapper (this is the preferred method because of the dependencies)
 ```vim
 ActivateAddons build-tools-wrapper

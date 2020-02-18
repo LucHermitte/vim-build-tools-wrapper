@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      10th May 2016
-" Last Update:  04th Jul 2019
+" Last Update:  18th Feb 2020
 "------------------------------------------------------------------------
 " Description:
 "       Background compilation with latest job_start() API
@@ -157,7 +157,8 @@ function! s:init(cmd) abort
         \ , 'build_mode'     : mode
         \ , 'project_name'   : prj_name
         \ }
-  call lh#async#queue(job)
+  let queue = lh#async#get_queue('qf', '')
+  call queue.push_or_start(job)
   " Cannot return anything yet
 endfunction
 
