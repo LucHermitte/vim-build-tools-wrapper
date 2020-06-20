@@ -113,6 +113,14 @@ The best way to define this option is from a project oriented plugin like [local
 [I have a lot of things to say on this topic](cmake.md).
 
 
+## Colours
+
+_BTW_ can display error messages that are coloured by `gcc -fdiagnostics-color=always` or `clang -fcolor-diagnostics` as long as [AnsiEsc plugin](https://github.com/powerman/vim-plugin-AnsiEsc) is installed (and active in your environment) -- while undocumented, fortunately `clang` (v9) seems to support `gcc` option.
+
+_BTW_ will automatically take care of colouring the quickfix window, but it won't force the compilers to generate coloured error messages. It's __up to you__, end-user to make sure the compiler you use receive the parameter, either through `$CFLAGS` or `$CXXFLAGS` or other means.
+
+![coloured compilation demo](screencast-BTW-colour.gif "Demo of compilation with coloured error messages emited by gcc")
+
 # Execute
 
 Just hit `<C-F5>` to execute the current program. You may have to change the key bound if you are using vim in console instead of gvim or macvim.

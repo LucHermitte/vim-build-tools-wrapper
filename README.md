@@ -13,24 +13,39 @@ will also be displayed for the quickfix window.
 # Installation
   * Requirements: Vim 7.+, [lh-vim-lib](http://github.com/LucHermitte/lh-vim-lib) (v5.0.0)
   * With [vim-addon-manager](https://github.com/MarcWeber/vim-addon-manager), install build-tools-wrapper (this is the preferred method because of the dependencies)
-```vim
-ActivateAddons build-tools-wrapper
-```
-  * or with [vim-flavor](http://github.com/kana/vim-flavor) which also supports
+
+    ```vim
+    ActivateAddons build-tools-wrapper
+    " Optional dependency to highlight gcc/clang error messages produced w/ -fdiagnostics-color=always
+    ActivateAddons github:powerman/vim-plugin-AnsiEsc
+    ```
+
+* or with [vim-flavor](http://github.com/kana/vim-flavor) which also supports
     dependencies:
-```
-flavor 'LucHermitte/vim-build-tools-wrapper'
-```
+
+    ```
+    flavor 'LucHermitte/vim-build-tools-wrapper'
+    # Optional dependency to highlight gcc/clang error messages produced w/ -fdiagnostics-color=always
+    flavor 'powerman/vim-plugin-AnsiEsc'
+    ```
+
   * or you can clone the git repositories (expecting I haven't forgotten anything):
-```vim
-git clone git@github.com:LucHermitte/lh-vim-lib.git
-git clone git@github.com:LucHermitte/vim-build-tools-wrapper.git
-```
+
+    ```bash
+    git clone git@github.com:LucHermitte/lh-vim-lib.git
+    git clone git@github.com:LucHermitte/vim-build-tools-wrapper.git
+    # Optional dependency to highlight gcc/clang error messages produced w/ -fdiagnostics-color=always
+    git clone git@github.com:powerman/vim-plugin-AnsiEsc
+    ```
+
   * or with Vundle/NeoBundle (expecting I haven't forgotten anything):
-```vim
-Bundle 'LucHermitte/lh-vim-lib'
-Bundle 'LucHermitte/vim-build-tools-wrapper'
-```
+
+    ```vim
+    Bundle 'LucHermitte/lh-vim-lib'
+    Bundle 'LucHermitte/vim-build-tools-wrapper'
+    " Optional dependency to highlight gcc/clang error messages produced w/ -fdiagnostics-color=always
+    Bundle 'powerman/vim-plugin-AnsiEsc'
+    ```
 
 # See also
 

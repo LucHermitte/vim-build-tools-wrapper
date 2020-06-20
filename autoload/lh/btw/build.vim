@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  27th Nov 2019
+" Last Update:  21st Jun 2020
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -319,6 +319,7 @@ endfunction
 
 " Function: lh#btw#build#_copen_bg_complete(what, job_info, [cop|cwin])      {{{3
 function! lh#btw#build#_copen_bg_complete(what, job_info, ...) abort
+  call s:Verbose("_copen_bg_complete start")
   let opt = (a:0>0) ? a:1 : ''
   if get(g:, 'lh#btw#auto_cbottom', 1)
     call call('lh#btw#build#_show_error', a:000)
@@ -330,6 +331,30 @@ function! lh#btw#build#_copen_bg_complete(what, job_info, ...) abort
         \ ? lh#option#get('BTW.highlight.success', 'Comment', 'g')
         \ : lh#option#get('BTW.highlight.error', 'Error', 'g')
   call lh#common#warning_msg("Build complete: ".msg."!", hl)
+
+  if get(g:, 'lh#btw#job_build#qf_need_colours', 0) && exists(':AnsiEsc')
+    let qf_winnr = lh#qf#get_winnr()
+    if qf_winnr
+      let crt_winr = winnr()
+      exe qf_winnr.'wincmd w'
+      " call s:Verbose("qf bufnr?: %1", bufnr('%'))
+      try
+        " :AnsiEsc, from https://github.com/powerman/vim-plugin-AnsiEsc
+        "
+        " Unfortunately neither this version nor the official one permits to
+        " test whether AnsiEsc needs to be executed, fortunately we can
+        " test if any synhl is defined in the current buffer!
+        if empty(lh#syntax#list('ansiNone'))
+          AnsiEsc
+        endif
+      finally
+        exe crt_winr.'wincmd w'
+      endtry
+
+      " TODO: else: what about is the qfwindow has been closed? Is it even possible?
+    endif
+  endif
+  call s:Verbose("_copen_bg_complete end")
 endfunction
 
 " Function: lh#btw#build#_copen_bg([cop|cwin])      {{{3

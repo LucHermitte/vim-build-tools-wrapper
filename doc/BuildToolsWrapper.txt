@@ -1,5 +1,5 @@
 *BuildToolsWrapper.txt* Projects building plugin
-                        For Vim version 7.x.    Last change: 14th Oct 2017
+                        For Vim version 7.x.    Last change: 21st Jun 2020
 
 
                 BuildToolsWrapper Plugin MANUAL   By Luc Hermitte
@@ -405,6 +405,6 @@ TODO list~
 - Improve and document *QFImport* , |BTW.compilation_dir| , "import:"
 
 ------------------------------------------------------------------------------
- © Luc Hermitte, 2004-2017, <http://github.com/LucHermitte/vim-build-tools-wrapper>, CC by SA 3.0 {{{1
+ © Luc Hermitte, 2004-2020, <http://github.com/LucHermitte/vim-build-tools-wrapper>, CC by SA 3.0 {{{1
  VIM: let b:VS_language = 'american'
  vim:ts=8:sw=4:tw=80:fo=tcq2:isk=!-~,^*,^\|,^\":ft=help:

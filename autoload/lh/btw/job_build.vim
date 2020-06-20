@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      10th May 2016
-" Last Update:  18th Feb 2020
+" Last Update:  21st Jun 2020
 "------------------------------------------------------------------------
 " Description:
 "       Background compilation with latest job_start() API
@@ -97,7 +97,18 @@ function! s:closeCB(channel, job_info) abort " {{{3
 endfunction
 
 function! s:callbackCB(channel, msg) abort " {{{3
-  caddexpr a:msg
+  " In case msg has been coloured by gc/clag options like
+  " -fdiagnostics-color=always, we need to clear the Ainsi Escape codes around
+  "  filenames.
+  " The processing of the escape sequences is left to plugins like AnsiEsc for
+  " instance.
+  " TODO: to support formats other than "f:(l:(c:))", may be we should alter
+  " &efm around "%f"...
+  let msg = substitute(a:msg, "^\e\[\\d\\+m\\%(\e\[K\\)\\(\\S\\+:\\)\e\[m\\%(\e\[K\\)\\ze\\%($\\|\\s\\)", '\1', '')
+  let g:lh#btw#job_build#qf_need_colours = get(g:, 'lh#btw#job_build#qf_need_colours', 0) || (msg != a:msg)
+
+  " And process the error mesage with Vim through
+  caddexpr msg
   if exists(':cbottom') && g:lh#btw#auto_cbottom
     let qf = getqflist()
     call assert_true(!empty(qf))
@@ -128,6 +139,7 @@ function! s:before_start_cb() dict abort " {{{3
         \ {'title': self.build_mode. ' compilation of ' . self.project_name})
   let self.start_time = reltime()
   let s:job = self
+  let g:lh#btw#job_build#qf_need_colours = 0
 endfunction
 
 if exists(':cbottom') " {{{3
