@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  26th Oct 2018
+" Last Update:  02nd Jul 2020
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to:
@@ -69,18 +69,21 @@ runtime! autoload/lh/btw/chain/_register_*.vim
 " Function: lh#btw#chain#_find_chain(dir) {{{3
 function! lh#btw#chain#_find_chain(dir) abort
   for prio in s:chain_priorities
-    for [file, chain] in items(s:registered_chains[prio])
-      if filereadable(a:dir.'/'.file)
-        return chain
-      endif
-    endfor
+    let chains = map(deepcopy(items(s:registered_chains[prio])), '[v:val[1], filereadable(a:dir."/".v:val[0])]')
+    call filter(chains, 'v:val[1]')
+    if !empty(chains) | return chains[0][0] | endif
   endfor
   return "_default"
 endfunction
 
 " Function: lh#btw#chain#load_config([chain]) {{{3
 function! lh#btw#chain#load_config(...) abort
-  let chain = a:0 > 0 ? a:1 : lh#btw#chain#_find_chain(lh#option#get('paths.sources', expand('%:p:h')))
+  let src_dir = lh#option#get('paths.sources')
+  if  lh#option#is_unset(src_dir)
+    let prefix = lh#project#is_in_a_project() ? 'p:' : 'b:'
+    let src_dir = lh#let#to(prefix.'.paths.sources',  expand('%:p:h'))
+  endif
+  let chain = a:0 > 0 ? a:1 : lh#btw#chain#_find_chain(src_dir)
 
   return lh#btw#chain#{chain}#load_config()
 endfunction

@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  15th Feb 2019
+" Last Update:  01st Jul 2020
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -147,7 +147,7 @@ function! lh#btw#cmake#auto_detect_compil_modes(menu_def) abort
 
   let subs = lh#path#glob_as_list(build_root_path, '*')
   call filter(subs, 'isdirectory(v:val)')
-  let g:subs = subs
+  " let g:subs = subs
   if empty(subs)
     call lh#common#warning_msg("No build directories detected in `".build_root."`.\nCompilation won't be possible for now.")
     return
@@ -328,7 +328,7 @@ function! lh#btw#cmake#_add_menus() abort
   call lh#project#menu#make('nic', '12', 'Edit local &CMake file (vertical)', '<localleader>v<F7>', '<buffer>', ':call lh#project#crt().get("BTW.config.functions").EditLocalCMakeFile("vert")<cr>')
 endfunction
 
-" Function: s:EditLocalCMakeFile() {{{3
+" Function: s:EditLocalCMakeFile([pos]) {{{3
 function! s:EditLocalCMakeFile(...) abort
   let where = a:0==0 ? '' : a:1.' '
   let file = lh#path#to_relative(expand('%:p:h').'/CMakeLists.txt')

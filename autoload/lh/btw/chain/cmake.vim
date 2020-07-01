@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  15th Feb 2019
+" Last Update:  02nd Jul 2020
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -167,7 +167,7 @@ function! s:config(...) dict abort " {{{3
       let ccmake = s:ccmake_interactive()
       if ccmake !~ '&$' && exists(':term')
         let opts = get(args, 'opts', '')
-        let prg = printf(ccmake, self.arg). (empty(opts) ? '' : opts)
+        let prg = printf(ccmake, self.arg. (empty(opts) ? '' : opts))
         call lh#common#warning_msg('Running: '.prg)
         let crt_prj = lh#project#crt()
         if &buftype == 'terminal' && term_getstatus('%') == 'finished'
@@ -183,7 +183,7 @@ function! s:config(...) dict abort " {{{3
           call crt_prj._register_buffer()
         endif
       else
-        let prg .= printf(s:ccmake_interactive(), self.arg). ' '.get(args, 'opts', '')
+        let prg .= printf(s:ccmake_interactive(), self.arg. ' '.get(args, 'opts', ''))
         call s:Verbose(":!".prg)
         exe ':silent !'.prg
       endif
@@ -220,13 +220,19 @@ function! s:analyse(...) dict abort " {{{3
 
   " 1- Try to autodetect build directory
   " 1.1- Find the project root directory
+  let sources_dir  = lh#option#get('paths.sources') " also stored in self.arg...
+  if  lh#option#is_unset(sources_dir)
+    call s:Verbose("BTW: (bpg):paths.sources is unset, abort CMake detection")
+    return 0
+  endif
+
+  call lh#assert#value(sources_dir).is_set() "Can we also expect sources_dir to always exist here?
   let prj_root_dir = lh#option#get('paths.project')
   if lh#option#is_set(prj_root_dir)
-    call s:Verbose("BTW: Bootstrapping cmake chain, using (bpg):paths.project='%1'", prj_root_dir)
+    call s:Verbose("BTW: Bootstrapping CMake chain, using (bpg):paths.project='%1'", prj_root_dir)
+    let updir_cmakelists = [sources_dir]
   else
     unlet prj_root_dir
-    let sources_dir = lh#option#get('paths.sources')
-    call lh#assert#value(sources_dir).is_set()
     " Sometimes, the paths.sources is artifically changed, in that case search
     " for the last up-directory with a CMakeLists.txt
     let updir_cmakelists = findfile('CMakeLists.txt', sources_dir.";", -1)
@@ -234,35 +240,92 @@ function! s:analyse(...) dict abort " {{{3
     call lh#assert#value(updir_cmakelists).not().empty()
 
     let prj_root_dir = lh#let#to(prefix.'paths.project', fnamemodify(updir_cmakelists[-1], ':p:h:h'))
-    call s:Verbose("BTW: Bootstrapping cmake chain, deducing (bpg):paths.project='%1'", prj_root_dir)
+    call s:Verbose("BTW: Bootstrapping CMake chain, deducing (bpg):paths.project='%1'", prj_root_dir)
   endif
 
   " 1.2- Find the build root directory
+  "      i.e. files would be in {build_root_dir}/{mode}/CMakeCache.txt
+  "      Or the build_dir
+  let build_dir      = lh#option#get('BTW.compilation_dir')
   let build_root_dir = lh#option#get('paths.build_root_dir')
-  if lh#option#is_set(build_root_dir)
-    call s:Verbose("BTW: Bootstrapping cmake chain, using (bpg):paths.build_root_dir='%1'", build_root_dir)
+  if lh#option#is_set(build_dir) && isdirectory(build_dir)
+    call s:Verbose("(bpg):BTW.compilation_dir already set as %1 => abort", build_dir)
+    return 1
+  elseif lh#option#is_set(build_root_dir) && isdirectory(build_root_dir)
+    call s:Verbose("BTW: Bootstrapping CMake chain, using (bpg):paths.build_root_dir='%1'", build_root_dir)
+    return 1
   else
-    unlet build_root_dir
-    " Now if there is a build/ dir in the parent directory, let's say
-    let build_dirname = lh#option#get('paths.build_dirname', 'build')
-    let updir_build = finddir(build_dirname, updir_cmakelists[-1].';', -1)
-    if empty(updir_build)
-      let build_root_dir = lh#ui#input("No '".build_dirname."/' directory found\nWhere do you want to build? ",
-            \ prj_root_dir.'/'.build_dirname)
-    else
-      let build_root_dir = lh#ui#input("'".build_dirname."/' directory found\nDo you confirm? ",
-            \ updir_build[-1])
+    " unlet build_root_dir
+    " 1.2.1- there is a symbolic link named compile_commands.json
+    let db = sources_dir.'/compile_commands.json'
+    if filereadable(db) && getftype(db) == 'link'
+      let db_path = fnamemodify(lh#path#readlink(db), ':.:h')
+      call s:Verbose("Symbolic link to %2 found as %1", db, db_path)
+      let build_dir = db_path
+      " then, ../*/CMakeCache.txt, there may be sibling dirs
+      let siblings = lh#path#glob_as_list(build_dir, '../*/CMakeCache.txt')
+      if  len(siblings) >= 2
+        let build_root_dir = lh#path#simplify(build_dir.'..')
+      endif
     endif
 
-    if  empty(build_root_dir)
-      return 0
+    " 1.2.2- there is {updirs...}/CMakeCache.txt
+    if  lh#option#is_unset(build_root_dir) && lh#option#is_unset(build_dir)
+      let files = lh#path#glob_as_list(prj_root_dir, '*/CMakeCache.txt')
+      if empty(files)
+        let files = lh#path#glob_as_list(prj_root_dir, '*/*/CMakeCache.txt')
+        if !empty(files)
+          let build_root_dir = lh#path#common(files)
+        endif
+      elseif len(files) == 1
+        let build_dir = fnamemodify(files[0], ':h')
+        let build_dir = lh#ui#input("Build directory found.\nDo you confirm? (empty to abort)",  build_dir, 'dir')
+      else
+        let build_root_dir = prj_root_dir
+      endif
+    endif
+
+    " 1.2.3- there is {updirs...}/build => ask
+    if  lh#option#is_unset(build_root_dir) && lh#option#is_unset(build_dir)
+      " Now if there is a build/ dir in the parent directory, let's say
+      let build_dirname = lh#option#get('paths.build_dirname', 'build')
+      let updir_build = finddir(build_dirname, updir_cmakelists[-1].';', -1)
+      if empty(updir_build)
+        let build_root_dir = lh#ui#input("No '".build_dirname."/' directory found\nWhere do you want to build? (empty to abort)",
+              \ prj_root_dir.'/'.build_dirname, 'dir')
+      else
+        let build_root_dir = lh#ui#input("'".build_dirname."/' directory found\nDo you confirm? (empty to abort)",
+              \ updir_build[-1], 'dir')
+      endif
+    endif
+
+    if lh#option#is_set(build_dir) && isdirectory(build_dir)
+      call s:Verbose("The current compilation dir has been found as %1", build_dir)
+      call lh#let#to(prefix.'BTW.compilation_dir', build_dir)
+    endif
+    if lh#option#is_unset(build_root_dir)
+      call s:Verbose("No CMake compilation mode found => abort support for multiple compilation modes")
+      return 1
     endif
     let build_root_dir = lh#path#relative_to(prj_root_dir, build_root_dir)
     call lh#let#to(prefix.'paths.build_root_dir', build_root_dir)
     call s:Verbose("BTW: Bootstrapping cmake chain, deducing (bpg):paths.build_root_dir='%1'", build_root_dir)
   endif
 
+  if count(build_root_dir, '/') == 1
+    " We may have sibling directories
+    call s:Verbose("The build_root_dir (%1) found is one step away from the prj_root_dir (%2), multiple compilation modes may be used.", build_root_dir, prj_root_dir)
+  else
+    call s:Verbose("The build_root_dir (%1) found is several steps away from the prj_root_dir (%2), we assume that no multiple compilation modes are used.", build_root_dir, prj_root_dir)
+  endif
+
   " 2- Register the bootstrapped configurations
+  " (bpg):BTW.build.mode.bootstrap is meant to store configuration
+  " options.
+  " With this, we iterate the list of typical modes to define the list
+  " of paths where various modes/configurations would be compiled in the
+  " case of a root build folder. When only a single compilation folder
+  " is used this doesn't make sense
   let confs = lh#option#get('BTW.build.mode.bootstrap', {})
   let list = lh#let#if_undef(prefix.'BTW.build.mode.list', {})
   for conf in keys(confs)
@@ -273,6 +336,7 @@ function! s:analyse(...) dict abort " {{{3
   call lh#let#if_undef('p:menu.menu.priority', lh#project#menu#reserve_id(prj).'.')
   call lh#let#if_undef('p:menu.menu.name'    , prj.name.'.')
 
+  " TODO: avoid to call the following function multiple times
   call lh#btw#cmake#define_options([
         \ 'auto_detect_compil_modes'
         \ ]

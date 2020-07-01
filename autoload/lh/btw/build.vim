@@ -64,6 +64,7 @@ function! s:ProjectName() abort
   elseif &ft == 'qf'             | cclose | return s:ProjectName()
   elseif lh#ft#is_script()       | return '%'
   else                           | return '%<'
+    " CMake case will be analysed afterward
   endif
 endfunction
 
