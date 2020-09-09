@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  21st Jun 2020
+" Last Update:  09th Sep 2020
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -150,9 +150,13 @@ endfunction
 
 " Function: s:DoRunAndCaptureOutput(program, options [, args]) {{{3
 let s:k_multijobs_options = {
-      \ 'make': '-j'
+      \ 'make': '-j',
+      \ 'cmake': '-j',
+      \ 'ctest': '-j'
       \}
+let s:known_multijobs_progs = '\v('.join(map(keys(s:k_multijobs_options), '"<".v:val.">"'), '|').')'
 let s:has_jobs = exists('*job_start') && has("patch-7.4.1980")
+
 function! s:DoRunAndCaptureOutput(program, options, ...) abort
   let ask_bg = get(a:options, 'background', lh#btw#option#_make_in_bg())
   let bg = (has('clientserver') || s:has_jobs) && ask_bg
@@ -171,10 +175,10 @@ function! s:DoRunAndCaptureOutput(program, options, ...) abort
   endif
   let args = join(a:000, ' ')
   let nb_jobs = lh#btw#option#_make_mj()
-  " if has_key(s:k_multijobs_options, program) && type(nb_jobs) == type(0) && nb_jobs > 0
-  if type(nb_jobs) == type(0) && nb_jobs > 0
-    " let args .= ' '. s:k_multijobs_options[program] .nb_jobs
-    let args .= ' -j' .nb_jobs
+  let mj_prg = matchstr(program, s:known_multijobs_progs)
+  if has_key(s:k_multijobs_options, mj_prg) && type(nb_jobs) == type(0) && nb_jobs > 0
+    call s:Verbose("Using multijob option %2 from %1", mj_prg, s:k_multijobs_options[mj_prg])
+    let args .= ' '. s:k_multijobs_options[mj_prg] .nb_jobs
   endif
 
   try
