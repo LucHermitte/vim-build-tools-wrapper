@@ -87,10 +87,12 @@ When an error is found, the quickfix window will get automatically opened. Howev
 ### From the shell
 First, a quick reminder. When, our system has gnu make installed (and not the badly configured gnumake from Mingw), we can compile the standalone file `foo.c` with `make foo` from our shell. We don't need to (and must not) write any Makefile! The executable `foo` will be generated in the current directory.
 
-Any need to inject an option ? `$CFLAGS`, `$CXXFLAGS`, `$CPPFLAGS`, `$LDFLAGS` (to name the main ones) are already there waiting to be set. For instance, we can compile the C++14 standalone file bar.cpp with `CXXFLAGS='-std=c++1y' make bar`. And execute the result with `./bar`.
+Any need to inject an option? `$CFLAGS`, `$CXXFLAGS`, `$CPPFLAGS`, `$LDFLAGS`, `$LDLIBS` (to name the main ones) are already there waiting to be set. For instance, we can compile the C++17 standalone file bar.cpp with `CXXFLAGS='-std=c++17' make bar`. And execute the result with `./bar`.
 
 ### From vim
-How is it related to vim, you'll ask? Well, this means we can compile foo.c from vim with `:make foo`, or even `:make %<` when the current buffer is foo.c. To compile bar.cpp, we'll first have to set `$CXXFLAGS` with `:let $CXXFLAGS='-std=c++1y'`, and then we can simply compile with `:make %<`. _Et voilà!_
+How is it related to vim, you'll ask? Well, this means we can compile foo.c from vim with `:make foo`, or even `:make %<` when the current buffer is foo.c. To compile bar.cpp, we'll first have to set `$CXXFLAGS` with `:let $CXXFLAGS='-std=c++17'`, and then we can simply compile with `:make %<`. _Et voilà!_
+
+For mingw case where gnumake has no default rule, or other programs, an alternative command is provided: `:MakeWith compilation-command`. e.g.  `:MakeWith g++ -std=c++2a -Wall -Wextra -o %< %`, `:MakeWith pylint %`...
 
 ### From vim with BTW
 The way BTW handles its default settings, we just need to hit `<F7>` to compile the current buffer. And if we need to set options, just set `$CXXFLAGS` once, and hit `<F7>` or `:Make` (note the capital 'M')

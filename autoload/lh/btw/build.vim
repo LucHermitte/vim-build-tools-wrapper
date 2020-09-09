@@ -245,6 +245,21 @@ function! lh#btw#build#_compile(...) abort
   call lh#btw#build#_do_compile(&makeprg, rule, "Compilation finished")
 endfunction
 
+" Function: lh#btw#build#_compile_with(...) {{{3
+function! lh#btw#build#_compile_with(str) abort
+  update
+  let sep = stridx(a:str, ' --- ')
+  if  sep < 0
+    let makeprg = a:str
+    let params  = ''
+  else
+    let makeprg = a:str[sep+5 :]
+    let params  = a:str[: sep-1]
+  endif
+  call s:Verbose('Compiling (%1) w/ "%2"', params, makeprg)
+  call lh#btw#build#_do_compile(makeprg, params, "Compilation finished")
+endfunction
+
 " Function: lh#btw#build#_do_compile(makeprg, rule, msg [, args]) {{{3
 function! lh#btw#build#_do_compile(makeprg, rule, msg, ...) abort
   let args = get(a:, 1, {})

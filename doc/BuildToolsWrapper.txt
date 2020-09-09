@@ -221,6 +221,30 @@ according to the heuristic described in |BTW-project-target|.
 By default, |:Make| (with no argument) is binded to <F7>. This can be overrided
 with the option |g:BTW.key.make|.
 
+                                                        *:MakeWith*
+Execute a program that'll fill the |quickfix| windows~
+While |:Make| is explicitly tune to compile with |'makeprg'| option,
+`:MakeWith` permits to inject the `makeprg` option on the fly. Like with the
+official |'makeprg'| option, targets will replace the `$*` pattern.
+
+Background compilation as described by |:Make-background| is automatically
+done.
+
+e.g. >
+    " Execute pylint on the specified target
+    :MakeWith pylint target
+
+    " Execute pylint on the specified targets
+    " This syntax "targets... --- makeprg" is... a test
+    " It may be removed eventually...
+    MakeWith target1 target2 --- pylint $*
+
+If you prefer a better control on the notification messages emitted, you could
+directly call the following instead:                  *lh#build#_do_compile()*  >
+
+    :call lh#build#_do_compile(makeprg, param, "Execution of XXX finished")
+<
+
                                                         *:Make-background*
 ...in background...~
 The compilation will be done in background if *g:BTW.make_in_background* is

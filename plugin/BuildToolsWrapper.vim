@@ -6,7 +6,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      28th Nov 2004
-" Last Update:  14th Oct 2017
+" Last Update:  07th Sep 2020
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -244,6 +244,7 @@ let s:k_version = 0700
 "       * Background compilation based on lh#async
 "       * Take p:$ENV into account to compile programs
 "       * Can execute in `:terminal`
+"       * New :MakeWith command
 "
 " TODO:                                    {{{2
 "       * &magic
@@ -310,8 +311,14 @@ command! -nargs=1 -complete=var QFImport      :call lh#btw#qf_add_var_to_import(
 command! -nargs=0               QFClearImport :call lh#btw#qf_clear_import()
 
 " # Build/Make invokation                  {{{2
+" Make targets...
 command! -nargs=* -complete=customlist,lh#btw#build#_make_complete
       \           Make                  :call lh#btw#build#_compile("<args>")
+
+" MakeWith target1 target2... --- makeprgexpression
+" MakeWith makeprgexpression
+command! -nargs=+ -complete=customlist,lh#btw#build#_make_complete
+      \           MakeWith              :call lh#btw#build#_compile_with("<args>")
 command! -nargs=0 Execute               :call lh#btw#build#_execute()
 command! -nargs=0 AddLetModeline        :call lh#btw#build#_add_let_modeline()
 command! -nargs=0 Config                :call lh#btw#build#_config()
