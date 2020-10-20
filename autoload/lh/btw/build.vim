@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  09th Sep 2020
+" Last Update:  20th Oct 2020
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -248,13 +248,14 @@ endfunction
 " Function: lh#btw#build#_compile_with(...) {{{3
 function! lh#btw#build#_compile_with(str) abort
   update
-  let sep = stridx(a:str, ' --- ')
+  let str = substitute(a:str, '%<\|%\(:[p8~.htre]\)*', '\=expand(submatch(0))', 'g')
+  let sep = stridx(str, ' --- ')
   if  sep < 0
-    let makeprg = a:str
+    let makeprg = str
     let params  = ''
   else
-    let makeprg = a:str[sep+5 :]
-    let params  = a:str[: sep-1]
+    let makeprg = str[sep+5 :]
+    let params  = str[: sep-1]
   endif
   call s:Verbose('Compiling (%1) w/ "%2"', params, makeprg)
   call lh#btw#build#_do_compile(makeprg, params, "Compilation finished")
