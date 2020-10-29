@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 070
 " Created:      14th Mar 2014
-" Last Update:  06th Sep 2018
+" Last Update:  29th Oct 2020
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -292,7 +292,7 @@ function! s:QuickFixImport() abort
   let qf = getqflist()
   if empty(qf) | return | endif
   let qf0 = qf[0]
-  if qf0.text =~ '^BTW: '
+  if qf0.text =~ '^BTW: ' && qf0.nr < len(s:qf_saved_options)
     " The qf list has already been proccessed, we need to import what it
     " contains
     let idx = - qf0.nr

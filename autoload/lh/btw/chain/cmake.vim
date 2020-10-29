@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  02nd Jul 2020
+" Last Update:  28th Oct 2020
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -258,6 +258,7 @@ function! s:analyse(...) dict abort " {{{3
     " unlet build_root_dir
     " 1.2.1- there is a symbolic link named compile_commands.json
     let db = sources_dir.'/compile_commands.json'
+    call s:Verbose('BTW: Bootstrapping CMake chain, Testing whether "%1" is a symbolic link...', db)
     if filereadable(db) && getftype(db) == 'link'
       let db_path = fnamemodify(lh#path#readlink(db), ':.:h')
       call s:Verbose("Symbolic link to %2 found as %1", db, db_path)
@@ -271,17 +272,27 @@ function! s:analyse(...) dict abort " {{{3
 
     " 1.2.2- there is {updirs...}/CMakeCache.txt
     if  lh#option#is_unset(build_root_dir) && lh#option#is_unset(build_dir)
+      call s:Verbose('BTW: Bootstrapping CMake chain, Searching for CMakeCache.txt under "%1"...', prj_root_dir)
       let files = lh#path#glob_as_list(prj_root_dir, '*/CMakeCache.txt')
       if empty(files)
-        let files = lh#path#glob_as_list(prj_root_dir, '*/*/CMakeCache.txt')
+        let build_dirname = lh#option#get('paths.build_dirname', '*')
+        let files = lh#path#glob_as_list(prj_root_dir, build_dirname.'/*/CMakeCache.txt')
         if !empty(files)
-          let build_root_dir = lh#path#common(files)
+          call s:Verbose('BTW: Bootstrapping CMake chain, CMakeCache.txt found in "%1/%2/*" ->  "%3"', prj_root_dir, build_dirname, files)
         endif
-      elseif len(files) == 1
-        let build_dir = fnamemodify(files[0], ':h')
-        let build_dir = lh#ui#input("Build directory found.\nDo you confirm? (empty to abort)",  build_dir, 'dir')
       else
-        let build_root_dir = prj_root_dir
+        call s:Verbose('BTW: Bootstrapping CMake chain, CMakeCache.txt found in "%1/*" ->  "%2"', prj_root_dir, files)
+      endif
+      if len(files) == 1
+        call s:Verbose('BTW: Bootstrapping CMake chain, a single CMakeCache.txt found in ->  "%1"', files)
+        let build_dir = fnamemodify(files[0], ':h')
+        " TODO: Add option to avoid asking...
+        let build_dir = lh#ui#input("Build directory found.\nDo you confirm? (empty to abort)",  build_dir, 'dir')
+        if !empty(build_dir)
+          let build_root_dir = fnamemodify(build_dir, ':h')
+        endif
+      elseif !empty(files)
+        let build_root_dir = lh#path#common(files)
       endif
     endif
 
@@ -289,6 +300,7 @@ function! s:analyse(...) dict abort " {{{3
     if  lh#option#is_unset(build_root_dir) && lh#option#is_unset(build_dir)
       " Now if there is a build/ dir in the parent directory, let's say
       let build_dirname = lh#option#get('paths.build_dirname', 'build')
+      call s:Verbose('BTW: Bootstrapping CMake chain, Searching for a "%1/" directory name before "%2"...', build_dirname, updir_cmakelists[-1])
       let updir_build = finddir(build_dirname, updir_cmakelists[-1].';', -1)
       if empty(updir_build)
         let build_root_dir = lh#ui#input("No '".build_dirname."/' directory found\nWhere do you want to build? (empty to abort)",
@@ -307,9 +319,10 @@ function! s:analyse(...) dict abort " {{{3
       call s:Verbose("No CMake compilation mode found => abort support for multiple compilation modes")
       return 1
     endif
+    call s:Verbose('BTW: Bootstrapping CMake chain, Making "%1" relative to "%2"...', build_root_dir, prj_root_dir)
     let build_root_dir = lh#path#relative_to(prj_root_dir, build_root_dir)
     call lh#let#to(prefix.'paths.build_root_dir', build_root_dir)
-    call s:Verbose("BTW: Bootstrapping cmake chain, deducing (bpg):paths.build_root_dir='%1'", build_root_dir)
+    call s:Verbose("BTW: Bootstrapping CMake chain, deducing (bpg):paths.build_root_dir='%1'", build_root_dir)
   endif
 
   if count(build_root_dir, '/') == 1

@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  01st Jul 2020
+" Last Update:  29th Oct 2020
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -190,10 +190,34 @@ function! lh#btw#cmake#def_toggable_compil_mode(menu_def) abort
   " and lh#menu#def_toggle_item
   call lh#assert#true(has_key(a:menu_def, 'project'))
   let menu_def = lh#let#if_undef('p:BTW._menu.compil_mode', lh#object#make_top_type({}))
-  let menu_def.values         = keys(lh#option#get('BTW.build.mode.list'))
+  let mode_list = lh#option#get('BTW.build.mode.list')
+  let menu_def.values         = keys(mode_list)
   " "variable" is a variable name, hence _project being a string
   let menu_def.variable       = lh#ref#bind(a:menu_def.project.variables, 'BTW.build.mode.current')
         \.print_with_fmt('p('.(a:menu_def.project.name).'):%{1.key}')
+  let crt_mode = lh#option#get('BTW.build.mode.current')
+  call s:Verbose('Requested BTW.build.mode.current: %1', crt_mode)
+
+  " For the first time, let's control that 'BTW.build.mode.current'
+  " matches a configuration with a Makefile
+  let project_root = a:menu_def.project.get('paths.project')
+  let valid_confs = filter(copy(mode_list), 'filereadable(project_root."/".v:val."/Makefile")')
+  call s:Verbose("Configurations with Makefiles are: %1", keys(valid_confs))
+  if lh#option#is_unset(crt_mode) || !has_key(valid_confs, crt_mode)
+    call s:Verbose("Requested BTW.build.mode.current (%1) not in valid_confs (%2)", crt_mode, keys(valid_confs))
+    if  len(valid_confs) == 1
+      call s:Verbose("Forcing BTW.build.mode.current to %1", keys(valid_confs)[0])
+      call lh#let#to('p:BTW.build.mode.current', keys(valid_confs)[0])
+    elseif empty(valid_confs)
+      call lh#common#warning_msg("No Makefile found, please bootstrap a configuration")
+    else
+      let c = lh#ui#which('lh#ui#combo', 'Requested BTW.build.mode.current ('.crt_mode.') has no Makefile. Please select one among the following. Escape to abort', keys(valid_confs))
+      if !empty(c)
+        call lh#let#to('p:BTW.build.mode.current', c)
+      endif
+    endif
+  endif
+
   let menu_def._root          = lh#option#get('paths.sources')
   if ! has_key(menu_def, 'menu')
     call extend(menu_def, a:menu_def, 'keep')
@@ -360,6 +384,7 @@ endfunction
 " # lh#btw#cmake#__update_compil_dir() dict {{{2
 function! lh#btw#cmake#__update_compil_dir() dict
   call s:Verbose("Updating compil dir in buffer %1 (%2) -- prj: %2",bufnr('%'), bufname('%'), get(self.project, 'name', '(none)'))
+  call s:Verbose('Required BTW.build.mode.current: %1', lh#option#get('BTW.build.mode.current'))
   " "let self.project().paths = value" is refused by viml interpreter => hence
   " the auxiliary reference
   if has_key(self, 'project') && (type(self.project) == type(function('has')))
