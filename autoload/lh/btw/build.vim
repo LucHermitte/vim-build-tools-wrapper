@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  20th Oct 2020
+" Last Update:  18th Nov 2020
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -184,8 +184,8 @@ function! s:DoRunAndCaptureOutput(program, options, ...) abort
   try
     if bg && s:has_jobs
       let args = expand(args)
-      call s:Verbose('rpl $* w/ %1', args)
       let cmd = substitute(program, '\$\*', args, 'g')
+      call s:Verbose('rpl $* w/ %1 --> %2', args, cmd)
       " makeprg escapes pipes, we need to unescape them for job_start
       let cmd = substitute(cmd, '\\|', '|', 'g')
       call lh#btw#job_build#execute(cmd)
@@ -410,6 +410,10 @@ endfunction
 
 " # Execute        {{{2
 " Function: lh#btw#build#_execute()                   {{{3
+let s:k_default_rules = {
+      \ 'make': 'all'
+      \,'ctest': '-V'
+      \ }
 function! lh#btw#build#_execute()
   let path = s:Executable()
   if type(path) == type({})
@@ -437,7 +441,7 @@ function! lh#btw#build#_execute()
           let makeprg = makeprg[ : (p-1)].ctx.makeprg[p : ]
         endif
       endif
-      call s:DoRunAndCaptureOutput(makeprg, {}, path.rule)
+      call s:DoRunAndCaptureOutput(makeprg, {}, get(path, 'rule', s:k_default_rules[path.type]))
     else
       call lh#common#error_msg( "BTW: unexpected type (".(path.type).") for the command to run")
     endif
