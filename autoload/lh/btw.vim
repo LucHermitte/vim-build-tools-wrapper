@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 070
 " Created:      14th Mar 2014
-" Last Update:  29th Oct 2020
+" Last Update:  18th Nov 2020
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -143,23 +143,47 @@ endfunction
 " Defines foldtext for each fold built from s:qf_folds
 " @param[in] s:qf_folds
 function! lh#btw#_qf_fold_text() abort
-  let test_nr = s:qf_folds[-1][v:foldstart]
-  if !has_key(s:qf_folds[test_nr], 'complement') | return | endif
+  let qf_folds = s:qf_folds()
+  let test_nr = qf_folds[-1][v:foldstart]
+  if !has_key(qf_folds[test_nr], 'complement') | return | endif
   let t = foldtext().': '
   let l = (4 - len(test_nr))
-  let t.= repeat(' ', l). (s:qf_folds[test_nr].name) .'   '
-  let t.= s:qf_folds[test_nr].complement
+  let t.= repeat(' ', l). (qf_folds[test_nr].name) .'   '
+  let t.= qf_folds[test_nr].complement
   return t
 endfunction
 
 
 " # CTest hooks                            {{{2
+let s:qf_ctx = get(s:, 'qf_ctx', lh#qf#make_context_map(0))
+
+" Function: s:qf_folds() -- getter       {{{3
+if lh#has#properties_in_qf()
+  function! s:qf_folds(...) abort
+    let res = s:qf_ctx.get('qf_folds')
+    if type(res) == type(0) | return {} | endif " no value
+    return res
+  endfunction
+  function! s:set_qf_folds(value) abort
+    return s:qf_ctx.set('qf_folds', a:value)
+  endfunction
+else
+  function! s:qf_folds(...) abort
+    return get(s:, '_qf_folds', {})
+  endfunction
+  function! s:set_qf_folds(value) abort
+    let s:_qf_folds = a:value
+    return s:_qf_folds
+  endfunction
+endif
+
 " Function: lh#btw#_register_fix_ctest() {{{3
 " When working with CTest, we need to:
 " - translate the name of the files in error from "{test-number}: file:line:
 "   message"
 " and we can fold the messages from each test.
 function! lh#btw#_register_fix_ctest() abort
+  call s:Verbose("Registering CTest post hooks for qf-window")
   let hooks = {
         \ 'pre' : {1: s:getSNR('QuickFixCleanFolds')},
         \ 'post': {2: s:getSNR('FixCTestOutput')},
@@ -171,7 +195,7 @@ endfunction
 " Function: s:QuickFixCleanFolds() {{{3
 function! s:QuickFixCleanFolds()
   call s:Verbose('Clean QF folds')
-  let s:qf_folds = {}
+  call s:set_qf_folds({})
 endfunction
 
 " Function: s:FixCTestOutput()       {{{3
@@ -181,7 +205,7 @@ function! s:FixCTestOutput() abort
     call s:Verbose("parse CTest output")
     let qf_changed = 0
     let qflist = getqflist()
-    let s:qf_folds = {-1: {}}
+    let qf_folds = s:set_qf_folds({-1: {}})
     let line_nr = 1
     let test_nr = -1
     let test_name = ''
@@ -192,26 +216,26 @@ function! s:FixCTestOutput() abort
       if      qft =~ '^test \d\+\s*$'
         " Test start line
         let test_nr = matchstr(qft, '^test \zs\d\+\ze\s*$')
-        lh#assert#value(qf_folds).not().has_key(qf_folds, test_nr)
-        let s:qf_folds[test_nr] = {'begin': line_nr}
-        let s:qf_folds[-1][line_nr] = test_nr
+        call lh#assert#value(qf_folds).not().has_key(test_nr)
+        let qf_folds[test_nr] = {'begin': line_nr}
+        let qf_folds[-1][line_nr] = test_nr
       elseif qft =~ '^\s*\d\+/\d\+ Test\s\+#\d\+:'
         " Test end line
         let test_nr = matchstr(qft, '^\s*\d\+/\d\+ Test\s\+#\zs\d\+\ze:')
         let test_success = matchstr(qft,  '^\s*\d\+/\d\+ Test\s\+#\d\+:\s\+'.test_name.' \.\+\s*\zs\S\+')
         let g:qft = qft
-        let s:qf_folds[test_nr].end = line_nr
-        let s:qf_folds[test_nr].complement = test_success
+        let qf_folds[test_nr].end = line_nr
+        let qf_folds[test_nr].complement = test_success
         let test_nr = -1
         let test_name = ''
       elseif qft =~ '^\s*Start\s\+\d\+: '
         let test_nr = matchstr(qft,  '^\s*Start\s\+\zs\d\+\ze:')
-        if !has_key(s:qf_folds, test_nr)
-          let s:qf_folds[test_nr] = {'begin': line_nr}
-          let s:qf_folds[-1][line_nr] = test_nr
+        if !has_key(qf_folds, test_nr)
+          let qf_folds[test_nr] = {'begin': line_nr}
+          let qf_folds[-1][line_nr] = test_nr
         endif
         let test_name = matchstr(qft, '^\s*Start\s\+'.test_nr.': \zs\S\+\ze\s*$')
-        let s:qf_folds[test_nr].name = test_name
+        let qf_folds[test_nr].name = test_name
         let test_name_lengths += [ len(test_name) ]
       elseif qf.bufnr != 0
         let b_name = bufname(qf.bufnr)
@@ -240,8 +264,9 @@ function! s:FixCTestOutput() abort
 
     " Find the max length of all test names and align them.
     let l = max(test_name_lengths)
-    for [t, pos] in items(s:qf_folds)
-      if t != -1
+    for [t, pos] in items(qf_folds)
+      " We may not have all information with caddexpr
+      if (t != -1) && has_key(pos, 'name')
         let pos.name .= ' '.repeat('.', 3 + l-len(pos.name))
       endif
     endfor
@@ -258,12 +283,14 @@ endfunction
 " Defines folds for each test
 " @param[in] s:qf_folds
 function! s:QuickFixDefFolds() abort
-  if !exists('s:qf_folds') | return | endif
-  for [t, pos] in items(s:qf_folds)
+  let qf_folds = s:qf_folds()
+  if empty('qf_folds') | return | endif
+  call lh#assert#type(qf_folds).is({})
+  for [t, pos] in items(qf_folds)
     if t != -1
       " echomsg t.' -> '.string(pos)
       if has_key(pos, 'begin') && has_key(pos, 'end')
-        exe (pos.begin).','.(pos.end).'fold'
+        exe (pos.begin).','.min([pos.end, line('$')]).'fold'
       else
         echomsg "Missing " .(has_key(pos, 'begin') ? "" : "-start-").(has_key(pos, 'end') ? "" : "-end-")." fold for test #".t
       endif
