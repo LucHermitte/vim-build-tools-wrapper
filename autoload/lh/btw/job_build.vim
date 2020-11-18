@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      10th May 2016
-" Last Update:  21st Jun 2020
+" Last Update:  19th Nov 2020
 "------------------------------------------------------------------------
 " Description:
 "       Background compilation with latest job_start() API
@@ -57,10 +57,9 @@ let s:has_qf_properties = has("patch-7.4.2200")
 
 "------------------------------------------------------------------------
 " ## API functions {{{1
-" Function: lh#btw#job_build#execute(cmd) {{{2
-function! lh#btw#job_build#execute(cmd) abort
-  call s:init(a:cmd)
-  return
+" Function: lh#btw#job_build#execute(cmd, options) {{{2
+function! lh#btw#job_build#execute(cmd, options) abort
+  call s:init(a:cmd, a:options)
 endfunction
 
 "------------------------------------------------------------------------
@@ -76,12 +75,12 @@ function! s:closeCB(channel, job_info) abort " {{{3
   " call s:Verbose("Background compilation with `%1' %2", s:cmd, job_status(a:channel))
   try
     let stamp = reltime()
-    call s:Verbose("Background compilation with `%1' finished", s:cmd)
+    call s:Verbose("Background %1 with `%2' finished", s:action, s:cmd)
     while ch_status(a:channel) == 'buffered'
       call s:callbackCB(a:channel, ch_read(a:channel))
     endwhile
     let time = reltimefloat(reltime(s:job.start_time, stamp))
-    call setqflist([{'text': "Background compilation with `".(s:cmd)."` finished in ".string(time)."s with exitval ".a:job_info.exitval}], 'a')
+    call setqflist([{'text': "Background ". s:action ." with `".(s:cmd)."` finished in ".string(time)."s with exitval ".a:job_info.exitval}], 'a')
   finally
     call s:Verbose('Job finished %1 -- %2', s:job, a:job_info)
     let what = s:job_description(s:job)
@@ -91,13 +90,14 @@ function! s:closeCB(channel, job_info) abort " {{{3
     call lh#btw#build#_copen_bg_complete(what, a:job_info)
     redraw
   else
+    " ??? How could it be used? s:must_replace_comp is never set...
     call lh#btw#job_build#execute(s:must_replace_comp)
     unlet s:must_replace_comp
   endif
 endfunction
 
 function! s:callbackCB(channel, msg) abort " {{{3
-  " In case msg has been coloured by gc/clag options like
+  " In case msg has been coloured by gcc/clag options like
   " -fdiagnostics-color=always, we need to clear the Ainsi Escape codes around
   "  filenames.
   " The processing of the escape sequences is left to plugins like AnsiEsc for
@@ -107,8 +107,14 @@ function! s:callbackCB(channel, msg) abort " {{{3
   let msg = substitute(a:msg, "^\e\[\\d\\+m\\%(\e\[K\\)\\(\\S\\+:\\)\e\[m\\%(\e\[K\\)\\ze\\%($\\|\\s\\)", '\1', '')
   let g:lh#btw#job_build#qf_need_colours = get(g:, 'lh#btw#job_build#qf_need_colours', 0) || (msg != a:msg)
 
-  " And process the error mesage with Vim through
+  " Best place to fix CMake/CTest ?
+  " if msg =~ '^\d\+: \f\+(\d\+):'
+  "   let msg = substitute(msg, '^\(\d\+: \)\(\f\+(\d\+):\)', '\2 \1', '')
+  " endif
   caddexpr msg
+  " And process the error mesage with Vim through
+  " The "new" method isn't compatible with QuickFixCmd* Events
+  " call setqflist([], 'a', {'lines': [msg]})
   if exists(':cbottom') && g:lh#btw#auto_cbottom
     let qf = getqflist()
     call assert_true(!empty(qf))
@@ -121,11 +127,11 @@ function! s:callbackCB(channel, msg) abort " {{{3
 endfunction
 
 function! s:start_fail_cb() dict abort " {{{3
-  call setqflist([{'text': "Background compilation with `".(self.cmd)."` finished with exitval ".job_info(self.job).exitval}], 'a')
+  call setqflist([{'text': "Background ". self.action ." with `".(self.cmd)."` finished with exitval ".job_info(self.job).exitval}], 'a')
 endfunction
 
 function! s:before_start_cb() dict abort " {{{3
-  call s:Verbose("Background compilation with `%1' started", self.cmd)
+  call s:Verbose("Background %1 with `%2' started", self.action, self.cmd)
   if exists(':cbottom')
     let g:lh#btw#auto_cbottom = lh#btw#option#_auto_scroll_in_bg()
     call s:Verbose("Reset auto_cbottom to autoscroll (%1)", g:lh#btw#auto_cbottom)
@@ -133,10 +139,10 @@ function! s:before_start_cb() dict abort " {{{3
   " Filling qflist is required because of lh#btw#build#_show_error() in caller
   " function
   let what = s:job_description(self)
-  echomsg "Compilation of ".what." started."
-  call setqflist([{'text': "Background compilation with `".(self.cmd)."` started"}])
+  echomsg substitute(self.action, '.*', '\u&', '') . " of ".what." started."
+  call setqflist([{'text': "Background ". self.action ." with `".(self.cmd)."` started"}])
   call setqflist([], 'r',
-        \ {'title': self.build_mode. ' compilation of ' . self.project_name})
+        \ {'title': self.build_mode. ' '. self.action . ' of ' . self.project_name})
   let self.start_time = reltime()
   let s:job = self
   let g:lh#btw#job_build#qf_need_colours = 0
@@ -154,13 +160,19 @@ if exists(':cbottom') " {{{3
   augroup END
 endif
 
-" Function: s:init(cmd) {{{3
-function! s:init(cmd) abort
+" Function: s:init(cmd, options) {{{3
+function! s:init(cmd, options) abort
+  " let mode     = lh#btw#build_mode()
+  " let prj_name = lh#btw#project_name()
+  let mode     = get(a:options, 'mode',     '')
+  let prj_name = get(a:options, 'prj_name', '')
+  let message  = get(a:options, 'message',  'Build %s%s')
+  let action   = get(a:options, 'action',   'compilation')
+  let s:action = action
   let s:cmd    = a:cmd
-  let mode     = lh#btw#build_mode()
-  let prj_name = lh#btw#project_name()
   let job =
-        \ { 'txt'            : 'Build '.prj_name . (empty(mode) ? '' : ' ('.mode.')')
+        \ { 'txt'            : printf(message, prj_name, empty(mode) ? '' : ' ('.mode.')')
+        \ , 'action'         : action
         \ , 'cmd'            : a:cmd
         \ , 'close_cb'       : function('s:closeCB')
         \ , 'callback'       : function('s:callbackCB')
@@ -169,6 +181,9 @@ function! s:init(cmd) abort
         \ , 'build_mode'     : mode
         \ , 'project_name'   : prj_name
         \ }
+  if has_key(a:options, 'hooks')
+    let job.hooks = a:options.hooks
+  endif
   let queue = lh#async#get_queue('qf', '')
   call queue.push_or_start(job)
   " Cannot return anything yet

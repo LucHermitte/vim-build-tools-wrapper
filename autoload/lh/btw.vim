@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 070
 " Created:      14th Mar 2014
-" Last Update:  18th Nov 2020
+" Last Update:  19th Nov 2020
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -53,7 +53,7 @@ endfunction
 " ## Exported functions {{{1
 
 " Function: lh#btw#compilation_dir([bufid]) {{{3
-function! lh#btw#compilation_dir(...)
+function! lh#btw#compilation_dir(...) abort
   return call('lh#btw#option#_compilation_dir', a:000)
 endfunction
 
@@ -123,7 +123,7 @@ function! s:getSNR(...)
 endfunction
 
 " Function: lh#btw#_evaluate(expr) {{{3
-function! lh#btw#_evaluate(expr)
+function! lh#btw#_evaluate(expr) abort
   if type(a:expr) == type({})
     if lh#ref#is_bound(a:expr)
       return a:expr.resolve()
@@ -139,22 +139,6 @@ function! lh#btw#_evaluate(expr)
 endfunction
 
 " # Folding functions                      {{{2
-" Function: lh#btw#qf_fold_text() {{{3
-" Defines foldtext for each fold built from s:qf_folds
-" @param[in] s:qf_folds
-function! lh#btw#_qf_fold_text() abort
-  let qf_folds = s:qf_folds()
-  let test_nr = qf_folds[-1][v:foldstart]
-  if !has_key(qf_folds[test_nr], 'complement') | return | endif
-  let t = foldtext().': '
-  let l = (4 - len(test_nr))
-  let t.= repeat(' ', l). (qf_folds[test_nr].name) .'   '
-  let t.= qf_folds[test_nr].complement
-  return t
-endfunction
-
-
-" # CTest hooks                            {{{2
 let s:qf_ctx = get(s:, 'qf_ctx', lh#qf#make_context_map(0))
 
 " Function: s:qf_folds() -- getter       {{{3
@@ -177,6 +161,22 @@ else
   endfunction
 endif
 
+" Function: lh#btw#qf_fold_text() {{{3
+" Defines foldtext for each fold built from s:qf_folds
+" @param[in] s:qf_folds
+function! lh#btw#_qf_fold_text() abort
+  let qf_folds = s:qf_folds()
+  let test_nr = qf_folds[-1][v:foldstart]
+  if !has_key(qf_folds[test_nr], 'complement') | return | endif
+  let t = foldtext().': '
+  let l = (4 - len(test_nr))
+  let t.= repeat(' ', l). (qf_folds[test_nr].name) .'   '
+  let t.= qf_folds[test_nr].complement
+  return t
+endfunction
+
+
+" # CTest hooks                            {{{2
 " Function: lh#btw#_register_fix_ctest() {{{3
 " When working with CTest, we need to:
 " - translate the name of the files in error from "{test-number}: file:line:
@@ -185,15 +185,16 @@ endif
 function! lh#btw#_register_fix_ctest() abort
   call s:Verbose("Registering CTest post hooks for qf-window")
   let hooks = {
-        \ 'pre' : {1: s:getSNR('QuickFixCleanFolds')},
-        \ 'post': {2: s:getSNR('FixCTestOutput')},
-        \ 'open': {9: s:getSNR('QuickFixDefFolds')}
+        \ 'pre'       : {1: s:getSNR('QuickFixCleanFolds')},
+        \ 'post'      : {2: s:getSNR('FixCTestOutput')},
+        \ 'open'      : {9: s:getSNR('QuickFixDefFolds')}
         \ }
+        " \ 'on-the-fly': {9: s:getSNR('ParseCTestOnTheFly')}
   call lh#btw#filters#register_hooks(hooks)
 endfunction
 
 " Function: s:QuickFixCleanFolds() {{{3
-function! s:QuickFixCleanFolds()
+function! s:QuickFixCleanFolds() abort
   call s:Verbose('Clean QF folds')
   call s:set_qf_folds({})
 endfunction
@@ -277,6 +278,50 @@ function! s:FixCTestOutput() abort
   catch /.*/
     call lh#common#error_msg("Error: ".v:exception. " throw at: ".v:throwpoint)
   endtry
+endfunction
+
+" Function: s:ParseCTestOnTheFly(line) {{{3
+function! s:ParseCTestOnTheFly(line, ctx) abort
+  try
+    call s:Verbose("ParseCTestOnTheFly(%1)", a:line)
+    let qf_folds = s:set_qf_folds({-1: {}})
+    let qft = a:line
+    let line_nr = len(getqflist())
+    if      qft =~ '^test \d\+\s*$'
+      " Test start line
+      let test_nr = matchstr(qft, '^test \zs\d\+\ze\s*$')
+      call lh#assert#value(qf_folds).not().has_key(test_nr)
+      let qf_folds[test_nr] = {'begin': a:ctx.line_nr}
+      let qf_folds[-1][a:ctx.line_nr] = test_nr
+      let a:ctx.test_nr = test_nr
+    elseif qft =~ '^\s*\d\+/\d\+ Test\s\+#\d\+:'
+      " Test end line
+      let test_nr      = matchstr(qft, '^\s*\d\+/\d\+ Test\s\+#\zs\d\+\ze:')
+      let test_success = matchstr(qft,  '^\s*\d\+/\d\+ Test\s\+#\d\+:\s\+'.(a:ctx.test_name).' \.\+\s*\zs\S\+')
+      let qf_folds[test_nr].end = a:ctx.line_nr
+      let qf_folds[test_nr].complement = test_success
+      let a:ctx.test_nr = -1
+      let a:ctx.test_name = ''
+    elseif qft =~ '^\s*Start\s\+\d\+: '
+      let test_nr = matchstr(qft,  '^\s*Start\s\+\zs\d\+\ze:')
+      if !has_key(qf_folds, test_nr)
+        let qf_folds[test_nr] = {'begin': a:ctx.line_nr}
+        let qf_folds[-1][a:ctx.line_nr] = test_nr
+      endif
+      let test_name = matchstr(qft, '^\s*Start\s\+'.test_nr.': \zs\S\+\ze\s*$')
+      let qf_folds[test_nr].name = test_name
+      let a:ctx.test_name_lengths = get(a:ctx, 'test_name_lengths', []]) + [ len(test_name) ]
+      let a:ctx.test_nr   = test_nr
+      let a:ctx.test_name = test_name
+    elseif qft =~ '^\d\+: \f\+\(:\d\+\|(\d\+)\):'
+      let qft = substitute(qft, '^\(\d\+: \)\(\f\+(:\d\+\|(\d\+)\):\)', '\2 \1', '')
+    endif
+  endif
+  let a:ctx.line_nr += 1
+  return qft
+catch /.*/
+  call lh#common#error_msg("Error: ".v:exception. " throw at: ".v:throwpoint)
+endtry
 endfunction
 
 " Function: s:QuickFixDefFolds()     {{{3
@@ -373,7 +418,7 @@ function! s:QuickFixImport() abort
 endfunction
 
 " Function: s:QuickFixRemoveExports(bid) {{{3
-function! s:QuickFixRemoveExports(bid)
+function! s:QuickFixRemoveExports(bid) abort
   if empty(bufname(a:bid)) | return | endif
   let bid = a:bid
   call s:Verbose("Removing exported variables for buffer ".bid)
@@ -396,7 +441,7 @@ function! lh#btw#qf_add_var_to_import(varname) abort
 endfunction
 
 " Function: lh#btw#qf_remove_var_to_import(varname)  {{{3
-function! lh#btw#qf_remove_var_to_import(varname)
+function! lh#btw#qf_remove_var_to_import(varname) abort
   let bid = bufnr('%')
   silent! unlet s:qf_options_to_import[bid][a:varname]
   if empty(s:qf_options_to_import[bid])
@@ -405,7 +450,7 @@ function! lh#btw#qf_remove_var_to_import(varname)
 endfunction
 
 " Function: lh#btw#qf_clear_import()   {{{3
-function! lh#btw#qf_clear_import()
+function! lh#btw#qf_clear_import() abort
   let s:qf_options_to_import = {}
 endfunction
 

@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  18th Nov 2020
+" Last Update:  19th Nov 2020
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -188,7 +188,7 @@ function! s:DoRunAndCaptureOutput(program, options, ...) abort
       call s:Verbose('rpl $* w/ %1 --> %2', args, cmd)
       " makeprg escapes pipes, we need to unescape them for job_start
       let cmd = substitute(cmd, '\\|', '|', 'g')
-      call lh#btw#job_build#execute(cmd)
+      call lh#btw#job_build#execute(cmd, a:options)
     elseif lh#os#OnDOSWindows() && bg
       let cmd = ':!start '.substitute(program, '\$\*', args, 'g')
       exe cmd
@@ -263,7 +263,10 @@ endfunction
 
 " Function: lh#btw#build#_do_compile(makeprg, rule, msg [, args]) {{{3
 function! lh#btw#build#_do_compile(makeprg, rule, msg, ...) abort
+  let mode     = lh#btw#build_mode()
+  let prj_name = lh#btw#project_name()
   let args = get(a:, 1, {})
+  let args = extend({'mode': mode, 'prj_name': prj_name}, args, 'force')
   let bg = s:DoRunAndCaptureOutput(a:makeprg, args, a:rule)
   if !bg
     echomsg a:msg.(len(a:rule)?" (".a:rule.")" : "")
@@ -428,10 +431,14 @@ function! lh#btw#build#_execute()
     " Execute the command
     if path.type =~ 'make\|ctest'
       let makeprg = &makeprg
+      let mode     = lh#btw#build_mode()
+      let prj_name = lh#btw#project_name()
+      let args     = {'mode': mode, 'prj_name': prj_name}
       if path.type == 'ctest'
         " let makeprg = substitute(&makeprg, '\<make\>', 'ctest', '')
         let compil_dir = lh#btw#option#_compilation_dir()
         let makeprg = printf('(cd %s && ctest $*)', shellescape(compil_dir))
+        call extend(args, {'message': 'Execute %s tests%s', 'action': 'testing'})
         call lh#assert#value(compil_dir).is_set()
         call lh#btw#_register_fix_ctest()
       endif
@@ -444,7 +451,7 @@ function! lh#btw#build#_execute()
           let makeprg = makeprg[ : (p-1)].ctx.makeprg[p : ]
         endif
       endif
-      call s:DoRunAndCaptureOutput(makeprg, {}, get(path, 'rule', s:k_default_rules[path.type]))
+      call s:DoRunAndCaptureOutput(makeprg, args, get(path, 'rule', s:k_default_rules[path.type]))
     else
       call lh#common#error_msg( "BTW: unexpected type (".(path.type).") for the command to run")
     endif
