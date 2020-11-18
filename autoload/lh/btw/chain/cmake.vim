@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  28th Oct 2020
+" Last Update:  18th Nov 2020
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -76,6 +76,7 @@ function! s:ensure_directory(dir) abort " {{{3
 endfunction
 
 " Function: lh#btw#chain#cmake#load_config() {{{2
+" Beware: at this time, the CWD may not be the final project WD
 function! lh#btw#chain#cmake#load_config(...) abort
   if lh#project#is_in_a_project()
     LetIfUndef p:BTW.target = ''
@@ -224,12 +225,14 @@ function! s:analyse(...) dict abort " {{{3
   if  lh#option#is_unset(sources_dir)
     call s:Verbose("BTW: (bpg):paths.sources is unset, abort CMake detection")
     return 0
+  else
+    call s:Verbose("BTW: Bootstrapping CMake chain, using (bpg):path.sources = '%1'", sources_dir)
   endif
 
   call lh#assert#value(sources_dir).is_set() "Can we also expect sources_dir to always exist here?
   let prj_root_dir = lh#option#get('paths.project')
   if lh#option#is_set(prj_root_dir)
-    call s:Verbose("BTW: Bootstrapping CMake chain, using (bpg):paths.project='%1'", prj_root_dir)
+    call s:Verbose("BTW: Bootstrapping CMake chain, using (bpg):paths.project = '%1'", prj_root_dir)
     let updir_cmakelists = [sources_dir]
   else
     unlet prj_root_dir
@@ -262,11 +265,11 @@ function! s:analyse(...) dict abort " {{{3
     if filereadable(db) && getftype(db) == 'link'
       let db_path = fnamemodify(lh#path#readlink(db), ':.:h')
       call s:Verbose("Symbolic link to %2 found as %1", db, db_path)
-      let build_dir = db_path
+      let build_dir = fnamemodify(db_path, ':p')
       " then, ../*/CMakeCache.txt, there may be sibling dirs
       let siblings = lh#path#glob_as_list(build_dir, '../*/CMakeCache.txt')
       if  len(siblings) >= 2
-        let build_root_dir = lh#path#simplify(build_dir.'..')
+        let build_root_dir = lh#path#simplify(build_dir.'/..')
       endif
     endif
 
