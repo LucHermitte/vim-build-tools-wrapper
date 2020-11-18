@@ -215,19 +215,9 @@ function! s:reconfig() dict abort " {{{3
   endif
 endfunction
 
-
-function! s:analyse(...) dict abort " {{{3
-  let prefix = lh#project#is_in_a_project() ? 'p:' : 'b:'
-
-  " 1- Try to autodetect build directory
-  " 1.1- Find the project root directory
-  let sources_dir  = lh#option#get('paths.sources') " also stored in self.arg...
-  if  lh#option#is_unset(sources_dir)
-    call s:Verbose("BTW: (bpg):paths.sources is unset, abort CMake detection")
-    return 0
-  else
-    call s:Verbose("BTW: Bootstrapping CMake chain, using (bpg):path.sources = '%1'", sources_dir)
-  endif
+function! s:search_build_dirs(prefix, sources_dir) abort " {{{3
+  let prefix      = a:prefix
+  let sources_dir = a:sources_dir
 
   call lh#assert#value(sources_dir).is_set() "Can we also expect sources_dir to always exist here?
   let prj_root_dir = lh#option#get('paths.project')
@@ -253,10 +243,10 @@ function! s:analyse(...) dict abort " {{{3
   let build_root_dir = lh#option#get('paths.build_root_dir')
   if lh#option#is_set(build_dir) && isdirectory(build_dir)
     call s:Verbose("(bpg):BTW.compilation_dir already set as %1 => abort", build_dir)
-    return 1
+    return build_root_dir
   elseif lh#option#is_set(build_root_dir) && isdirectory(build_root_dir)
     call s:Verbose("BTW: Bootstrapping CMake chain, using (bpg):paths.build_root_dir='%1'", build_root_dir)
-    return 1
+    return build_root_dir
   else
     " unlet build_root_dir
     " 1.2.1- there is a symbolic link named compile_commands.json
@@ -320,7 +310,7 @@ function! s:analyse(...) dict abort " {{{3
     endif
     if lh#option#is_unset(build_root_dir)
       call s:Verbose("No CMake compilation mode found => abort support for multiple compilation modes")
-      return 1
+      return build_root_dir
     endif
     call s:Verbose('BTW: Bootstrapping CMake chain, Making "%1" relative to "%2"...', build_root_dir, prj_root_dir)
     let build_root_dir = lh#path#relative_to(prj_root_dir, build_root_dir)
@@ -335,6 +325,24 @@ function! s:analyse(...) dict abort " {{{3
     call s:Verbose("The build_root_dir (%1) found is several steps away from the prj_root_dir (%2), we assume that no multiple compilation modes are used.", build_root_dir, prj_root_dir)
   endif
 
+  return build_root_dir
+endfunction
+
+function! s:analyse(...) dict abort " {{{3
+  call s:Verbose("CMake analysing(%1)", a:000)
+  let prefix = lh#project#is_in_a_project() ? 'p:' : 'b:'
+
+  " 1- Try to autodetect build directory
+  " 1.1- Find the project root directory
+  let sources_dir  = lh#option#get('paths.sources') " also stored in self.arg...
+  if  lh#option#is_unset(sources_dir)
+    call s:Verbose("BTW: (bpg):paths.sources is unset, abort CMake detection")
+    return 0
+  else
+    call s:Verbose("BTW: Bootstrapping CMake chain, using (bpg):path.sources = '%1'", sources_dir)
+  endif
+  let build_root_dir = s:search_build_dirs(prefix, sources_dir)
+
   " 2- Register the bootstrapped configurations
   " (bpg):BTW.build.mode.bootstrap is meant to store configuration
   " options.
@@ -342,21 +350,23 @@ function! s:analyse(...) dict abort " {{{3
   " of paths where various modes/configurations would be compiled in the
   " case of a root build folder. When only a single compilation folder
   " is used this doesn't make sense
-  let confs = lh#option#get('BTW.build.mode.bootstrap', {})
-  let list = lh#let#if_undef(prefix.'BTW.build.mode.list', {})
-  for conf in keys(confs)
-    let list[conf] = build_root_dir . '/' . conf
-  endfor
+  if lh#option#is_set(build_root_dir)
+    let confs = lh#option#get('BTW.build.mode.bootstrap', {})
+    let list = lh#let#if_undef(prefix.'BTW.build.mode.list', {})
+    for conf in keys(confs)
+      let list[conf] = build_root_dir . '/' . conf
+    endfor
+    let options = [ 'auto_detect_compil_modes' ]
+  else
+    let options = []
+  endif
 
   let prj = lh#project#crt()
   call lh#let#if_undef('p:menu.menu.priority', lh#project#menu#reserve_id(prj).'.')
   call lh#let#if_undef('p:menu.menu.name'    , prj.name.'.')
 
   " TODO: avoid to call the following function multiple times
-  call lh#btw#cmake#define_options([
-        \ 'auto_detect_compil_modes'
-        \ ]
-        \ + a:000)
+  call lh#btw#cmake#define_options(options + a:000)
   return 1
 endfunction
 

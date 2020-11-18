@@ -429,7 +429,10 @@ function! lh#btw#build#_execute()
     if path.type =~ 'make\|ctest'
       let makeprg = &makeprg
       if path.type == 'ctest'
-        let makeprg = substitute(&makeprg, '\<make\>', 'ctest', '')
+        " let makeprg = substitute(&makeprg, '\<make\>', 'ctest', '')
+        let compil_dir = lh#btw#option#_compilation_dir()
+        let makeprg = printf('(cd %s && ctest $*)', shellescape(compil_dir))
+        call lh#assert#value(compil_dir).is_set()
         call lh#btw#_register_fix_ctest()
       endif
       if !empty(ctx)
