@@ -6,7 +6,7 @@
 " Version:      0.7.0
 let s:k_version = 070
 " Created:      13th Mar 2014
-" Last Update:  18th Nov 2020
+" Last Update:  19th Nov 2020
 "------------------------------------------------------------------------
 " Description:
 "       Generic way to add on-the-fly filters and hooks on quickfix results
@@ -56,9 +56,9 @@ function! s:register_qf_hooks_autocmds() abort
     augroup BTW_QF_PreHook
       au!
       " clean folding data before compiling
-      au QuickFixCmdPre  [^l]* nested call lh#btw#filters#_apply_quick_fix_hooks('pre')
-      au QuickFixCmdPost [^l]* nested call lh#btw#filters#_apply_quick_fix_hooks('post')
-      au FileType        qf           call lh#btw#filters#_apply_quick_fix_hooks('open')
+      au QuickFixCmdPre  make nested call lh#btw#filters#_apply_quick_fix_hooks('pre')
+      au QuickFixCmdPost make nested call lh#btw#filters#_apply_quick_fix_hooks('post')
+      au FileType        qf          call lh#btw#filters#_apply_quick_fix_hooks('open')
     augroup END
   endif
 

@@ -122,6 +122,12 @@ function! s:getSNR(...)
   return s:SNR . (a:0>0 ? (a:1) : '')
 endfunction
 
+" Function: s:getSID() abort {{{3
+function! s:getSID() abort
+  return eval(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_getSID$'))
+endfunction
+let s:k_script_name      = s:getSID()
+
 " Function: lh#btw#_evaluate(expr) {{{3
 function! lh#btw#_evaluate(expr) abort
   if type(a:expr) == type({})
@@ -182,15 +188,17 @@ endfunction
 " - translate the name of the files in error from "{test-number}: file:line:
 "   message"
 " and we can fold the messages from each test.
-function! lh#btw#_register_fix_ctest() abort
+function! lh#btw#_register_fix_ctest(args) abort
   call s:Verbose("Registering CTest post hooks for qf-window")
   let hooks = {
         \ 'pre'       : {1: s:getSNR('QuickFixCleanFolds')},
         \ 'post'      : {2: s:getSNR('FixCTestOutput')},
         \ 'open'      : {9: s:getSNR('QuickFixDefFolds')}
         \ }
-        " \ 'on-the-fly': {9: s:getSNR('ParseCTestOnTheFly')}
   call lh#btw#filters#register_hooks(hooks)
+  let otf = s:MakeCTestParser()
+  " TODO: add prio
+  let a:args['on-the-fly-hooks'] = get(a:args, 'on-the-fly-hooks', []) + [otf]
 endfunction
 
 " Function: s:QuickFixCleanFolds() {{{3
@@ -276,52 +284,81 @@ function! s:FixCTestOutput() abort
       call setqflist(qflist, 'r')
     endif
   catch /.*/
-    call lh#common#error_msg("Error: ".v:exception. " throw at: ".v:throwpoint)
+    call lh#common#warning_msg("Error: ".v:exception. " throw at: ".v:throwpoint)
   endtry
 endfunction
 
 " Function: s:ParseCTestOnTheFly(line) {{{3
-function! s:ParseCTestOnTheFly(line, ctx) abort
+function! s:MakeCTestParser() abort
+  let res = lh#object#make_top_type({})
+  let res.test_nr           = -1
+  let res.line_nr           = 1
+  let res.test_name         = ''
+  let res.test_name_lengths = []
+  let res.qf_folds          = {}
+  let res.there_was_a_fold  = 0
+  call lh#object#inject(res, 'parse', 'ParseCTestOnTheFly', s:k_script_name)
+  return res
+endfunction
+
+function! s:ParseCTestOnTheFly(line) dict abort
   try
     call s:Verbose("ParseCTestOnTheFly(%1)", a:line)
-    let qf_folds = s:set_qf_folds({-1: {}})
+
+    if  empty(self.qf_folds)
+      let self.line_nr  = len(getqflist()) + 1
+      let self.qf_folds = s:set_qf_folds({-1: {}})
+    endif
+    let qf_folds = self.qf_folds
+    if self.there_was_a_fold
+      " let's fold on the fly as well
+      " NB: folds are delayed as their line hasn't been inserted yet
+      " As CTest has some conclusion at the end, we shouldn't loose the last
+      " fold
+      let qf_winnr = lh#qf#get_winnr()
+      exe printf('%swindo %s,%sfold',
+            \ qf_winnr,
+            \ qf_folds[self.there_was_a_fold].begin, qf_folds[self.there_was_a_fold].end)
+      let self.there_was_a_fold = 0
+    endif
     let qft = a:line
-    let line_nr = len(getqflist())
     if      qft =~ '^test \d\+\s*$'
       " Test start line
       let test_nr = matchstr(qft, '^test \zs\d\+\ze\s*$')
       call lh#assert#value(qf_folds).not().has_key(test_nr)
-      let qf_folds[test_nr] = {'begin': a:ctx.line_nr}
-      let qf_folds[-1][a:ctx.line_nr] = test_nr
-      let a:ctx.test_nr = test_nr
+      let qf_folds[test_nr] = {'begin': self.line_nr}
+      let qf_folds[-1][self.line_nr] = test_nr
+      let self.test_nr = test_nr
     elseif qft =~ '^\s*\d\+/\d\+ Test\s\+#\d\+:'
       " Test end line
       let test_nr      = matchstr(qft, '^\s*\d\+/\d\+ Test\s\+#\zs\d\+\ze:')
-      let test_success = matchstr(qft,  '^\s*\d\+/\d\+ Test\s\+#\d\+:\s\+'.(a:ctx.test_name).' \.\+\s*\zs\S\+')
-      let qf_folds[test_nr].end = a:ctx.line_nr
+      let test_success = matchstr(qft,  '^\s*\d\+/\d\+ Test\s\+#\d\+:\s\+'.(self.test_name).' \.\+\s*\zs\S\+')
+      call lh#assert#value(qf_folds).has_key(test_nr)
+      let qf_folds[test_nr].end = self.line_nr
       let qf_folds[test_nr].complement = test_success
-      let a:ctx.test_nr = -1
-      let a:ctx.test_name = ''
+      let self.there_was_a_fold = self.test_nr
+      let self.test_nr = -1
+      let self.test_name = ''
     elseif qft =~ '^\s*Start\s\+\d\+: '
       let test_nr = matchstr(qft,  '^\s*Start\s\+\zs\d\+\ze:')
       if !has_key(qf_folds, test_nr)
-        let qf_folds[test_nr] = {'begin': a:ctx.line_nr}
-        let qf_folds[-1][a:ctx.line_nr] = test_nr
+        let qf_folds[test_nr] = {'begin': self.line_nr}
+        let qf_folds[-1][self.line_nr] = test_nr
       endif
       let test_name = matchstr(qft, '^\s*Start\s\+'.test_nr.': \zs\S\+\ze\s*$')
       let qf_folds[test_nr].name = test_name
-      let a:ctx.test_name_lengths = get(a:ctx, 'test_name_lengths', []]) + [ len(test_name) ]
-      let a:ctx.test_nr   = test_nr
-      let a:ctx.test_name = test_name
+      let self.test_name_lengths += [ len(test_name) ]
+      let self.test_nr   = test_nr
+      let self.test_name = test_name
     elseif qft =~ '^\d\+: \f\+\(:\d\+\|(\d\+)\):'
-      let qft = substitute(qft, '^\(\d\+: \)\(\f\+(:\d\+\|(\d\+)\):\)', '\2 \1', '')
+      let qft = substitute(qft, '^\(\d\+: \)\(\f\+\(:\d\+\|(\d\+)\):\)', '\2 \1', '')
     endif
-  endif
-  let a:ctx.line_nr += 1
-  return qft
-catch /.*/
-  call lh#common#error_msg("Error: ".v:exception. " throw at: ".v:throwpoint)
-endtry
+    let self.line_nr += 1
+    return qft
+  catch /.*/
+    call lh#common#warning_msg("Error: ".v:exception. " throw at: ".v:throwpoint)
+  endtry
+  return a:line
 endfunction
 
 " Function: s:QuickFixDefFolds()     {{{3
@@ -331,6 +368,7 @@ function! s:QuickFixDefFolds() abort
   let qf_folds = s:qf_folds()
   if empty('qf_folds') | return | endif
   call lh#assert#type(qf_folds).is({})
+  call s:Verbose('Add folds: %1', values(map(copy(qf_folds), '"#".v:key.string([get(v:val,"begin","??"), get(v:val,"end","??")])')))
   for [t, pos] in items(qf_folds)
     if t != -1
       " echomsg t.' -> '.string(pos)

@@ -107,14 +107,22 @@ function! s:callbackCB(channel, msg) abort " {{{3
   let msg = substitute(a:msg, "^\e\[\\d\\+m\\%(\e\[K\\)\\(\\S\\+:\\)\e\[m\\%(\e\[K\\)\\ze\\%($\\|\\s\\)", '\1', '')
   let g:lh#btw#job_build#qf_need_colours = get(g:, 'lh#btw#job_build#qf_need_colours', 0) || (msg != a:msg)
 
-  " Best place to fix CMake/CTest ?
-  " if msg =~ '^\d\+: \f\+(\d\+):'
-  "   let msg = substitute(msg, '^\(\d\+: \)\(\f\+(\d\+):\)', '\2 \1', '')
-  " endif
-  caddexpr msg
-  " And process the error mesage with Vim through
-  " The "new" method isn't compatible with QuickFixCmd* Events
-  " call setqflist([], 'a', {'lines': [msg]})
+  " Fix CMake/CTest message on-the-fly
+  for hook in get(s:job, 'otf_hooks', [])
+    let msg = hook.parse(msg)
+  endfor
+  " And process the error message with Vim through
+  if lh#has#setqflist_lines()
+    " The "new" method isn't compatible with QuickFixCmd* Events
+    " Seems fine and better this way:
+    " - more efficient
+    " - don't messes qf-window
+    call setqflist([], 'a', {'lines': [msg]})
+  else
+    " Since a few versions, caddexpr messes qfwindow
+    " Fortunately, we can now use setqflist("items") oo'
+    caddexpr msg
+  endif
   if exists(':cbottom') && g:lh#btw#auto_cbottom
     let qf = getqflist()
     call assert_true(!empty(qf))
@@ -181,8 +189,8 @@ function! s:init(cmd, options) abort
         \ , 'build_mode'     : mode
         \ , 'project_name'   : prj_name
         \ }
-  if has_key(a:options, 'hooks')
-    let job.hooks = a:options.hooks
+  if has_key(a:options, 'on-the-fly-hooks')
+    let job.otf_hooks = a:options['on-the-fly-hooks']
   endif
   let queue = lh#async#get_queue('qf', '')
   call queue.push_or_start(job)

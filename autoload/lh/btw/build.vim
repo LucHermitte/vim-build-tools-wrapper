@@ -440,7 +440,7 @@ function! lh#btw#build#_execute()
         let makeprg = printf('(cd %s && ctest $*)', shellescape(compil_dir))
         call extend(args, {'message': 'Execute %s tests%s', 'action': 'testing'})
         call lh#assert#value(compil_dir).is_set()
-        call lh#btw#_register_fix_ctest()
+        call lh#btw#_register_fix_ctest(args)
       endif
       if !empty(ctx)
         let p = matchend(makeprg, '.*;')
