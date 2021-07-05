@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  29th Oct 2020
+" Last Update:  05th Jul 2021
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
