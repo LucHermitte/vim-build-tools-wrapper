@@ -154,14 +154,14 @@ function! lh#btw#cmake#auto_detect_compil_modes(menu_def) abort
     " throw "No subdirectories found in `".build_root."`: cannot deduce compilations modes"
   endif
 
-  " Check directories without Makefiles
-  let without_makefile = filter(copy(subs), '! filereadable(v:val."/Makefile")')
+  " Check directories without CMakeFiles
+  let without_cmakefiles = filter(copy(subs), '! isdirectory(v:val."/CMakeFiles")')
   " Check directories without CMakeLists
   let without_cmakecache = filter(copy(subs), '! filereadable(v:val."/CMakeCache.txt")')
 
   let msg = ''
-  if !empty(without_makefile)
-    let msg .= "\nThe following build directories have no Makefile: ".join(without_makefile, ', ')
+  if !empty(without_cmakefiles)
+    let msg .= "\nThe following build directories have no CMakeFiles: ".join(without_cmakefiles, ', ')
   endif
   if !empty(without_cmakecache)
     let msg .= "\nThe following build directories have no CMakeCache.txt file ".join(without_cmakecache, ', ')
@@ -200,19 +200,26 @@ function! lh#btw#cmake#def_toggable_compil_mode(menu_def) abort
   call s:Verbose('Requested BTW.build.mode.current: %1', crt_mode)
 
   " For the first time, let's control that 'BTW.build.mode.current'
-  " matches a configuration with a Makefile
+  " matches a configuration with a CMakeFiles/ or a Makefile
   let project_root = a:menu_def.project.get('paths.project')
-  let valid_confs = filter(copy(mode_list), 'filereadable(project_root."/".v:val."/Makefile")')
-  call s:Verbose("Configurations with Makefiles are: %1", keys(valid_confs))
-  if lh#option#is_unset(crt_mode) || !has_key(valid_confs, crt_mode)
+  let valid_confs = filter(copy(mode_list),
+        \   '    filereadable(project_root."/".v:val."/Makefile")'
+        \ . ' || isdirectory(project_root."/".v:val."/CMakeFiles")')
+  call s:Verbose("Configurations with CMakeFiles or Makefiles are: %1", keys(valid_confs))
+  let no_mode = lh#option#is_unset(crt_mode)
+  if no_mode || !has_key(valid_confs, crt_mode)
     call s:Verbose("Requested BTW.build.mode.current (%1) not in valid_confs (%2)", crt_mode, keys(valid_confs))
     if  len(valid_confs) == 1
       call s:Verbose("Forcing BTW.build.mode.current to %1", keys(valid_confs)[0])
       call lh#let#to('p:BTW.build.mode.current', keys(valid_confs)[0])
     elseif empty(valid_confs)
-      call lh#common#warning_msg("No Makefile found, please bootstrap a configuration")
+      call lh#common#warning_msg("No CMakeFiles found, please bootstrap a configuration")
     else
-      let c = lh#ui#which('lh#ui#combo', lh#fmt#printf('Requested BTW.build.mode.current (%1) has no CMakeFiles. Please select one among the following. Escape to abort', crt_mode), keys(valid_confs))
+      let msg = [
+            \ lh#fmt#printf('Requested BTW.build.mode.current (%1) has no CMakeFiles. Please select one among the following. Escape to abort', crt_mode),
+            \ 'Please select a compilation mode among the following. Escape to abort'
+            \ ]
+      let c = lh#ui#which('lh#ui#combo', msg[no_mode], keys(valid_confs))
       if !empty(c)
         call lh#let#to('p:BTW.build.mode.current', c)
       endif

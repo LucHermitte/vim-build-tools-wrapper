@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  18th Nov 2020
+" Last Update:  10th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -81,12 +81,8 @@ function! lh#btw#chain#cmake#load_config(...) abort
   if lh#project#is_in_a_project()
     LetIfUndef p:BTW.target = ''
   endif
-  " TODO: find the best place to do this...
-  if SystemDetected() == 'msdos'
-    :BTW setlocal cmake
-  else
-    BTW addlocal cmake
-  endif
+  " Use CMake as the main compilation tool!
+  :BTW setlocal cmake
 
   let config = lh#btw#chain#cmake#_make()
   if call(config.analyse, lh#list#flatten(a:000), config)
@@ -397,8 +393,8 @@ endfunction
 
 function! s:lazy_bootstrap() dict abort " {{{3
   let wd = lh#btw#_evaluate(self.wd)
-  " TODO: use an option if the make of the Makefile file is different
-  if !filereadable(wd . '/' . 'Makefile')
+  " TODO: use an option if the make of the CMakeFiles file is different
+  if !isdirectory(wd . '/' . 'CMakeFiles')
     return self.bootstrap()
   else
     return 1
