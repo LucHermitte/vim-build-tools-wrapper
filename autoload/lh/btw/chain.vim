@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  02nd Jul 2020
+" Last Update:  10th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to:
@@ -190,11 +190,11 @@ if !exists('g:BTW_BTW_in_use')
   function! lh#btw#chain#_BTW(command, ...) abort
     call s:Verbose(':BTW %1', [a:command]+a:000)
     " todo: check a:0 > 1
-    if     'set'      == a:command                    | let g:BTW_build_tool = a:1
-      if exists('b:BTW_build_tool')
-        let b:BTW_build_tool = a:1
+    if     'set'      == a:command                    | call lh#let#to('g:BTW.build_tool', a:1)
+      if exists('b:BTW.build_tool')
+        call lh#let#to('b:BTW.build_tool', a:1)
       endif
-    elseif 'setlocal'       == a:command              | let b:BTW_build_tool = a:1
+    elseif 'setlocal'       == a:command              | call lh#let#to('b:BTW.build_tool', a:1)
     elseif 'setoption'      == a:command              | call s:SetOption('g', a:000)
     elseif 'setoptionlocal' == a:command              | call s:SetOption('p', a:000)
     elseif 'config_out_of_sources_build' == a:command | call s:ConfigOutOfSourcesBuild('p', a:000)
@@ -284,7 +284,7 @@ function! lh#btw#chain#_reconstruct() abort
 
     " does the filter implies an external script to run
     let prg = lh#btw#option#_filter_program_empty_default(s:ToVarName(filter))
-    if !empty(prg)
+    if !empty(Prg)
       " Faire dans BTW-{filter}.vim
       " let prg = substitute(expand('<sfile>:p:h'), ' ', '\\ ', 'g')
       let makeprg_pattern .= ' 2>&1 \| '.prg
@@ -304,7 +304,7 @@ function! lh#btw#chain#_reconstruct() abort
   let v_efm = join(l_efm, ',')
 
   " and finally set makeprg and efm variables in the right scope
-  let islocal = exists('b:BTW_build_tool') || exists('b:BTW') || exists('b:'.s:filter_list_varname)
+  let islocal = exists('b:BTW.build_tool') || exists('b:BTW') || exists('b:'.s:filter_list_varname)
   if lh#project#is_in_a_project()
     let make_scope = lh#project#crt()
     let scope = 'p:'

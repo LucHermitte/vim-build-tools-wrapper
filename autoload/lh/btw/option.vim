@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  30th Oct 2018
+" Last Update:  10th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       Centralize BTW option retrieval
@@ -74,8 +74,8 @@ function! s:old(name, default, ...) abort " {{{3
 endfunction
 
 function! s:get_explicit_names(new_name, old_name, default, ...) abort " {{{3
-  let res = call('lh#option#get', ['BTW.'.a:new_name, s:k_unset] + a:000)
-  if lh#option#is_set(res) | return res | endif
+  let Res = call('lh#option#get', ['BTW.'.a:new_name, s:k_unset] + a:000)
+  if lh#option#is_set(Res) | return Res | endif
   return call('lh#option#get', ['BTW_'.a:old_name, a:default] + a:000)
 endfunction
 
@@ -225,8 +225,8 @@ endfunction
 " Function: lh#btw#option#_filter_program(prog, ...) {{{3
 function! lh#btw#option#_filter_program(prog, ...) abort
   let Prog = a:0 > 0
-        \ ? s:get_explicit_names_from_buf(a:1, '_filter.program.'.a:prog, 'filter_program_'.a:prog, a:prog)
-        \ : s:get_explicit_names('_filter.program.'.a:prog, 'filter_program_'.a:prog, a:prog)
+        \ ? s:get_explicit_names_from_buf(a:1, 'filter.program.'.a:prog, 'filter_program_'.a:prog, a:prog)
+        \ : s:get_explicit_names('filter.program.'.a:prog, 'filter_program_'.a:prog, a:prog)
   return Prog
 endfunction
 

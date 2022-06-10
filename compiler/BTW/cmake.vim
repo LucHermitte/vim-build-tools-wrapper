@@ -4,7 +4,7 @@
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      0.7.0
 " Created:      21st Feb 2012
-" Last Update:  30th Oct 2018
+" Last Update:  10th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       BTW cmake compilation toolchain
@@ -45,14 +45,14 @@ if 1 == get(g:, 'lh#btw#chain#__loading_main_tool', 0)
   " ... only if cmake filter has been loaded with `:BTW set(local)`, not with
   " `:BTW add(local)`
   function! s:compile_cmake(...)
-    let target = a:0 ? (' --target '.a:1) : ''
+    let target = (a:0 && a:1 != '$*') ? (' --target '.a:1) : ''
     let build_dir = lh#btw#option#_compilation_dir()
     let config    = lh#btw#build_mode('Release')
     let res = 'cmake --build '.lh#path#fix(build_dir).' --config '.config.target
     return res
   endfunction
 
-  let b:BTW_filter_program_cmake = function(s:getSNR('compile_cmake'))
+  call lh#let#to('g:BTW.filter.program.cmake', function(s:getSNR('compile_cmake')))
 endif
 
 "=============================================================================
