@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  19th Nov 2020
+" Last Update:  10th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -242,6 +242,7 @@ function! lh#btw#build#_compile(...) abort
   endif
 
   " Do compile with a current &makeprg
+  let rule = project_config.adapt_parameters(rule)
   call lh#btw#build#_do_compile(&makeprg, rule, "Compilation finished")
 endfunction
 

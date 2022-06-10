@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  10th Jun 2022
+" Last Update:  11th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -133,7 +133,8 @@ function! lh#btw#chain#cmake#_make(...) abort "{{{3
   let res.type = 'ccmake'
   let res.arg  = lh#option#get('paths.sources')
   let res.wd   = lh#ref#bind(prefix.'BTW.compilation_dir')
-  call lh#object#inject_methods(res, s:k_script_name, 'config', 'reconfig', 'analyse', 'bootstrap', 'lazy_bootstrap')
+  call lh#object#inject_methods(res, s:k_script_name, 'config', 'reconfig', 'analyse', 'bootstrap',
+        \ 'lazy_bootstrap', 'adapt_parameters')
   return res
 endfunction
 
@@ -399,6 +400,10 @@ function! s:lazy_bootstrap() dict abort " {{{3
   else
     return 1
   endif
+endfunction
+
+function! s:adapt_parameters(rule) dict abort " {{{3
+  return !empty(a:rule) ? '--target '.a:rule : ''
 endfunction
 
 "------------------------------------------------------------------------

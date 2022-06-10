@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  08th Jul 2019
+" Last Update:  10th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -67,7 +67,8 @@ endfunction
 " Function: lh#btw#chain#_default#_make(...) {{{2
 function! lh#btw#chain#_default#_make(...) abort
   let res = lh#object#make_top_type(get(a:, 1, {}))
-  call lh#object#inject_methods(res, s:k_script_name, 'config', 'reconfig', 'bootstrap', 'lazy_bootstrap')
+  call lh#object#inject_methods(res, s:k_script_name, 'config', 'reconfig', 'bootstrap',
+        \ 'lazy_bootstrap', 'adapt_parameters')
   let res.type = 'modeline'
   return res
 endfunction
@@ -90,6 +91,10 @@ endfunction
 
 function! s:bootstrap() dict abort
   return 1
+endfunction
+
+function! s:adapt_parameters(rule) dict abort
+  return a:rule
 endfunction
 
 "------------------------------------------------------------------------
