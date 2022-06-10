@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  29th Oct 2020
+" Last Update:  10th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -185,6 +185,7 @@ endfunction
 " {menu_def} shall contain:
 " - menu.priority and menu.name
 " - _project settings
+let s:k_no_mode = lh#option#unset('no mode set')
 function! lh#btw#cmake#def_toggable_compil_mode(menu_def) abort
   " Automatically set variables for lh#btw#project_options#add_toggle_option,
   " and lh#menu#def_toggle_item
@@ -195,7 +196,7 @@ function! lh#btw#cmake#def_toggable_compil_mode(menu_def) abort
   " "variable" is a variable name, hence _project being a string
   let menu_def.variable       = lh#ref#bind(a:menu_def.project.variables, 'BTW.build.mode.current')
         \.print_with_fmt('p('.(a:menu_def.project.name).'):%{1.key}')
-  let crt_mode = lh#option#get('BTW.build.mode.current')
+  let crt_mode = lh#option#get('BTW.build.mode.current', s:k_no_mode)
   call s:Verbose('Requested BTW.build.mode.current: %1', crt_mode)
 
   " For the first time, let's control that 'BTW.build.mode.current'
@@ -211,7 +212,7 @@ function! lh#btw#cmake#def_toggable_compil_mode(menu_def) abort
     elseif empty(valid_confs)
       call lh#common#warning_msg("No Makefile found, please bootstrap a configuration")
     else
-      let c = lh#ui#which('lh#ui#combo', 'Requested BTW.build.mode.current ('.crt_mode.') has no Makefile. Please select one among the following. Escape to abort', keys(valid_confs))
+      let c = lh#ui#which('lh#ui#combo', lh#fmt#printf('Requested BTW.build.mode.current (%1) has no CMakeFiles. Please select one among the following. Escape to abort', crt_mode), keys(valid_confs))
       if !empty(c)
         call lh#let#to('p:BTW.build.mode.current', c)
       endif
