@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  10th Jun 2022
+" Last Update:  11th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -471,10 +471,10 @@ endfunction
 
 " # Config         {{{2
 " Function: lh#btw#build#_config()                    {{{3
-function! lh#btw#build#_config() abort
+function! lh#btw#build#_config(...) abort
   let config = lh#btw#option#_project_config()
   call lh#assert#value(config).is_set().has_key('config')
-  return config.config({'background': lh#btw#option#_make_in_bg()})
+  return call(config.config, [{'background': lh#btw#option#_make_in_bg()}, a:000], config)
 endfunction
 
 " Function: lh#btw#build#_re_config()                 {{{3

@@ -6,7 +6,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      28th Nov 2004
-" Last Update:  07th Sep 2020
+" Last Update:  11th Jun 2022
 "------------------------------------------------------------------------
 " Description:  Flexible alternative to Vim compiler-plugins.
 "
@@ -321,7 +321,7 @@ command! -nargs=+ -complete=customlist,lh#btw#build#_make_complete
       \           MakeWith              :call lh#btw#build#_compile_with("<args>")
 command! -nargs=0 Execute               :call lh#btw#build#_execute()
 command! -nargs=0 AddLetModeline        :call lh#btw#build#_add_let_modeline()
-command! -nargs=0 Config                :call lh#btw#build#_config()
+command! -nargs=* Config                :call lh#btw#build#_config(<f-args>)
 command! -nargs=0 ReConfig              :call lh#btw#build#_re_config()
 command! -nargs=0 Copen                 :call lh#btw#build#_show_error('copen')
 command! -nargs=0 Cwindow               :call lh#btw#build#_show_error('cwindow')

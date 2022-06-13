@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  11th Jun 2022
+" Last Update:  14th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -75,6 +75,127 @@ function! s:ensure_directory(dir) abort " {{{3
   endif
 endfunction
 
+" ## Configure related options {{{2
+" Configure Options {{{3
+let s:k_boolean_choices = ['On', 'Off']
+let s:k_defaults = {}
+let s:k_defaults.CMAKE_EXPORT_COMPILE_COMMANDS = { 'default': 'On', 'choices': s:k_boolean_choices}
+let s:k_defaults.BUILD_TESTING                 = { 'default': 'ignore', 'choices': s:k_boolean_choices}
+let s:k_defaults.BUILD_SHARED_LIBS             = { 'default': 'ignore', 'choices': s:k_boolean_choices}
+let s:k_defaults.CMAKE_BUILD_TYPE              = { 'default': 'Release',
+      \ 'choices': ['Release', 'Debug', 'RelWithDebInfo', 'MinSizeRel']}
+
+function! s:get_option(name, cmdline, ...) abort " {{{3
+  if match(a:cmdline, '^-D'.a:name.'=.*$') >= 0
+    " Option already explicit in cmdline => use it
+    return []
+  endif
+  let is_option = get(a:, 1, 0)
+
+  " Else, priority is
+  " 1. option set as (bpg):BTW.cmake.options[a:name]
+  " 2. hard coded default values
+  "
+  " If value
+  " - is 'ignored' => return ''
+  " - is 'ask' => ask end-user amond possible values (hardcoded, or special
+  "   default for booleans, or user input)
+  " - else return the default choice
+  if has_key(s:k_defaults, a:name)
+    let default_choice   = s:k_defaults[a:name].default
+    let possible_choices = s:k_defaults[a:name].choices
+  elseif is_option
+    if a:name =~ '^ENABLE_.*'
+      let default_choice   = 'ask'
+    else
+      let default_choice   = 'ignore'
+    endif
+    let possible_choices = s:k_boolean_choices
+  else
+    let default_choice   = 'ask'
+    let possible_choices = ''
+  endif
+
+  " Override BTW default choice with user preferences
+  let default_choice = lh#option#get('BTW.cmake.options.'.a:name, default_choice)
+
+  if     default_choice ==? 'ignore'
+    return []
+  elseif default_choice ==? 'ask'
+    if empty(possible_choices)
+      let value = lh#ui#input('Value for '.a:name.'? ')
+    else
+      let cmakelists_default = get(a:, 2, '')
+      let default_idx = max([index(possible_choices, cmakelists_default, 0, 1), 0])
+      call s:Verbose("Ask default for %1 should be %2", a:name, cmakelists_default)
+      let value = lh#ui#which('lh#ui#combo', 'Value for '.a:name.'? ', possible_choices + ['Ignore'], default_idx+1)
+    endif
+  else
+    let value = default_choice
+  endif
+
+  if empty(value) || value == 'Ignore'
+    return []
+  else
+    return [printf('-D%s=%s', a:name, value)]
+  endif
+endfunction
+
+function! s:find_root_cmakelists(root_dir) abort " {{{3
+  " Search the CMakeLists closer to the project root directory
+  " If several are at the same depth, ask end-user which one to choose
+  " TODO: cache the information!
+  let cmakefiles = findfile('CMakeLists.txt', a:root_dir.'/**', -1)
+  call s:Verbose('all cmakefiles: %1', cmakefiles)
+  " try to determine the files which is closest to source dir root.
+  let depths = map(copy(cmakefiles), 'count(v:val, "/")')
+  call s:Verbose('cmakefiles depths: %1', depths)
+  let min_depth = min(map(copy(depths), 'v:val'))
+  call s:Verbose('min depths: %1', min_depth)
+  let cmakefiles = filter(cmakefiles, 'depths[v:key] == min_depth')
+  call s:Verbose('kepts cmakefiles: %1', cmakefiles)
+  if len(cmakefiles) > 1
+    return lh#path#select_one(cmakefiles, 'Which CMakeLists file is the project root one?')
+  elseif len(cmakefiles) == 1
+    return cmakefiles[0]
+  else
+    return ''
+  endif
+endfunction
+
+function! s:find_options_in_cmakelists(root_dir) abort " {{{3
+  let cmakefile = s:find_root_cmakelists(a:root_dir)
+  if  empty(cmakefile) | return [] | endif
+
+  let lines = readfile(cmakefile)
+  call filter(lines, 'v:val =~ "\\c^\\s*option("')
+  let options = map(lines, { _, v
+        \ -> matchlist(v, '\c^\s*option(\zs\(\k\+\).\{-}\%(\(on\|off\)\s*)\s*\)\=$')[1:2]})
+
+  call s:Verbose("Options are: %1", options)
+  return options
+endfunction
+
+function! s:get_generator(args) abort " {{{3
+  " Ignore the option if alredy set
+  if index(a:args, '-G') >= 0 | return [] | endif
+
+  " Don't know how to detect MSVC++ generators...
+  let generators = {
+        \ 'ninja' : 'Ninja'
+        \, 'make' : 'Unix Makefiles'
+        \ }
+  let gen_exes = filter(keys(generators), { _, v -> executable(v)})
+  let gen_names = map(copy(gen_exes), 'generators[v:val]')
+  if     empty(gen_names)    | return []
+  elseif len(gen_names) == 1 | return ['-G', gen_names[0]]
+  else
+    let gen = lh#ui#which('lh#ui#combo', 'Which generator shall be used?', gen_names)
+    return empty(gen) ? [] : ['-G', gen]
+  endif
+endfunction
+
+
 " Function: lh#btw#chain#cmake#load_config() {{{2
 " Beware: at this time, the CWD may not be the final project WD
 function! lh#btw#chain#cmake#load_config(...) abort
@@ -96,7 +217,10 @@ endfunction
 function! s:cmake() abort " {{{3
   if executable('cmake')
     return 'cmake %s'
-  elseif has(':Module')
+  elseif has(':Module') && exists(':Module')
+    " :Module wraps Lmod `module` command, and comes from
+    " https://github.com/LucHermitte/lh-misc/blob/master/plugin/lmod.vim
+    " (don't forget the autoload file!)
     call lh#common#warning_msg("CMake cannot be found in your environment. Let's try to load it")
     Module load cmake
     if v:shell_error
@@ -109,11 +233,14 @@ function! s:cmake() abort " {{{3
 endfunction
 
 function! s:ccmake_interactive() abort " {{{3
-  if executable('cmake-gui')
+  if executable('cmake-gui') && 0
     return 'cmake-gui %s &'
   elseif executable('ccmake')
     return 'ccmake %s'
-  elseif has(':Module')
+  elseif has(':Module') && exists(':Module')
+    " :Module wraps Lmod `module` command, and comes from
+    " https://github.com/LucHermitte/lh-misc/blob/master/plugin/lmod.vim
+    " (don't forget the autoload file!)
     call lh#common#warning_msg("CMake cannot be found in your environment. Let's try to load it")
     Module load cmake
     if v:shell_error
@@ -139,12 +266,48 @@ function! lh#btw#chain#cmake#_make(...) abort "{{{3
 endfunction
 
 function! s:config(...) dict abort " {{{3
+  " TODO:
+  " - the passing of interactive/synchronous/...
+  " - cmake over cmake-gui
+  "
+  " Improve
   " Running modes: interactive, background, synchronous
-  let args = get(a:, 1, {})
-  let mode = get(args, 'mode', 'interactive')
+  let args      = get(a:, 1, {})
+  let cmdline   = copy(get(a:, 2, []))  " A list
+  call lh#assert#type(cmdline).is([])
+  let mode      = get(args, 'mode', 'interactive')
+  " FIXME: Actually cmake-gui will ignore "-G 'generator'" parameter... :-(
+  let generator = s:get_generator(cmdline)
 
-  let wd = lh#btw#_evaluate(self.wd)
+  " Build directory
+  let idx_build_dir = index(cmdline, '-B')
+  if idx_build_dir >= 0
+    let wd = remove(cmdline, idx_build_dir, idx_build_dir+1)[-1]
+  else
+    let wd = lh#btw#_evaluate(self.wd)
+  endif
+  call s:Verbose('CMake configuration will be generated in %1', wd)
   call s:ensure_directory(wd)
+
+  " Typicals options
+  let cmdline += s:get_option('CMAKE_BUILD_TYPE',              cmdline)
+  let cmdline += s:get_option('CMAKE_EXPORT_COMPILE_COMMANDS', cmdline)
+  " let cmdline += s:get_option('BUILD_TESTING',                 cmdline)
+  let cmdline += s:get_option('BUILD_SHARED_LIBS',             cmdline)
+
+  " call s:Verbose('cmake.config(%1, %2)', args, cmdline)
+
+  " Other options found in CMakeLists.txt
+  let options = s:find_options_in_cmakelists(self.arg)
+  for [opt, def] in options
+    let cmdline += s:get_option(opt, cmdline, 1, def)
+  endfor
+
+  let opts = generator + get(args, 'opts', []) + cmdline
+  let all_opts = printf('-S %s -B %s %s',
+        \ lh#path#fix(self.arg), lh#path#fix(wd), join(opts, ' '))
+  call s:Verbose('cmake.config(%1, %2)', args, all_opts)
+
   if lh#os#OnDOSWindows()
     " TODO: support all modes on Windows
 
@@ -159,13 +322,10 @@ function! s:config(...) dict abort " {{{3
     " - "interactive" -> ccmake(-gui)
     " - "background"  -> use BTW Make on cmake
     " - "synchronous" -> direct call to system() on cmake
-    "
-    let prg = lh#os#sys_cd(wd).' && '
     if mode == 'interactive'
       let ccmake = s:ccmake_interactive()
       if ccmake !~ '&$' && exists(':term')
-        let opts = get(args, 'opts', '')
-        let prg = printf(ccmake, self.arg. (empty(opts) ? '' : opts))
+        let prg = printf(ccmake, all_opts)
         call lh#common#warning_msg('Running: '.prg)
         let crt_prj = lh#project#crt()
         if &buftype == 'terminal' && term_getstatus('%') == 'finished'
@@ -181,19 +341,24 @@ function! s:config(...) dict abort " {{{3
           call crt_prj._register_buffer()
         endif
       else
-        let prg .= printf(s:ccmake_interactive(), self.arg. ' '.get(args, 'opts', ''))
+        let prg = printf(s:ccmake_interactive(), all_opts)
         call s:Verbose(":!".prg)
         exe ':silent !'.prg
       endif
     else
-      let prg .= printf(s:cmake(), self.arg). ' '.get(args, 'opts', '')
-      let opts = {'background': (mode=='background')}
+      let prg = printf(s:cmake(), all_opts)
+      let d_opts = {'background': (mode=='background')}
       if mode == 'synchronous'
         call lh#common#warning_msg('Running: '.prg."\nPlease wait...")
       endif
-      call lh#btw#build#_do_compile(prg, '', "CMake execution terminated", opts)
+      call lh#btw#build#_do_compile(prg, '', "CMake execution terminated", d_opts)
     endif
   endif
+
+  " Register new build directory, when configuration is detected to have
+  " proceeded far enough... (for a CMakeCache.txt to exist or the command to
+  " return "success"???)
+  " TODO: ...
 endfunction
 
 function! s:reconfig() dict abort " {{{3
