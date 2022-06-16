@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  11th Jun 2022
+" Last Update:  16th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -348,6 +348,10 @@ function! lh#btw#build#_copen_bg_complete(what, job_info, ...) abort
   let opt = (a:0>0) ? a:1 : ''
   if get(g:, 'lh#btw#auto_cbottom', 1)
     call call('lh#btw#build#_show_error', a:000)
+  elseif exists(':CompilHintsUpdate')
+    " Because background compilation fills qf-window with setqflist() which
+    " doesn't update any window
+    :CompilHintsUpdate
   endif
   let msg
         \ = a:what
