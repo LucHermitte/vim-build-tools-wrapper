@@ -55,7 +55,7 @@ set cpo&vim
 " Avoid global reinclusion }}}1
 "------------------------------------------------------------------------
 " Check we are using cygwin                 {{{1
-if !has('win32') 
+if !(has('win32') || has('win32unix'))
       \ || !( ($TERM=='cygwin') || ($OSTYPE=='cygwin') || executable('cygpath'))
   echoerr "Cygwin not detected..."
   finish
