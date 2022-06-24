@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  10th Jun 2022
+" Last Update:  27th Jun 2022
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to:
@@ -283,8 +283,9 @@ function! lh#btw#chain#_reconstruct() abort
     call s:AdjustEFM(filter, efm)
 
     " does the filter implies an external script to run
-    let prg = lh#btw#option#_filter_program_empty_default(s:ToVarName(filter))
-    if !empty(Prg)
+    let Prg = lh#btw#option#_filter_program_empty_default(s:ToVarName(filter))
+    let prg = type(Prg) == type('') ? Prg : Prg()
+    if !empty(prg)
       " Faire dans BTW-{filter}.vim
       " let prg = substitute(expand('<sfile>:p:h'), ' ', '\\ ', 'g')
       let makeprg_pattern .= ' 2>&1 \| '.prg
