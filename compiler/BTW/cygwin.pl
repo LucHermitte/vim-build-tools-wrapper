@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# $Id$ 
 # Author:	Luc Hermitte <EMAIL:hermitte {at} free {dot} fr>
 #		<URL:http://hermitte.free.fr/vim>
 # Purpose:	Convert Cygwin pathames to plain Windows pathnames.
@@ -26,7 +25,7 @@ sub WindowsPath
     if ( exists( $h{$path} ) ) {
 	return $h{$path} ;
     } else {
-	# Get the real localtion of the file
+	# Get the real location of the file
 	$wpath = `realpath "$path"`;
 	chomp ($wpath);
 	# /cygdrive/c/path -> C:/path
