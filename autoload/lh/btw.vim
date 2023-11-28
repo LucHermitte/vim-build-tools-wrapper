@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 070
 " Created:      14th Mar 2014
-" Last Update:  19th Nov 2020
+" Last Update:  28th Nov 2023
 "------------------------------------------------------------------------
 " Description:
 "       API & Internals for BuildToolsWrapper
@@ -52,12 +52,12 @@ endfunction
 "------------------------------------------------------------------------
 " ## Exported functions {{{1
 
-" Function: lh#btw#compilation_dir([bufid]) {{{3
+" Function: lh#btw#compilation_dir([bufid]) {{{2
 function! lh#btw#compilation_dir(...) abort
   return call('lh#btw#option#_compilation_dir', a:000)
 endfunction
 
-" Function: lh#btw#build_mode([default]) {{{3
+" Function: lh#btw#build_mode([default]) {{{2
 function! lh#btw#build_mode(...) abort
   let default = a:0 == 0 ? '' : a:1
   let mode = lh#option#get('BTW.build.mode.current')
@@ -75,7 +75,7 @@ function! lh#btw#build_mode(...) abort
   endif
 endfunction
 
-" Function: lh#btw#project_name([bufid]) {{{3
+" Function: lh#btw#project_name([bufid]) {{{2
 function! lh#btw#project_name(...) abort
   let bufid = a:0 > 0 ? a:1 : bufnr('%')
   let project_config = lh#btw#option#_project_config(bufid) " use from_buf version to detect undefined
@@ -108,7 +108,6 @@ function! lh#btw#project_name(...) abort
   endif
   " N- Return default!
   return fnamemodify(bufname(bufid), ':r')
-endif
 endfunction
 
 "------------------------------------------------------------------------
@@ -542,10 +541,17 @@ function! lh#btw#_save_last_buffer_data() abort
   endif
   " This line messes with the current qfwindow title
   " -> force it back with patch 7.4-2200
-  call setqflist(qf, 'r')
-  if s:has_qf_properties
-    call setqflist([], 'r', title)
-  endif
+  let cleanup = lh#on#exit()
+        \.restore('b:undo_ftplugin')
+  call lh#let#unlet('b:undo_ftplugin')
+  try
+    call setqflist(qf, 'r')
+    if s:has_qf_properties
+      call setqflist([], 'r', title)
+    endif
+  finally
+    call cleanup.finalize()
+  endtry
 endfunction
 
 "}}}1
