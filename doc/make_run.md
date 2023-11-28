@@ -1,8 +1,28 @@
-
-
 # Introduction
 
 BTW offers a simplified way to build and execute programs from vim. In essence, this plugin encapsulates `:make` and `:!./%<`.
+
+* [Options](#options)
+    * [Keybindings](#keybindings)
+        * [Notes:](#notes)
+    * [Behaviour](#behaviour)
+        * [Compilation](#compilation)
+            * [Notes:](#notes)
+        * [Configuration](#configuration)
+        * [Report errors](#report-errors)
+        * [Execution](#execution)
+* [Build](#build)
+    * [Mono-file projects](#mono-file-projects)
+        * [From the shell](#from-the-shell)
+        * [From vim](#from-vim)
+        * [From vim with BTW](#from-vim-with-btw)
+            * [Limitations](#limitations)
+    * [Multi-files projects](#multi-files-projects)
+    * [CMake based projects](#cmake-based-projects)
+    * [Colours](#colours)
+* [Execute](#execute)
+* [Demo](#demo)
+
 
 # Options
 Several options can permit to tune the behaviour of BTW.
@@ -10,10 +30,10 @@ Several options can permit to tune the behaviour of BTW.
 ## Keybindings
 |   Command                        |   Default keybinding   |  Variable to set in `.vimrc`  |
 |:---------------------------------|:-----------------------|:------------------------------|
-| `:Make`                          | `<F7>`                 | `g:BTW.key.make`              |
+| [`:Make`](#build)                | `<F7>`                 | `g:BTW.key.make`              |
 | `:StopBGCompilation`<sup>1</sup> | N/A (yet)              | N/A (yet)                     |
-| `:Execute`                       | `<C-F5>`               | `g:BTW.key.execute`           |
-| `:Config`                        | `<M-F7>`               | `g:BTW.key.config`            |
+| [`:Execute`](#execute)           | `<C-F5>`               | `g:BTW.key.execute`           |
+| [`:Config`](#configuration)      | `<M-F7>`               | `g:BTW.key.config`            |
 | `:ReConfig`                      | `<M-F8>`               | `g:BTW.key.re_config`         |
 
 #### Notes:
@@ -51,10 +71,13 @@ Several options can permit to tune the behaviour of BTW.
 ### Configuration
 
 The option `(bpg):BTW.project_config` says what to do on `:Config`.
+
 When `(bpg):BTW.project_config.type` equals
   * `modeline`, add a _let-modeline_
   * `makefile`, open the make file named `(bpg):BTW.project_config.file` in `(bpg):BTW.project_config.wd`.
   * `ccmake`, starts ccmake in `(bpg):BTW.project_config.wd`, with `(bpg):BTW.project_config.args` as parameters.
+  * other compilation chains can be supported, you can even drop your one in
+    `{rtp}/autoload/lh/btw/chain/`, but sorry it's not documented at the time.
 
 
 ### Report errors
@@ -81,6 +104,10 @@ Projects are compiled on `<F7>` or `:Make`, in the directory specified by `(bpg)
 The compilation tries to detect automatically the target though `(bpg):BTW.project...` options, though it may be forced as a parameter to `:Make`.
 
 When an error is found, the quickfix window will get automatically opened. However, when the quickfix window is not opened (link errors are not detected by default as compilation errors), the command `:Copen` is provided. `:Copen` differs from `:copen` in the sense it adjust its size the number of lines to display.
+
+Note: the [`'makeprg'`](http://vimhelp.appspot.com/options.txt.html#%27makeprg%27)
+can also be temporarily overridden by using `:MakeWith command-to-execute with
+parameters`.
 
 ## Mono-file projects
 
