@@ -149,7 +149,7 @@ They contain:
     * `sources`: this matches all the trunk => complete even with test files
     * `build_root_dir`: points to the root (/list of root) directory(/ies)
       where build directories are stored. Meant to be used with `auto_detect_compil_modes`.
-      This option is relative to `paths.project` key. 
+      This option is relative to `paths.project` key.
     * `doxyfile`: where the doxyfile is
     * `_build`: internal, points to the current compilation directory at any
       time
@@ -157,7 +157,8 @@ They contain:
       stored
     * `clic()`: Returns `_build` + `_clic` (by default)
  * `build`: path relative from `paths.project` -- the following are not
-   mandatory, any name, and any number of modes can be used.  
+   mandatory, any name, and any number of modes can be used
+
    Filling this key is not mandatory. Instead we can fill
    `paths.build_root_dir` and use `auto_detect_compil_modes`.
     * `Debug`:  tells where to find the debug mode directory
