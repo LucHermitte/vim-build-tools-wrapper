@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  14th Jun 2022
+" Last Update:  20th Feb 2024
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -260,6 +260,7 @@ function! lh#btw#chain#cmake#_make(...) abort "{{{3
   let res.type = 'ccmake'
   let res.arg  = lh#option#get('paths.sources')
   let res.wd   = lh#ref#bind(prefix.'BTW.compilation_dir')
+  call s:Verbose("Binding %1:%2", prefix, 'BTW.compilation_dir')
   call lh#object#inject_methods(res, s:k_script_name, 'config', 'reconfig', 'analyse', 'bootstrap',
         \ 'lazy_bootstrap', 'adapt_parameters')
   return res
@@ -401,8 +402,8 @@ function! s:search_build_dirs(prefix, sources_dir) abort " {{{3
   " 1.2- Find the build root directory
   "      i.e. files would be in {build_root_dir}/{mode}/CMakeCache.txt
   "      Or the build_dir
-  let build_dir      = lh#option#get('BTW.compilation_dir')
-  let build_root_dir = lh#option#get('paths.build_root_dir')
+  let build_dir      = lh#option#get('BTW.compilation_dir')  " -- absolute
+  let build_root_dir = lh#option#get('paths.build_root_dir') " -- relative to prj_root_dir
   if lh#option#is_set(build_dir) && isdirectory(build_dir)
     call s:Verbose("(bpg):BTW.compilation_dir already set as %1 => abort", build_dir)
     return build_root_dir
@@ -468,7 +469,7 @@ function! s:search_build_dirs(prefix, sources_dir) abort " {{{3
 
     if lh#option#is_set(build_dir) && isdirectory(build_dir)
       call s:Verbose("The current compilation dir has been found as %1", build_dir)
-      call lh#let#to(prefix.'BTW.compilation_dir', build_dir)
+      call lh#btw#option#_set_compilation_dir(prefix, build_dir)
     endif
     if lh#option#is_unset(build_root_dir)
       call s:Verbose("No CMake compilation mode found => abort support for multiple compilation modes")
@@ -516,7 +517,7 @@ function! s:analyse(...) dict abort " {{{3
     let confs = lh#option#get('BTW.build.mode.bootstrap', {})
     let list = lh#let#if_undef(prefix.'BTW.build.mode.list', {})
     for conf in keys(confs)
-      let list[conf] = build_root_dir . '/' . conf
+      let list[conf] = lh#path#simplify(build_root_dir . '/' . conf)
     endfor
     let options = [ 'auto_detect_compil_modes' ]
   else

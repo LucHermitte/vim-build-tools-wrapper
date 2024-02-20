@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  10th Jun 2022
+" Last Update:  20th Feb 2024
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -98,7 +98,7 @@ function! lh#btw#cmake#define_options(options) abort
   " Add all selected options to menu
   for option in a:options
     " save the menu in order to make hooks and other stuff accessible
-    let menu_def = lh#let#if_undef('p:BTW.'.option, {})
+    let menu_def = lh#let#if_undef('p:BTW.'..option, {})
     call extend(menu_def, deepcopy(lh#option#get('menu')), 'keep')
     " let menu_def.menu = copy(lh#option#get('menu'))
     let menu_def.project = lh#project#crt()
@@ -397,8 +397,9 @@ function! lh#btw#cmake#__update_compil_dir() dict
   " the auxiliary reference
   if has_key(self, 'project') && (type(self.project) == type(function('has')))
     let paths = self.project().paths
-    let dir = paths.project.'/'.self.project().build[self.project().compilation.mode]
+    let dir = lh#path#simplify(paths.project.'/'.self.project().build[self.project().compilation.mode])
     let paths._build = dir
+    call lh#warning#emit('Setting the buffer local b:BTW.compilation_dir')
     call lh#let#to('b:BTW.compilation_dir', dir)
   else
     let compil_mode = self.project.get('BTW.build.mode.current') " variable
@@ -408,10 +409,15 @@ function! lh#btw#cmake#__update_compil_dir() dict
     call lh#assert#type(project_dir).is('')
     let compil_subpath = self.project.get('BTW.build.mode.list['.compil_mode.']')
     call lh#assert#type(compil_subpath).is('')
-    call s:Verbose("Set compilation dir to %1/%2", project_dir, compil_subpath)
-    let dir = project_dir.'/'.compil_subpath
-    " call lh#let#to('p:paths._build', dir)
+    let dir = lh#path#simplify(project_dir.'/'.compil_subpath)
+    call s:Verbose("Set compilation dir to %1", dir)
+    if exists('b:BTW.compilation_dir')
+      call lh#warning#emit(printf(
+            \ 'p:BTW.compilation_dir is being set to %s, but the buffer-local b:BTW.compilation_dir is already set to %s',
+            \ dir, b:BTW.compilation_dir))
+    endif
     call self.project.set('BTW.compilation_dir', dir)
+    call lh#assert#equal(dir, lh#option#get('BTW.compilation_dir'))
   endif
   " echoerr "Compiling ".expand('%')." in ".lh#btw#option#_compilation_dir()
   if has_key(self, '_update_compil_dir_hook')

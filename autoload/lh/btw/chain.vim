@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  27th Jun 2022
+" Last Update:  20th Feb 2024
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to:
@@ -561,7 +561,7 @@ function! s:SetOption(scope, opts) abort
     if a:scope == 'g'
       let name = lh#project#_crt_var_name('p:'.a_name)
       if exists(name)
-        call lh#common#warning_msg("Warning: ".name." is already set to ".{name})
+        call lh#warning#emit("Warning: ".name." is already set to ".{name})
       endif
     endif
     let name = a:scope.':'.a_name
@@ -571,7 +571,7 @@ function! s:SetOption(scope, opts) abort
     if lh#option#is_set(value)
       echo "Option " . a_name . " is set to ".lh#object#to_string(value)
     else
-        call lh#common#warning_msg("Warning: ".a_name." is not set.")
+        call lh#warning#emit("Warning: ".a_name." is not set.")
     endif
   endif
 endfunction
