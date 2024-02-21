@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  20th Feb 2024
+" Last Update:  21st Feb 2024
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions dedicated to:
@@ -78,6 +78,7 @@ endfunction
 
 " Function: lh#btw#chain#load_config([chain]) {{{3
 function! lh#btw#chain#load_config(...) abort
+  call lh#warning#emit("btw#chain#load_config(%1)", a:000)
   let src_dir = lh#option#get('paths.sources')
   if  lh#option#is_unset(src_dir)
     let prefix = lh#project#is_in_a_project() ? 'p:' : 'b:'
@@ -271,7 +272,7 @@ function! lh#btw#chain#_reconstruct() abort
   let dir = lh#btw#option#_compilation_dir()
   call s:Verbose('Compiling with %1 in %2 (bid: %3 - %4)', makeprg_pattern, dir, bufnr('%'), bufname('%'))
   let need_pipefail = 0
-  if !empty(dir) && lh#option#is_set(dir)
+  if !empty(dir) && lh#option#is_set(dir) && lh#option#get('BTW.filter.program.need_cd.'.prog, 1)
     let makeprg_pattern = '(cd %{1.dir} && ' . makeprg_pattern . ')'
     " let makeprg = '(cd '.shellescape(dir).' && ' . makeprg . ')'
   endif

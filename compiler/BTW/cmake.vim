@@ -4,7 +4,7 @@
 "		<URL:http://github.com/LucHermitte/vim-build-tools-wrapper>
 " Version:      0.7.0
 " Created:      21st Feb 2012
-" Last Update:  11th Jun 2022
+" Last Update:  21st Feb 2024
 "------------------------------------------------------------------------
 " Description:
 "       BTW cmake compilation toolchain
@@ -54,6 +54,7 @@ if 1 == get(g:, 'lh#btw#chain#__loading_main_tool', 0)
   endfunction
 
   call lh#let#to('g:BTW.filter.program.cmake', function(s:getSNR('compile_cmake')))
+  call lh#let#to('g:BTW.filter.program.need_cd.cmake', 0)
 endif
 
 "=============================================================================
