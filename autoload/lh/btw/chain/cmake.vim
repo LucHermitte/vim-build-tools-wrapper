@@ -272,13 +272,9 @@ function! lh#btw#chain#cmake#_make(...) abort "{{{3
   return res
 endfunction
 
-function! s:config(...) dict abort " {{{3
-  " TODO:
-  " - the passing of interactive/synchronous/...
-  " - cmake over cmake-gui
-  "
-  " Improve
-  " Running modes: interactive, background, synchronous
+function! lh#btw#chain#cmake#_build_config_cmdline(this, ...) abort " {{{3
+  " this function sole purpose is to help test the following s:config()
+  " function
   let args      = get(a:, 1, {})
   let cmdline   = copy(get(a:, 2, []))  " A list
   call lh#assert#type(cmdline).is([])
@@ -291,8 +287,9 @@ function! s:config(...) dict abort " {{{3
   if idx_build_dir >= 0
     let wd = remove(cmdline, idx_build_dir, idx_build_dir+1)[-1]
   else
-    let wd = lh#btw#_evaluate(self.wd)
+    let wd = lh#btw#_evaluate(a:this.wd)
   endif
+  call lh#assert#value(wd).is_set()
   call s:Verbose('CMake configuration will be generated in %1', wd)
   call s:ensure_directory(wd)
 
@@ -305,15 +302,28 @@ function! s:config(...) dict abort " {{{3
   " call s:Verbose('cmake.config(%1, %2)', args, cmdline)
 
   " Other options found in CMakeLists.txt
-  let options = s:find_options_in_cmakelists(self.arg)
+  let options = s:find_options_in_cmakelists(a:this.arg)
   for [opt, def] in options
     let cmdline += s:get_option(opt, cmdline, 1, def)
   endfor
 
   let opts = generator + get(args, 'opts', []) + cmdline
   let all_opts = printf('-S %s -B %s %s',
-        \ lh#path#fix(self.arg), lh#path#fix(wd), join(opts, ' '))
+        \ lh#path#fix(a:this.arg), lh#path#fix(wd), join(opts, ' '))
   call s:Verbose('cmake.config(%1, %2)', args, all_opts)
+
+  return all_opts
+endfunction
+
+function! s:config(...) dict abort " {{{3
+  let mode      = get(args, 'mode', 'interactive')
+  " TODO:
+  " - the passing of interactive/synchronous/...
+  " - cmake over cmake-gui
+  "
+  " Improve
+  " Running modes: interactive, background, synchronous
+  let all_opts = call('lh#btw#chain#cmake#_build_config_cmdline',[self] + a:000)
 
   if lh#os#OnDOSWindows()
     " TODO: support all modes on Windows
