@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  20th Feb 2024
+" Last Update:  21st Feb 2024
 "------------------------------------------------------------------------
 " Description:
 "       Centralize BTW option retrieval
@@ -40,17 +40,19 @@ function! lh#btw#option#version()
 endfunction
 
 " # Debug   {{{2
-if !exists('s:verbose')
-  let s:verbose = 0
-endif
+let s:verbose = get(s:, 'verbose', 0)
 function! lh#btw#option#verbose(...)
   if a:0 > 0 | let s:verbose = a:1 | endif
   return s:verbose
 endfunction
 
-function! s:Verbose(expr)
+function! s:Log(expr, ...) abort
+  call call('lh#log#this',[a:expr]+a:000)
+endfunction
+
+function! s:Verbose(expr, ...) abort
   if s:verbose
-    echomsg a:expr
+    call call('s:Log',[a:expr]+a:000)
   endif
 endfunction
 
@@ -154,6 +156,8 @@ function! lh#btw#option#_project_config(...) abort
       let res = lh#btw#chain#load_config()
       let prefix = lh#project#is_in_a_project() ? 'p:' : 'b:'
       call lh#let#to(prefix.'BTW.project_config', res)
+    else
+      call s:Verbose("Reusing project configuration: %1", res)
     endif
     return res
   endif

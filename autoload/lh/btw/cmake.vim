@@ -5,7 +5,7 @@
 " Version:      0.7.0
 let s:k_version = 0700
 " Created:      12th Sep 2012
-" Last Update:  20th Feb 2024
+" Last Update:  21st Feb 2024
 "------------------------------------------------------------------------
 " Description:
 "       Simplifies the defintion of CMake based projects
@@ -79,6 +79,7 @@ endfunction
 " @since v0.8.0, deprecates lh#btw#cmake#def_options
 " This time, we use p:variables!
 function! lh#btw#cmake#define_options(options) abort
+  call s:Verbose("lh#btw#cmake#def_options(%1)", a:options)
   if !lh#project#is_in_a_project()
     throw "lh#btw#cmake#define_options() cannot be used outside projects!"
   endif
@@ -237,6 +238,7 @@ function! lh#btw#cmake#def_toggable_compil_mode(menu_def) abort
   let menu_def.set_project_executable = function('lh#btw#cmake#__set_project_executable')
   let menu_def.update_compil_dir      = function('lh#btw#cmake#__update_compil_dir')
   function! menu_def.do_update() dict abort
+    call s:Verbose("Menu %1 -> do_update()", self.menu.name)
     call self.update_compil_dir()
     " Only the directory changes. No need to update everything w/ `BTW rebuild`
     call lh#btw#chain#_resolve_makeprg(self.project)

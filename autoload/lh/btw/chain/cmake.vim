@@ -7,7 +7,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      24th Oct 2018
-" Last Update:  20th Feb 2024
+" Last Update:  21st Feb 2024
 "------------------------------------------------------------------------
 " Description:
 "       «description»
@@ -260,7 +260,7 @@ function! lh#btw#chain#cmake#_make(...) abort "{{{3
   let res.type = 'ccmake'
   let res.arg  = lh#option#get('paths.sources')
   let res.wd   = lh#ref#bind(prefix.'BTW.compilation_dir')
-  call s:Verbose("Binding %1:%2", prefix, 'BTW.compilation_dir')
+  call s:Verbose("Binding cmake.wd to %1%2", prefix, 'BTW.compilation_dir')
   call lh#object#inject_methods(res, s:k_script_name, 'config', 'reconfig', 'analyse', 'bootstrap',
         \ 'lazy_bootstrap', 'adapt_parameters')
   return res
@@ -502,7 +502,7 @@ function! s:analyse(...) dict abort " {{{3
     call s:Verbose("BTW: (bpg):paths.sources is unset, abort CMake detection")
     return 0
   else
-    call s:Verbose("BTW: Bootstrapping CMake chain, using (bpg):path.sources = '%1'", sources_dir)
+    call s:Verbose("BTW: Bootstrapping CMake chain, using (bpg):paths.sources = '%1'", sources_dir)
   endif
   let build_root_dir = s:search_build_dirs(prefix, sources_dir)
 
@@ -514,6 +514,7 @@ function! s:analyse(...) dict abort " {{{3
   " case of a root build folder. When only a single compilation folder
   " is used this doesn't make sense
   if lh#option#is_set(build_root_dir)
+    call s:Verbose("build_root_dir %1 is found => auto detecting compilation modes", build_root_dir)
     let confs = lh#option#get('BTW.build.mode.bootstrap', {})
     let list = lh#let#if_undef(prefix.'BTW.build.mode.list', {})
     for conf in keys(confs)
