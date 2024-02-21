@@ -199,7 +199,8 @@ endfunction
 " Function: lh#btw#chain#cmake#load_config() {{{2
 " Beware: at this time, the CWD may not be the final project WD
 function! lh#btw#chain#cmake#load_config(...) abort
-  if lh#project#is_in_a_project()
+  let is_in_a_project = lh#project#is_in_a_project()
+  if is_in_a_project
     LetIfUndef p:BTW.target = ''
   endif
   " Use CMake as the main compilation tool!
@@ -207,6 +208,11 @@ function! lh#btw#chain#cmake#load_config(...) abort
 
   let config = lh#btw#chain#cmake#_make()
   if call(config.analyse, lh#list#flatten(a:000), config)
+    if is_in_a_project
+      " Make sure BTW.project_config is set when called directly to configure
+      " CMake
+      call lh#let#to('p:BTW.project_config', config)
+    endif
     return config
   else
     return lh#option#unset('Failed to bootstrap a CMake environment')
