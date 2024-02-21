@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  16th Jun 2022
+" Last Update:  21st Feb 2024
 "------------------------------------------------------------------------
 " Description:
 "       Internal functions used to build projects
@@ -441,10 +441,10 @@ function! lh#btw#build#_execute()
       let args     = {'mode': mode, 'prj_name': prj_name}
       if path.type == 'ctest'
         " let makeprg = substitute(&makeprg, '\<make\>', 'ctest', '')
-        let compil_dir = lh#btw#option#_compilation_dir()
-        let makeprg = printf('(cd %s && ctest $*)', shellescape(compil_dir))
+        let exec_dir = lh#btw#option#_execution_dir()
+        call lh#assert#value(exec_dir).is_set()
+        let makeprg = printf('(cd %s && ctest $*)', shellescape(exec_dir))
         call extend(args, {'message': 'Execute %s tests%s', 'action': 'testing'})
-        call lh#assert#value(compil_dir).is_set()
         call lh#btw#_register_fix_ctest(args)
       endif
       if !empty(ctx)

@@ -218,6 +218,14 @@ function! lh#btw#option#_compilation_dir(...) abort
         \ : s:get('compilation_dir', '.')
 endfunction
 
+" Function: lh#btw#option#execution_dir([bufid]) {{{3
+function! lh#btw#option#_execution_dir(...) abort
+  let compil_dir = call('lh#btw#option#_compilation_dir', a:000)
+  let path = lh#option#get('BTW.executable.dir', compil_dir)
+  let path = substitute(path, '{\(.\{-}\)}', '\=lh#option#get(submatch(1))', 'g')
+  return path
+endfunction
+
 " Function: lh#btw#option#_set_compilation_dir(prefix, build_dir) {{{3
 function! lh#btw#option#_set_compilation_dir(prefix, build_dir) abort
   if a:prefix != 'b:' && exists('b:BTW.compilation_dir')
