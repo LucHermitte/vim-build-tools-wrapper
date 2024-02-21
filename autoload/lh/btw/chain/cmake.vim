@@ -513,6 +513,7 @@ function! s:analyse(...) dict abort " {{{3
   " of paths where various modes/configurations would be compiled in the
   " case of a root build folder. When only a single compilation folder
   " is used this doesn't make sense
+  let options = copy(a:000)
   if lh#option#is_set(build_root_dir)
     call s:Verbose("build_root_dir %1 is found => auto detecting compilation modes", build_root_dir)
     let confs = lh#option#get('BTW.build.mode.bootstrap', {})
@@ -520,17 +521,15 @@ function! s:analyse(...) dict abort " {{{3
     for conf in keys(confs)
       let list[conf] = lh#path#simplify(build_root_dir . '/' . conf)
     endfor
-    let options = [ 'auto_detect_compil_modes' ]
-  else
-    let options = []
+    call lh#list#push_if_new(options, 'auto_detect_compil_modes')
   endif
 
   let prj = lh#project#crt()
   call lh#let#if_undef('p:menu.menu.priority', lh#project#menu#reserve_id(prj).'.')
   call lh#let#if_undef('p:menu.menu.name'    , prj.name.'.')
 
-  " TODO: avoid to call the following function multiple times
-  call lh#btw#cmake#define_options(options + a:000)
+  " TODO: Make sure options aren't listed several times...
+  call lh#btw#cmake#define_options(options)
   return 1
 endfunction
 
