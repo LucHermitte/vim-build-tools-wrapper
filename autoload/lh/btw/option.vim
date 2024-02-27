@@ -5,7 +5,7 @@
 " Version:      0.7.0.
 let s:k_version = '070'
 " Created:      23rd Mar 2015
-" Last Update:  21st Feb 2024
+" Last Update:  27th Feb 2024
 "------------------------------------------------------------------------
 " Description:
 "       Centralize BTW option retrieval
@@ -233,7 +233,7 @@ function! lh#btw#option#_set_compilation_dir(prefix, build_dir) abort
             \ '%sBTW.compilation_dir is being set to %s, but the buffer-local b:BTW.compilation_dir is already set to %s',
             \ a:prefix, a:build_dir, b:BTW.compilation_dir))
   endif
-  call lh#let#to(prefix.'BTW.compilation_dir', a:build_dir)
+  call lh#let#to(a:prefix.'BTW.compilation_dir', a:build_dir)
 endfunction
 
 " # Filter        options {{{2
